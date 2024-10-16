@@ -1,0 +1,13 @@
+{
+  "build": {
+    "mcu": "t3",
+    "tuya_platform": "t3"
+  },
+  "frameworks": ["base", "arduino"],
+  "platforms": ["tuyaopensdk"],
+  "name": "OpenSDK T3",
+  "upload": {
+  },
+  "url": "https://developer.tuya.com/en/docs/iot/T3-U-Module-Datasheet?id=Kdd4pzscwf0il",
+  "vendor": "Tuya IOT"
+}

@@ -1,0 +1,26 @@
+{
+  "name": "tuyaopensdk",
+  "title": "Tuya OpenSDK",
+  "description": "Tuya-open-sdk-for-device is an open source IoT development framework that supports cross-chip platforms and operating systems.",
+  "homepage": "https://www.tuya.com/",
+  "license": "Apache-2.0",
+  "keywords": ["tuya", "open", "opensdk"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tuya/tuya-open-sdk-for-device.git"
+  },
+  "version": "1.0.0",
+  "frameworks": {
+    "base": {
+      "title": "Base Framework (SDK only)",
+      "script": "builder/frameworks/base.py"
+    }
+  },
+  "packages": {
+    "tool-cmake": {
+      "type": "tool",
+      "owner": "platformio",
+      "version": "^3.19.0"
+    }
+  }
+}

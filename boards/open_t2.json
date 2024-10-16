@@ -1,0 +1,13 @@
+{
+  "build": {
+    "mcu": "t2",
+    "tuya_platform": "t2"
+  },
+  "frameworks": ["base", "arduino"],
+  "platforms": ["tuyaopensdk"],
+  "name": "OpenSDK T2",
+  "upload": {
+  },
+  "url": "https://developer.tuya.com/en/docs/iot/T2-U-module-datasheet?id=Kce1tncb80ldq",
+  "vendor": "Tuya IOT"
+}
