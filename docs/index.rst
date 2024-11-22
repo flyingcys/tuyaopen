@@ -14,7 +14,7 @@ TuyaOpen 是一款跨芯片平台、操作系统的 IoT 开发框架。它基于
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: 目录
 
    zh_CN/quick_start.md
