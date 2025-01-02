@@ -34,10 +34,53 @@
 /***********************************************************
 ***********************variable define**********************
 ***********************************************************/
+char info_ssid[64 + 1];
 
 /***********************************************************
 ***********************function define**********************
 ***********************************************************/
+/**
+ * @brief wifi Related event callback function
+ *
+ * @param[in] event:event
+ * @param[in] arg:parameter
+ * @return none
+ */
+static void wifi_event_callback(WF_EVENT_E event, void *arg)
+{
+    OPERATE_RET op_ret = OPRT_OK;
+    NW_IP_S sta_info;
+    memset(&sta_info, 0, sizeof(NW_IP_S));
+
+    PR_DEBUG("-------------event callback-------------");
+    switch (event) {
+    case WFE_CONNECTED: {
+        PR_DEBUG("connection succeeded!");
+
+        /* output ip information */
+        op_ret = tal_wifi_get_ip(WF_STATION, &sta_info);
+        if (OPRT_OK != op_ret) {
+            PR_ERR("get station ip error");
+            return;
+        }
+        PR_NOTICE("gw: %s", sta_info.gw);
+        PR_NOTICE("ip: %s", sta_info.ip);
+        PR_NOTICE("mask: %s", sta_info.mask);
+        break;
+    }
+
+    case WFE_CONNECT_FAILED: {
+        PR_DEBUG("connection fail!");
+        break;
+    }
+
+    case WFE_DISCONNECTED: {
+        PR_DEBUG("disconnect!");
+        break;
+    }
+    }
+}
+
 /**
  * @brief WiFi scanf task
  *
@@ -50,7 +93,7 @@ void user_main()
     AP_IF_S *ap_info;
     uint32_t ap_info_nums;
     int i = 0;
-    char info_ssid[50];
+    PR_NOTICE("------ wifi scan example start ------");
 
     tal_log_init(TAL_LOG_LEVEL_DEBUG, 1024, (TAL_LOG_OUTPUT_CB)tkl_log_output);
     tal_kv_init(&(tal_kv_cfg_t){
@@ -60,7 +103,11 @@ void user_main()
     tal_sw_timer_init();
     tal_workq_init();
 
-    PR_NOTICE("------ wifi scan example start ------");
+    /*WiFi init*/
+    TUYA_CALL_ERR_GOTO(tal_wifi_init(wifi_event_callback), __EXIT);
+
+    /*Set WiFi mode to station*/
+    TUYA_CALL_ERR_GOTO(tal_wifi_set_work_mode(WWM_STATION), __EXIT);
 
     /*Scan WiFi information in the current environment*/
     TUYA_CALL_ERR_GOTO(tal_wifi_all_ap_scan(&ap_info, &ap_info_nums), __EXIT);

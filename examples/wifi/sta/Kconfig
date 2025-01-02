@@ -1,0 +1,12 @@
+menu "Application config"
+
+    config EXAMPLE_SSID
+        string "connect ssid"
+        default 1 if (PLATFORM_T3)
+        range 1 64
+
+    config EXAMPLE_PASSWORD
+        string "connect password"
+        range 8 32
+
+endmenu

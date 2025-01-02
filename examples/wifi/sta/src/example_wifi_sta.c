@@ -25,6 +25,14 @@
 #include "tal_wifi.h"
 #include "tkl_output.h"
 
+#ifndef EXAMPLE_SSID
+#define EXAMPLE_SSID "your-ssid-xxx"
+#endif
+
+#ifndef EXAMPLE_PASSWORD
+#define EXAMPLE_PASSWORD "your-pswd-xxx"
+#endif
+
 /***********************************************************
 *************************micro define***********************
 ***********************************************************/
@@ -91,8 +99,6 @@ static void wifi_event_callback(WF_EVENT_E event, void *arg)
 void user_main()
 {
     OPERATE_RET rt = OPRT_OK;
-    char connect_ssid[] = "your-ssid-xxx"; // connect wifi ssid
-    char connect_pswd[] = "your-pswd-xxx"; // connect wifi password
 
     tal_log_init(TAL_LOG_LEVEL_DEBUG, 1024, (TAL_LOG_OUTPUT_CB)tkl_log_output);
     PR_NOTICE("------ wifi station example start ------");
@@ -104,8 +110,11 @@ void user_main()
     TUYA_CALL_ERR_GOTO(tal_wifi_set_work_mode(WWM_STATION), __EXIT);
 
     /*STA mode, connect to WiFi*/
-    PR_NOTICE("\r\nconnect wifi ssid: %s, password: %s\r\n", connect_ssid, connect_pswd);
-    TUYA_CALL_ERR_LOG(tal_wifi_station_connect((int8_t *)connect_ssid, (int8_t *)connect_pswd));
+    PR_NOTICE("\r\nconnect wifi ssid: %s, password: %s\r\n", EXAMPLE_SSID, EXAMPLE_PASSWORD);
+    
+    TUYA_CALL_ERR_LOG(tal_wifi_station_connect((int8_t *)EXAMPLE_SSID, (int8_t *)EXAMPLE_PASSWORD));
+
+    PR_NOTICE("ssid: %s, password: %s connect success!\r\n", EXAMPLE_SSID, EXAMPLE_PASSWORD);
 
 __EXIT:
     return;
