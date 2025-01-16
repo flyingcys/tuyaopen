@@ -13,3 +13,6 @@
 [submodule "apps/tuya_cloud/switch_demo/libqrencode"]
 	path = apps/tuya_cloud/switch_demo/libqrencode
 	url = https://github.com/fukuchi/libqrencode.git
+[submodule "src/libtls/mbedtls-3.6.2"]
+	path = src/libtls/mbedtls-3.6.2
+	url = https://github.com/Mbed-TLS/mbedtls.git
