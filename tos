@@ -10,6 +10,15 @@ PROJECT_INI=$PROJECT_ROOT/project_build.ini
 KCONFIG_TOOLS=$OPEN_SDK_ROOT/tools/kconfiglib
 
 
+if [ x"$TOS_DEBUG" = x"1" ]; then
+    CMAKE_VERBOSE="-DCMAKE_VERBOSE_MAKEFILE=ON"
+    VERBOSE="--verbose"
+else
+    CMAKE_VERBOSE=""
+    VERBOSE=""
+fi
+
+
 # ==============================================================================
 # executing define
 # ------------------------------------------------------------------------------
@@ -88,7 +97,7 @@ function check_exec()
     check_command_version "cmake" "3.16.0" "cmake --version"
     # check_command_version "ccmake" "3.16.0" "ccmake --version"  # sudo apt-get install cmake-curses-gui
     # check_command_version "lcov" "1.14" "lcov --version"
-    # check_command_version "ninja" "1.6.0" "ninja --version"
+    check_command_version "ninja" "1.6.0" "ninja --version"
 
     check_submodules
 
@@ -257,8 +266,8 @@ function build_exec()
         if [ -f "$PLATFORM_PATH/build_setup.sh" ]; then
             $PLATFORM_PATH/build_setup.sh "${PROJ}" "${PROJECT_PLATFORM}" "${PROJECT_CHIP}" "${PROJECT_FRAMEWORK}"
         fi
-        cmake $OPEN_SDK_ROOT -DTOS_PROJECT_NAME=$PROJ -DTOS_PROJECT_ROOT=$PROJECT_ROOT -DTOS_PROJECT_PLATFORM=$PROJECT_PLATFORM -DTOS_FRAMEWORK=$PROJECT_FRAMEWORK -DTOS_PROJECT_CHIP=$PROJECT_CHIP
-        make example
+        cmake -G Ninja $CMAKE_VERBOSE $OPEN_SDK_ROOT -DTOS_PROJECT_NAME=$PROJ -DTOS_PROJECT_ROOT=$PROJECT_ROOT -DTOS_PROJECT_PLATFORM=$PROJECT_PLATFORM -DTOS_FRAMEWORK=$PROJECT_FRAMEWORK -DTOS_PROJECT_CHIP=$PROJECT_CHIP
+        ninja example $VERBOSE
         if [ ! "0" = "$?" ]; then
             RET=1
         fi
@@ -285,7 +294,7 @@ function clean_exec()
         fi
 
         cd $PROJECT_ROOT/.build/$PROJ
-        make clean_all
+        ninja clean_all
         cd - > /dev/null
     done
 }
@@ -329,11 +338,15 @@ function menuconfig_exec()
     HEADER_DIR="$PROJECT_ROOT/.build/$PROJ/include"
     HEADER_FILE="tuya_kconfig.h"
     HEADER_IN_PATH="${KCONFIG_TOOLS}/config.h.in"
+    APP_DEFAULT_CONFIG="$PROJECT_ROOT/app_default.config"
 
     mkdir -p ${DOT_CONFIG_DIR}
     cd ${DOT_CONFIG_DIR}
     if [ ! -f $DOT_CONFIG ]; then
         cp $PLATFORM_PATH/default.config $DOT_CONFIG
+        if [ -f $APP_DEFAULT_CONFIG ]; then
+            cat $APP_DEFAULT_CONFIG >> $DOT_CONFIG
+        fi
     fi
     python3 $KCONFIG_TOOLS/set_catalog_config.py -b $PLATFORM_PATH -s $OPEN_SDK_ROOT/src -a $PROJECT_ROOT -o $KCONFIG_CATALOG
     bash ${KCONFIG_TOOLS}/run_menuconfig.sh "${KCONFIG_CATALOG}" "$DOT_CONFIG"
