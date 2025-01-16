@@ -9,7 +9,7 @@ set(MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 # MODULE_NAME
 get_filename_component(MODULE_NAME ${MODULE_PATH} NAME)
 
-set(MBEDTLS mbedtls-3.1.0)
+set(MBEDTLS mbedtls-3.6.2)
 
 # LIB_SRCS
 file(GLOB_RECURSE 
@@ -47,6 +47,8 @@ target_include_directories(${MODULE_NAME}
     PUBLIC
         ${LIB_PUBLIC_INC}
     )
+
+target_compile_definitions(${MODULE_NAME} PUBLIC -DMBEDTLS_CONFIG_FILE="tuya_tls_config.h")
 
 
 ########################################
