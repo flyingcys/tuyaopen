@@ -182,3 +182,19 @@ exit:
     mbedtls_md_free(&md_ctx);
     return ret;
 }
+
+
+int mbedtls_timing_get_delay(void *data)
+{
+    return 0;
+}
+
+void mbedtls_timing_set_delay(void *data, uint32_t int_ms, uint32_t fin_ms)
+{
+
+}
+
+unsigned long mbedtls_timing_get_timer(struct mbedtls_timing_hr_time *val, int reset)
+{
+
+}

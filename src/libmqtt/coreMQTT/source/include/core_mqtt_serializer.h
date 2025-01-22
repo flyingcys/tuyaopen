@@ -1,6 +1,8 @@
 /*
- * coreMQTT v1.0.1
- * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * coreMQTT <DEVELOPMENT BRANCH>
+ * Copyright (C) 2022 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ *
+ * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -32,33 +34,13 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
-/**
- * @cond DOXYGEN_IGNORE
- * Doxygen should ignore this section.
- */
-
-/* bool is defined in only C99+. */
-#if defined( __cplusplus ) || ( defined( __STDC_VERSION__ ) && ( __STDC_VERSION__ >= 199901L ) )
-    #include <stdbool.h>
-#elif !defined( bool ) && !defined( false ) && !defined( true )
-    #define bool     int8_t
-    #define false    ( int8_t ) 0
-    #define true     ( int8_t ) 1
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    extern "C" {
 #endif
-/** @endcond */
-
-/* MQTT_DO_NOT_USE_CUSTOM_CONFIG allows building the MQTT library
- * without a custom config. If a custom config is provided, the
- * MQTT_DO_NOT_USE_CUSTOM_CONFIG macro should not be defined. */
-#ifndef MQTT_DO_NOT_USE_CUSTOM_CONFIG
-    /* Include custom config file before other headers. */
-    #include "core_mqtt_config.h"
-#endif
-
-/* Include config defaults header to get default values of configs not
- * defined in core_mqtt_config.h file. */
-#include "core_mqtt_config_defaults.h"
+/* *INDENT-ON */
 
 #include "transport_interface.h"
 
@@ -103,18 +85,27 @@ struct MQTTPacketInfo;
  */
 typedef enum MQTTStatus
 {
-    MQTTSuccess = 0,     /**< Function completed successfully. */
-    MQTTBadParameter,    /**< At least one parameter was invalid. */
-    MQTTNoMemory,        /**< A provided buffer was too small. */
-    MQTTSendFailed,      /**< The transport send function failed. */
-    MQTTRecvFailed,      /**< The transport receive function failed. */
-    MQTTBadResponse,     /**< An invalid packet was received from the server. */
-    MQTTServerRefused,   /**< The server refused a CONNECT or SUBSCRIBE. */
-    MQTTNoDataAvailable, /**< No data available from the transport interface. */
-    MQTTIllegalState,    /**< An illegal state in the state record. */
-    MQTTStateCollision,  /**< A collision with an existing state record entry. */
-    MQTTKeepAliveTimeout, /**< Timeout while waiting for PINGRESP. */
-    MQTTNotAuthorized /**< onnection refused: not authorized. */
+    MQTTSuccess = 0,                /**< Function completed successfully. */
+    MQTTBadParameter,               /**< At least one parameter was invalid. */
+    MQTTNoMemory,                   /**< A provided buffer was too small. */
+    MQTTSendFailed,                 /**< The transport send function failed. */
+    MQTTRecvFailed,                 /**< The transport receive function failed. */
+    MQTTBadResponse,                /**< An invalid packet was received from the server. */
+    MQTTServerRefused,              /**< The server refused a CONNECT or SUBSCRIBE. */
+    MQTTNoDataAvailable,            /**< No data available from the transport interface. */
+    MQTTIllegalState,               /**< An illegal state in the state record. */
+    MQTTStateCollision,             /**< A collision with an existing state record entry. */
+    MQTTKeepAliveTimeout,           /**< Timeout while waiting for PINGRESP. */
+    MQTTNeedMoreBytes,              /**< MQTT_ProcessLoop/MQTT_ReceiveLoop has received
+                                    incomplete data; it should be called again (probably after
+                                    a delay). */
+    MQTTStatusConnected,            /**< MQTT connection is established with the broker. */
+    MQTTStatusNotConnected,         /**< MQTT connection is not established with the broker. */
+    MQTTStatusDisconnectPending,    /**< Transport Interface has failed and MQTT connection needs to be closed. */
+    MQTTPublishStoreFailed,         /**< User provided API to store a copy of outgoing publish for retransmission  purposes,
+                                    has failed. */
+    MQTTPublishRetrieveFailed       /**< User provided API to retrieve the copy of a publish while reconnecting
+                                    with an unclean session has failed. */
 } MQTTStatus_t;
 
 /**
@@ -272,6 +263,11 @@ typedef struct MQTTPacketInfo
      * @brief Length of remaining serialized data.
      */
     size_t remainingLength;
+
+    /**
+     * @brief The length of the MQTT header including the type and length.
+     */
+    size_t headerLength;
 } MQTTPacketInfo_t;
 
 /**
@@ -748,6 +744,24 @@ MQTTStatus_t MQTT_SerializePublish( const MQTTPublishInfo_t * pPublishInfo,
 /* @[declare_mqtt_serializepublish] */
 
 /**
+ * @brief Serialize an MQTT PUBLISH packet header without the topic string in the
+ * given buffer. This function will add the topic string length to the provided
+ * buffer. This helps reduce an unnecessary copy of the topic string into the
+ * buffer.
+ *
+ * @param[in] pPublishInfo MQTT PUBLISH packet parameters.
+ * @param[in] remainingLength Remaining Length provided by #MQTT_GetPublishPacketSize.
+ * @param[out] pBuffer Buffer for packet serialization.
+ * @param[out] headerSize Size of the serialized MQTT PUBLISH header.
+ *
+ * @return #MQTTSuccess if the serialization is successful. Otherwise, #MQTTBadParameter.
+ */
+MQTTStatus_t MQTT_SerializePublishHeaderWithoutTopic( const MQTTPublishInfo_t * pPublishInfo,
+                                                      size_t remainingLength,
+                                                      uint8_t * pBuffer,
+                                                      size_t * headerSize );
+
+/**
  * @brief Serialize an MQTT PUBLISH packet header in the given buffer.
  *
  * This function serializes PUBLISH header in to the given buffer. The payload
@@ -1185,5 +1199,116 @@ MQTTStatus_t MQTT_GetIncomingPacketTypeAndLength( TransportRecv_t readFunc,
                                                   NetworkContext_t * pNetworkContext,
                                                   MQTTPacketInfo_t * pIncomingPacket );
 /* @[declare_mqtt_getincomingpackettypeandlength] */
+
+/**
+ * @brief Extract the MQTT packet type and length from incoming packet.
+ *
+ * This function must be called for every incoming packet to retrieve the
+ * #MQTTPacketInfo_t.type and #MQTTPacketInfo_t.remainingLength. A
+ * #MQTTPacketInfo_t is not valid until this routine has been invoked.
+ *
+ * @param[in] pBuffer The buffer holding the raw data to be processed
+ * @param[in] pIndex Pointer to the index within the buffer to marking the end
+ *            of raw data available.
+ * @param[out] pIncomingPacket Structure used to hold the fields of the
+ *            incoming packet.
+ *
+ * @return #MQTTSuccess on successful extraction of type and length,
+ * #MQTTBadParameter if @p pIncomingPacket is invalid,
+ * #MQTTBadResponse if an invalid packet is read, and
+ * #MQTTNoDataAvailable if there is nothing to read.
+ */
+ /* @[declare_mqtt_processincomingpackettypeandlength] */
+MQTTStatus_t MQTT_ProcessIncomingPacketTypeAndLength( const uint8_t * pBuffer,
+                                                      const size_t * pIndex,
+                                                      MQTTPacketInfo_t * pIncomingPacket );
+/* @[declare_mqtt_processincomingpackettypeandlength] */
+
+/**
+ * @brief Update the duplicate publish flag within the given header of the publish packet.
+ *
+ * @param[in] pHeader The buffer holding the header content
+ * @param[in] set If true then the flag will be set else cleared
+ *
+ * @return #MQTTSuccess on successful setting of the duplicate flag,
+ * #MQTTBadParameter for invalid parameters
+ */
+ /* @[declare_mqtt_updateduplicatepublishflag] */
+MQTTStatus_t MQTT_UpdateDuplicatePublishFlag( uint8_t * pHeader , bool set);
+/* @[declare_mqtt_updateduplicatepublishflag] */
+
+/**
+ * @fn uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex, const MQTTConnectInfo_t * pConnectInfo, const MQTTPublishInfo_t * pWillInfo, size_t remainingLength );
+ * @brief Serialize the fixed part of the connect packet header.
+ *
+ * @param[out] pIndex Pointer to the buffer where the header is to
+ * be serialized.
+ * @param[in] pConnectInfo The connect information.
+ * @param[in] pWillInfo The last will and testament information.
+ * @param[in] remainingLength The remaining length of the packet to be
+ * serialized.
+ *
+ * @return A pointer to the end of the encoded string.
+ */
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this definition, this function is private.
+ */
+uint8_t * MQTT_SerializeConnectFixedHeader( uint8_t * pIndex,
+                                            const MQTTConnectInfo_t * pConnectInfo,
+                                            const MQTTPublishInfo_t * pWillInfo,
+                                            size_t remainingLength );
+/** @endcond */
+
+/**
+ * @fn  uint8_t * MQTT_SerializeSubscribeHeader( size_t remainingLength, uint8_t * pIndex, uint16_t packetId );
+ * @brief Serialize the fixed part of the subscribe packet header.
+ *
+ * @param[in] remainingLength The remaining length of the packet to be
+ * serialized.
+ * @param[in] pIndex Pointer to the buffer where the header is to
+ * be serialized.
+ * @param[in] packetId The packet ID to be serialized.
+ *
+ * @return A pointer to the end of the encoded string.
+ */
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this definition, this function is private.
+ */
+uint8_t * MQTT_SerializeSubscribeHeader( size_t remainingLength,
+                                         uint8_t * pIndex,
+                                         uint16_t packetId );
+/** @endcond */
+
+/**
+ * @fn uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength, uint8_t * pIndex, uint16_t packetId );
+ * @brief Serialize the fixed part of the unsubscribe packet header.
+ *
+ * @param[in] remainingLength The remaining length of the packet to be
+ * serialized.
+ * @param[in] pIndex Pointer to the buffer where the header is to
+ * be serialized.
+ * @param[in] packetId The packet ID to be serialized.
+ *
+ * @return A pointer to the end of the encoded string.
+ */
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * Doxygen should ignore this definition, this function is private.
+ */
+uint8_t * MQTT_SerializeUnsubscribeHeader( size_t remainingLength,
+                                           uint8_t * pIndex,
+                                           uint16_t packetId );
+/** @endcond */
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    }
+#endif
+/* *INDENT-ON* */
 
 #endif /* ifndef CORE_MQTT_SERIALIZER_H */

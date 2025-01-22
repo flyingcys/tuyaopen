@@ -407,6 +407,7 @@ OPERATE_RET tuya_tls_init(void)
 {
     OPERATE_RET op_ret = OPRT_OK;
 
+    PR_DEBUG("==== tuya_tls_init. ====");
     mbedtls_threading_set_alt(__tuya_tls_mutex_init, __tuya_tls_mutex_free, __tuya_tls_mutex_lock,
                               __tuya_tls_mutex_unlock);
 

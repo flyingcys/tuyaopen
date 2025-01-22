@@ -1,6 +1,8 @@
 /*
- * coreMQTT v1.0.1
- * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * coreMQTT <DEVELOPMENT BRANCH>
+ * Copyright (C) 2022 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ *
+ * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -27,23 +29,27 @@
 #ifndef CORE_MQTT_H
 #define CORE_MQTT_H
 
-/* MQTT_DO_NOT_USE_CUSTOM_CONFIG allows building the MQTT library
- * without a custom config. If a custom config is provided, the
- * MQTT_DO_NOT_USE_CUSTOM_CONFIG macro should not be defined. */
-#ifndef MQTT_DO_NOT_USE_CUSTOM_CONFIG
-    /* Include custom config file before other headers. */
-    #include "core_mqtt_config.h"
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    extern "C" {
 #endif
-
-/* Include config defaults header to get default values of configs not
- * defined in core_mqtt_config.h file. */
-#include "core_mqtt_config_defaults.h"
+/* *INDENT-ON* */
 
 /* Include MQTT serializer library. */
 #include "core_mqtt_serializer.h"
 
 /* Include transport interface. */
 #include "transport_interface.h"
+
+/**
+ * @cond DOXYGEN_IGNORE
+ * The current version of this library.
+ *
+ * If MQTT_LIBRARY_VERSION ends with + it represents the version in development
+ * after the numbered release.
+ */
+#define MQTT_LIBRARY_VERSION    "v2.3.1+"
+/** @endcond */
 
 /**
  * @ingroup mqtt_constants
@@ -59,11 +65,28 @@ struct MQTTContext;
 struct MQTTDeserializedInfo;
 
 /**
+ * @ingroup mqtt_struct_types
+ * @brief An opaque structure provided by the library to the #MQTTStorePacketForRetransmit function when using #MQTTStorePacketForRetransmit.
+ */
+typedef struct MQTTVec MQTTVec_t;
+
+/**
  * @ingroup mqtt_callback_types
- * @brief Application provided callback to retrieve the current time in
- * milliseconds.
+ * @brief Application provided function to query the time elapsed since a given
+ * epoch in milliseconds.
  *
- * @return The current time in milliseconds.
+ * @note The timer should be a monotonic timer. It just needs to provide an
+ * incrementing count of milliseconds elapsed since a given epoch.
+ *
+ * @note As the timer is supposed to be a millisecond timer returning a 32-bit
+ * value, it will overflow in just under 50 days. But it will not cause any issues
+ * in the library as the time function is only used for calculating durations for
+ * timeouts and keep alive periods. The difference in unsigned numbers is
+ * used where unsigned wrap around is defined. Unless the timeout is bigger than
+ * 100 days (50*2) where the numbers can wrap around more than once the code
+ * should work properly.
+ *
+ * @return The time elapsed in milliseconds.
  */
 typedef uint32_t (* MQTTGetCurrentTimeFunc_t )( void );
 
@@ -85,13 +108,67 @@ typedef void (* MQTTEventCallback_t )( struct MQTTContext * pContext,
                                        struct MQTTDeserializedInfo * pDeserializedInfo );
 
 /**
+ * @brief User defined callback used to store outgoing publishes. Used to track any publish
+ * retransmit on an unclean session connection.
+ *
+ * @param[in] pContext Initialised MQTT Context.
+ * @param[in] packetId Outgoing publish packet identifier.
+ * @param[in] pMqttVec Pointer to the opaque mqtt vector structure. Users should use MQTT_SerializeMQTTVec
+ *                and MQTT_GetBytesInMQTTVec functions to get the memory required and to serialize the
+ *                MQTTVec_t in the provided memory respectively.
+ *
+ * @return True if the copy is successful else false.
+ */
+/* @[define_mqtt_retransmitstorepacket] */
+typedef bool ( * MQTTStorePacketForRetransmit)( struct MQTTContext * pContext,
+                                                uint16_t packetId,
+                                                MQTTVec_t * pMqttVec );
+/* @[define_mqtt_retransmitstorepacket] */
+
+/**
+ * @brief User defined callback used to retreive a copied publish for resend operation. Used to
+ * track any publish retransmit on an unclean session connection.
+ *
+ * @param[in] pContext Initialised MQTT Context.
+ * @param[in] packetId Copied publish packet identifier.
+ * @param[out] pSerializedMqttVec Output parameter to store the pointer to the serialized MQTTVec_t
+ *                  using MQTT_SerializeMQTTVec.
+ * @param[out] pSerializedMqttVecLen Output parameter to return the number of bytes used to store the
+ *                  MQTTVec_t. This value should be the same as the one received from MQTT_GetBytesInMQTTVec
+ *                  when storing the packet.
+ *
+ * @return True if the retreive is successful else false.
+ */
+/* @[define_mqtt_retransmitretrievepacket] */
+typedef bool ( * MQTTRetrievePacketForRetransmit)( struct MQTTContext * pContext,
+                                                   uint16_t packetId,
+                                                   uint8_t ** pSerializedMqttVec,
+                                                   size_t * pSerializedMqttVecLen );
+/* @[define_mqtt_retransmitretrievepacket] */
+
+/**
+ * @brief User defined callback used to clear a particular copied publish packet. Used to
+ * track any publish retransmit on an unclean session connection.
+ *
+ * @param[in] pContext Initialised MQTT Context.
+ * @param[in] packetId Copied publish packet identifier.
+ *
+ * @return True if the clear is successful else false.
+ */
+/* @[define_mqtt_retransmitclearpacket] */
+typedef void (* MQTTClearPacketForRetransmit)( struct MQTTContext * pContext,
+                                               uint16_t packetId );
+/* @[define_mqtt_retransmitclearpacket] */
+
+/**
  * @ingroup mqtt_enum_types
  * @brief Values indicating if an MQTT connection exists.
  */
 typedef enum MQTTConnectionStatus
 {
-    MQTTNotConnected, /**< @brief MQTT Connection is inactive. */
-    MQTTConnected     /**< @brief MQTT Connection is active. */
+    MQTTNotConnected,     /**< @brief MQTT Connection is inactive. */
+    MQTTConnected,        /**< @brief MQTT Connection is active. */
+    MQTTDisconnectPending /**< @brief MQTT Connection needs to be disconnected as a transport error has occurred. */
 } MQTTConnectionStatus_t;
 
 /**
@@ -131,7 +208,7 @@ typedef enum MQTTPubAckType
  */
 typedef enum MQTTSubAckStatus
 {
-    MQTTSubAckSuccessQos0 = 0x00, /**< @brief Success with a maximum delivery at QoS 0 . */
+    MQTTSubAckSuccessQos0 = 0x00, /**< @brief Success with a maximum delivery at QoS 0. */
     MQTTSubAckSuccessQos1 = 0x01, /**< @brief Success with a maximum delivery at QoS 1. */
     MQTTSubAckSuccessQos2 = 0x02, /**< @brief Success with a maximum delivery at QoS 2. */
     MQTTSubAckFailure = 0x80      /**< @brief Failure. */
@@ -157,12 +234,22 @@ typedef struct MQTTContext
     /**
      * @brief State engine records for outgoing publishes.
      */
-    MQTTPubAckInfo_t outgoingPublishRecords[ MQTT_STATE_ARRAY_MAX_COUNT ];
+    MQTTPubAckInfo_t * outgoingPublishRecords;
 
     /**
      * @brief State engine records for incoming publishes.
      */
-    MQTTPubAckInfo_t incomingPublishRecords[ MQTT_STATE_ARRAY_MAX_COUNT ];
+    MQTTPubAckInfo_t * incomingPublishRecords;
+
+    /**
+     * @brief The maximum number of outgoing publish records.
+     */
+    size_t outgoingPublishRecordMaxCount;
+
+    /**
+     * @brief The maximum number of incoming publish records.
+     */
+    size_t incomingPublishRecordMaxCount;
 
     /**
      * @brief The transport interface used by the MQTT connection.
@@ -197,7 +284,12 @@ typedef struct MQTTContext
     /**
      * @brief Timestamp of the last packet sent by the library.
      */
-    uint32_t lastPacketTime;
+    uint32_t lastPacketTxTime;
+
+    /**
+     * @brief Timestamp of the last packet received by the library.
+     */
+    uint32_t lastPacketRxTime;
 
     /**
      * @brief Whether the library sent a packet during a call of #MQTT_ProcessLoop or
@@ -205,15 +297,30 @@ typedef struct MQTTContext
      */
     bool controlPacketSent;
 
+    /**
+     * @brief Index to keep track of the number of bytes received in network buffer.
+     */
+    size_t index;
+
     /* Keep alive members. */
     uint16_t keepAliveIntervalSec; /**< @brief Keep Alive interval. */
     uint32_t pingReqSendTimeMs;    /**< @brief Timestamp of the last sent PINGREQ. */
     bool waitingForPingResp;       /**< @brief If the library is currently awaiting a PINGRESP. */
 
     /**
-     * @brief User data context.
+     * @brief User defined API used to store outgoing publishes.
      */
-    void * userData;
+    MQTTStorePacketForRetransmit storeFunction;
+
+    /**
+     * @brief User defined API used to retreive a copied publish for resend operation.
+     */
+    MQTTRetrievePacketForRetransmit retrieveFunction;
+
+    /**
+     * @brief User defined API used to clear a particular copied publish packet.
+     */
+    MQTTClearPacketForRetransmit clearFunction;
 } MQTTContext_t;
 
 /**
@@ -231,22 +338,98 @@ typedef struct MQTTDeserializedInfo
 /**
  * @brief Initialize an MQTT context.
  *
- * This function must be called on a #MQTTContext_t before any other function.
+ * This function must be called on an #MQTTContext_t before any other function.
  *
- * @note The #MQTTGetCurrentTimeFunc_t callback function must be defined. If
+ * @note The #MQTTGetCurrentTimeFunc_t function for querying time must be defined. If
  * there is no time implementation, it is the responsibility of the application
- * to provide a dummy function to always return 0, and provide 0 timeouts for
- * all calls to #MQTT_Connect, #MQTT_ProcessLoop, and #MQTT_ReceiveLoop. This
- * will result in loop functions running for a single iteration, and #MQTT_Connect
- * relying on #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT to receive the CONNACK packet.
+ * to provide a dummy function to always return 0, provide 0 timeouts for
+ * all calls to #MQTT_Connect, #MQTT_ProcessLoop, and #MQTT_ReceiveLoop and configure
+ * the #MQTT_RECV_POLLING_TIMEOUT_MS and #MQTT_SEND_TIMEOUT_MS configurations
+ * to be 0. This will result in loop functions running for a single iteration, and
+ * #MQTT_Connect relying on #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT to receive the CONNACK packet.
  *
  * @param[in] pContext The context to initialize.
  * @param[in] pTransportInterface The transport interface to use with the context.
- * @param[in] getTimeFunction The time utility function to use with the context.
- * @param[in] userCallback The user callback to use with the context to
- * notify about incoming packet events.
- * @param[in] pNetworkBuffer Network buffer provided for the context.
- * @param[in] userData user data context.
+ * @param[in] getTimeFunction The time utility function which can return the amount of time
+ *    (in milliseconds) elapsed since a given epoch. This function will be used to ensure that
+ *    timeouts in the API calls are met and keep-alive messages are sent on time.
+ * @param[in] userCallback The user callback to use with the context to notify about incoming
+ *     packet events.
+ * @param[in] pNetworkBuffer Network buffer provided for the context. This buffer will be used
+ *     to receive incoming messages from the broker. This buffer must remain valid and in scope
+ *     for the entire lifetime of the @p pContext and must not be used by another context and/or
+ *     application.
+ *
+ * @return #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise.
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // Function for obtaining a timestamp.
+ * uint32_t getTimeStampMs();
+ * // Callback function for receiving packets.
+ * void eventCallback(
+ *      MQTTContext_t * pContext,
+ *      MQTTPacketInfo_t * pPacketInfo,
+ *      MQTTDeserializedInfo_t * pDeserializedInfo
+ * );
+ * // Network send.
+ * int32_t networkSend( NetworkContext_t * pContext, const void * pBuffer, size_t bytes );
+ * // Network receive.
+ * int32_t networkRecv( NetworkContext_t * pContext, void * pBuffer, size_t bytes );
+ *
+ * MQTTContext_t mqttContext;
+ * TransportInterface_t transport;
+ * MQTTFixedBuffer_t fixedBuffer;
+ * // Create a globally accessible buffer which remains in scope for the entire duration
+ * // of the MQTT context.
+ * uint8_t buffer[ 1024 ];
+ *
+ * // Clear context.
+ * memset( ( void * ) &mqttContext, 0x00, sizeof( MQTTContext_t ) );
+ *
+ * // Set transport interface members.
+ * transport.pNetworkContext = &someTransportContext;
+ * transport.send = networkSend;
+ * transport.recv = networkRecv;
+ *
+ * // Set buffer members.
+ * fixedBuffer.pBuffer = buffer;
+ * fixedBuffer.size = 1024;
+ *
+ * status = MQTT_Init( &mqttContext, &transport, getTimeStampMs, eventCallback, &fixedBuffer );
+ *
+ * if( status == MQTTSuccess )
+ * {
+ *      // Do something with mqttContext. The transport and fixedBuffer structs were
+ *      // copied into the context, so the original structs do not need to stay in scope.
+ *      // However, the memory pointed to by the fixedBuffer.pBuffer must remain in scope.
+ * }
+ * @endcode
+ */
+/* @[declare_mqtt_init] */
+MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
+                        const TransportInterface_t * pTransportInterface,
+                        MQTTGetCurrentTimeFunc_t getTimeFunction,
+                        MQTTEventCallback_t userCallback,
+                        const MQTTFixedBuffer_t * pNetworkBuffer );
+/* @[declare_mqtt_init] */
+
+/**
+ * @brief Initialize an MQTT context for QoS > 0.
+ *
+ * This function must be called on an #MQTTContext_t after MQTT_Init and before any other function.
+ *
+ * @param[in] pContext The context to initialize.
+ * @param[in] pOutgoingPublishRecords Pointer to memory which will be used to store state of outgoing
+ * publishes.
+ * @param[in] outgoingPublishCount Maximum number of records which can be kept in the memory
+ * pointed to by @p pOutgoingPublishRecords.
+ * @param[in] pIncomingPublishRecords Pointer to memory which will be used to store state of incoming
+ * publishes.
+ * @param[in] incomingPublishCount Maximum number of records which can be kept in the memory
+ * pointed to by @p pIncomingPublishRecords.
  *
  * @return #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSuccess otherwise.
@@ -271,12 +454,14 @@ typedef struct MQTTDeserializedInfo
  * TransportInterface_t transport;
  * MQTTFixedBuffer_t fixedBuffer;
  * uint8_t buffer[ 1024 ];
+ * const size_t outgoingPublishCount = 30;
+ * MQTTPubAckInfo_t outgoingPublishes[ outgoingPublishCount ];
  *
  * // Clear context.
  * memset( ( void * ) &mqttContext, 0x00, sizeof( MQTTContext_t ) );
  *
  * // Set transport interface members.
- * transport.pNetworkInterface = &someNetworkInterface;
+ * transport.pNetworkContext = &someTransportContext;
  * transport.send = networkSend;
  * transport.recv = networkRecv;
  *
@@ -284,23 +469,136 @@ typedef struct MQTTDeserializedInfo
  * fixedBuffer.pBuffer = buffer;
  * fixedBuffer.size = 1024;
  *
- * status = MQTT_Init( &mqttContext, &transport, getTimeStampMs, eventCallback, &fixedBuffer, NULL );
+ * status = MQTT_Init( &mqttContext, &transport, getTimeStampMs, eventCallback, &fixedBuffer );
  *
  * if( status == MQTTSuccess )
  * {
- *      // Do something with mqttContext. The transport and fixedBuffer structs were
- *      // copied into the context, so the original structs do not need to stay in scope.
+ *      // We do not expect any incoming publishes in this example, therefore the incoming
+ *      // publish pointer is NULL and the count is zero.
+ *      status = MQTT_InitStatefulQoS( &mqttContext, outgoingPublishes, outgoingPublishCount, NULL, 0 );
+ *
+ *      // Now QoS1 and/or QoS2 publishes can be sent with this context.
  * }
  * @endcode
  */
-/* @[declare_mqtt_init] */
-MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
-                        const TransportInterface_t * pTransportInterface,
-                        MQTTGetCurrentTimeFunc_t getTimeFunction,
-                        MQTTEventCallback_t userCallback,
-                        const MQTTFixedBuffer_t * pNetworkBuffer,
-                        void * userData );
-/* @[declare_mqtt_init] */
+/* @[declare_mqtt_initstatefulqos] */
+MQTTStatus_t MQTT_InitStatefulQoS( MQTTContext_t * pContext,
+                                   MQTTPubAckInfo_t * pOutgoingPublishRecords,
+                                   size_t outgoingPublishCount,
+                                   MQTTPubAckInfo_t * pIncomingPublishRecords,
+                                   size_t incomingPublishCount );
+/* @[declare_mqtt_initstatefulqos] */
+
+/**
+ * @brief Initialize an MQTT context for publish retransmits for QoS > 0.
+ *
+ * This function must be called on an #MQTTContext_t after MQTT_InitstatefulQoS and before any other function.
+ *
+ * @param[in] pContext The context to initialize.
+ * @param[in] storeFunction User defined API used to store outgoing publishes.
+ * @param[in] retrieveFunction User defined API used to retreive a copied publish for resend operation.
+ * @param[in] clearFunction User defined API used to clear a particular copied publish packet.
+ *
+ * @return #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise.
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * // Function for obtaining a timestamp.
+ * uint32_t getTimeStampMs();
+ * // Callback function for receiving packets.
+ * void eventCallback(
+ *      MQTTContext_t * pContext,
+ *      MQTTPacketInfo_t * pPacketInfo,
+ *      MQTTDeserializedInfo_t * pDeserializedInfo
+ * );
+ * // Network send.
+ * int32_t networkSend( NetworkContext_t * pContext, const void * pBuffer, size_t bytes );
+ * // Network receive.
+ * int32_t networkRecv( NetworkContext_t * pContext, void * pBuffer, size_t bytes );
+ * // User defined callback used to store outgoing publishes
+ * bool publishStoreCallback(struct MQTTContext* pContext,
+ *                           uint16_t packetId,
+ *                           MQTTVec_t* pIoVec);
+ * // User defined callback used to retreive a copied publish for resend operation
+ * bool publishRetrieveCallback(struct MQTTContext* pContext,
+ *                              uint16_t packetId,
+ *                              TransportOutVector_t** pIoVec,
+ *                              size_t* ioVecCount);
+ * // User defined callback used to clear a particular copied publish packet
+ * bool publishClearCallback(struct MQTTContext* pContext,
+ *                           uint16_t packetId);
+ * // User defined callback used to clear all copied publish packets
+ * bool publishClearAllCallback(struct MQTTContext* pContext);
+ *
+ * MQTTContext_t mqttContext;
+ * TransportInterface_t transport;
+ * MQTTFixedBuffer_t fixedBuffer;
+ * uint8_t buffer[ 1024 ];
+ * const size_t outgoingPublishCount = 30;
+ * MQTTPubAckInfo_t outgoingPublishes[ outgoingPublishCount ];
+ *
+ * // Clear context.
+ * memset( ( void * ) &mqttContext, 0x00, sizeof( MQTTContext_t ) );
+ *
+ * // Set transport interface members.
+ * transport.pNetworkContext = &someTransportContext;
+ * transport.send = networkSend;
+ * transport.recv = networkRecv;
+ *
+ * // Set buffer members.
+ * fixedBuffer.pBuffer = buffer;
+ * fixedBuffer.size = 1024;
+ *
+ * status = MQTT_Init( &mqttContext, &transport, getTimeStampMs, eventCallback, &fixedBuffer );
+ *
+ * if( status == MQTTSuccess )
+ * {
+ *      // We do not expect any incoming publishes in this example, therefore the incoming
+ *      // publish pointer is NULL and the count is zero.
+ *      status = MQTT_InitStatefulQoS( &mqttContext, outgoingPublishes, outgoingPublishCount, NULL, 0 );
+ *
+ *      // Now QoS1 and/or QoS2 publishes can be sent with this context.
+ * }
+ *
+ * if( status == MQTTSuccess )
+ * {
+ *      status = MQTT_InitRetransmits( &mqttContext, publishStoreCallback,
+ *                                                   publishRetrieveCallback,
+ *                                                   publishClearCallback,
+ *                                                   publishClearAllCallback );
+ *
+ *      // Now unacked Publishes can be resent on an unclean session resumption.
+ * }
+ * @endcode
+ */
+
+/* @[declare_mqtt_initretransmits] */
+MQTTStatus_t MQTT_InitRetransmits( MQTTContext_t * pContext,
+                                   MQTTStorePacketForRetransmit storeFunction,
+                                   MQTTRetrievePacketForRetransmit retrieveFunction,
+                                   MQTTClearPacketForRetransmit clearFunction );
+/* @[declare_mqtt_initretransmits] */
+
+/**
+ * @brief Checks the MQTT connection status with the broker.
+ *
+ * @param[in] pContext Initialized MQTT context.
+ *
+ * @return #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTStatusConnected if the MQTT connection is established with the broker.
+ * #MQTTStatusNotConnected if the MQTT connection is broker.
+ * #MQTTStatusDisconnectPending if Transport Interface has failed and MQTT connection needs to be closed.
+ *
+ * <b>Example</b>
+ * @code{c}
+ *
+ * @endcode
+ */
+/* @[declare_mqtt_checkconnectstatus] */
+MQTTStatus_t MQTT_CheckConnectStatus( MQTTContext_t * pContext );
+/* @[declare_mqtt_checkconnectstatus] */
 
 /**
  * @brief Establish an MQTT session.
@@ -317,8 +615,9 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  *    The network receive for CONNACK is retried up to the number of times
  *    configured by #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
  *
- * @note If a dummy #MQTTGetCurrentTimeFunc_t was passed to #MQTT_Init, then the
- * timeout MUST be set to 0.
+ * @note If a dummy #MQTTGetCurrentTimeFunc_t was passed to #MQTT_Init, then a
+ * timeout value of 0 MUST be passed to the API, and the #MQTT_RECV_POLLING_TIMEOUT_MS
+ * and #MQTT_SEND_TIMEOUT_MS timeout configurations MUST be set to 0.
  *
  * @param[in] pContext Initialized MQTT context.
  * @param[in] pConnectInfo MQTT CONNECT packet information.
@@ -327,8 +626,9 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * @param[in] timeoutMs Maximum time in milliseconds to wait for a CONNACK packet.
  * A zero timeout makes use of the retries for receiving CONNACK as configured with
  * #MQTT_MAX_CONNACK_RECEIVE_RETRY_COUNT.
- * @param[out] pSessionPresent Whether a previous session was present.
- * Only relevant if not establishing a clean session.
+ * @param[out] pSessionPresent This value will be set to true if a previous session
+ * was present; otherwise it will be set to false. It is only relevant if not
+ * establishing a clean session.
  *
  * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
  * hold the MQTT packet;
@@ -337,6 +637,11 @@ MQTTStatus_t MQTT_Init( MQTTContext_t * pContext,
  * #MQTTRecvFailed if transport receive failed for CONNACK;
  * #MQTTNoDataAvailable if no data available to receive in transport until
  * the @p timeoutMs for CONNACK;
+ * #MQTTStatusConnected if the connection is already established
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
+ * before calling any other API
+ * MQTTPublishRetrieveFailed if on an unclean session connection, the copied
+ * publishes are not retrieved successfully for retransmission
  * #MQTTSuccess otherwise.
  *
  * @note This API may spend more time than provided in the timeoutMS parameters in
@@ -416,14 +721,18 @@ MQTTStatus_t MQTT_Connect( MQTTContext_t * pContext,
  * the broker.
  *
  * @param[in] pContext Initialized MQTT context.
- * @param[in] pSubscriptionList List of MQTT subscription info.
- * @param[in] subscriptionCount The number of elements in pSubscriptionList.
+ * @param[in] pSubscriptionList Array of MQTT subscription info.
+ * @param[in] subscriptionCount The number of elements in @ pSubscriptionList
+ * array.
  * @param[in] packetId Packet ID generated by #MQTT_GetPacketId.
  *
  * @return #MQTTNoMemory if the #MQTTContext_t.networkBuffer is too small to
  * hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
+ * #MQTTStatusNotConnected if the connection is not established yet
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
+ * before calling any other API
  * #MQTTSuccess otherwise.
  *
  * <b>Example</b>
@@ -477,6 +786,11 @@ MQTTStatus_t MQTT_Subscribe( MQTTContext_t * pContext,
  * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
+ * #MQTTStatusNotConnected if the connection is not established yet
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
+ * before calling any other API
+ * #MQTTPublishStoreFailed if the user provided callback to copy and store the
+ * outgoing publish packet fails
  * #MQTTSuccess otherwise.
  *
  * <b>Example</b>
@@ -515,6 +829,28 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
 /* @[declare_mqtt_publish] */
 
 /**
+ * @brief Cancels an outgoing publish callback (only for QoS > QoS0) by
+ * removing it from the pending ACK list.
+ *
+ * @note This cannot cancel the actual publish as that might have already
+ * been sent to the broker. This only removes the details of the given packet
+ * ID from the list of unACKed packet. That allows the caller to free any memory
+ * associated with the publish payload, topic string etc. Also, after this API
+ * call, the user provided callback will not be invoked when the ACK packet is
+ * received.
+ *
+ * @param[in] pContext Initialized MQTT context.
+ * @param[in] packetId packet ID corresponding to the outstanding publish.
+ *
+ * @return #MQTTBadParameter if invalid parameters are passed;
+ * #MQTTSuccess otherwise.
+ */
+/* @[declare_mqtt_cancelcallback] */
+MQTTStatus_t MQTT_CancelCallback( const MQTTContext_t * pContext,
+                                  uint16_t packetId );
+/* @[declare_mqtt_cancelcallback] */
+
+/**
  * @brief Sends an MQTT PINGREQ to broker.
  *
  * @param[in] pContext Initialized and connected MQTT context.
@@ -522,6 +858,9 @@ MQTTStatus_t MQTT_Publish( MQTTContext_t * pContext,
  * @return #MQTTNoMemory if pBuffer is too small to hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
+ * #MQTTStatusNotConnected if the connection is not established yet
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
+ * before calling any other API
  * #MQTTSuccess otherwise.
  */
 /* @[declare_mqtt_ping] */
@@ -541,6 +880,9 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  * hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport write failed;
+ * #MQTTStatusNotConnected if the connection is not established yet
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
+ * before calling any other API
  * #MQTTSuccess otherwise.
  *
  * <b>Example</b>
@@ -567,7 +909,7 @@ MQTTStatus_t MQTT_Ping( MQTTContext_t * pContext );
  * // Obtain a new packet id for the unsubscribe request.
  * packetId = MQTT_GetPacketId( pContext );
  *
- * status = MQTT_Subscribe( pContext, &unsubscribeList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId );
+ * status = MQTT_Unsubscribe( pContext, &unsubscribeList[ 0 ], NUMBER_OF_SUBSCRIPTIONS, packetId );
  *
  * if( status == MQTTSuccess )
  * {
@@ -592,6 +934,7 @@ MQTTStatus_t MQTT_Unsubscribe( MQTTContext_t * pContext,
  * hold the MQTT packet;
  * #MQTTBadParameter if invalid parameters are passed;
  * #MQTTSendFailed if transport send failed;
+ * #MQTTStatusNotConnected if the connection is already disconnected
  * #MQTTSuccess otherwise.
  */
 /* @[declare_mqtt_disconnect] */
@@ -602,13 +945,19 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * @brief Loop to receive packets from the transport interface. Handles keep
  * alive.
  *
- * @note Passing a timeout value of 0 will run the loop for a single iteration.
- * If a dummy #MQTTGetCurrentTimeFunc_t was passed to #MQTT_Init, then this
- * timeout MUST be set to 0.
+ * @note If a dummy timer function, #MQTTGetCurrentTimeFunc_t, is passed to the library,
+ * then the keep-alive mechanism is not supported by the #MQTT_ProcessLoop API.
+ * In that case, the #MQTT_ReceiveLoop API function should be used instead.
  *
  * @param[in] pContext Initialized and connected MQTT context.
- * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
- * run, unless an error occurs.
+ *
+ * @note Calling this function blocks the calling context for a time period that
+ * depends on the passed the configuration macros, #MQTT_RECV_POLLING_TIMEOUT_MS
+ * and #MQTT_SEND_TIMEOUT_MS, and the underlying transport interface implementation
+ * timeouts, unless an error occurs. The blocking period also depends on the execution time of the
+ * #MQTTEventCallback_t callback supplied to the library. It is recommended that the supplied
+ * #MQTTEventCallback_t callback does not contain blocking operations to prevent potential
+ * non-deterministic blocking period of the #MQTT_ProcessLoop API call.
  *
  * @return #MQTTBadParameter if context is NULL;
  * #MQTTRecvFailed if a network error occurs during reception;
@@ -618,6 +967,12 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * #MQTT_PINGRESP_TIMEOUT_MS milliseconds;
  * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
  * invalid transition for the internal state machine;
+ * #MQTTNeedMoreBytes if MQTT_ProcessLoop has received
+ * incomplete data; it should be called again (probably after a delay);
+ * #MQTTStatusNotConnected if the connection is not established yet and a PING
+ * or an ACK is being sent.
+ * #MQTTStatusDisconnectPending if the user is expected to call MQTT_Disconnect
+ * before calling any other API
  * #MQTTSuccess on success.
  *
  * <b>Example</b>
@@ -625,15 +980,14 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  *
  * // Variables used in this example.
  * MQTTStatus_t status;
- * uint32_t timeoutMs = 100;
  * // This context is assumed to be initialized and connected.
  * MQTTContext_t * pContext;
  *
  * while( true )
  * {
- *      status = MQTT_ProcessLoop( pContext, timeoutMs );
+ *      status = MQTT_ProcessLoop( pContext );
  *
- *      if( status != MQTTSuccess )
+ *      if( status != MQTTSuccess && status != MQTTNeedMoreBytes )
  *      {
  *          // Determine the error. It's possible we might need to disconnect
  *          // the underlying transport connection.
@@ -646,21 +1000,26 @@ MQTTStatus_t MQTT_Disconnect( MQTTContext_t * pContext );
  * @endcode
  */
 /* @[declare_mqtt_processloop] */
-MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
-                               uint32_t timeoutMs );
+MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext );
 /* @[declare_mqtt_processloop] */
 
 /**
  * @brief Loop to receive packets from the transport interface. Does not handle
  * keep alive.
  *
- * @note Passing a timeout value of 0 will run the loop for a single iteration.
- * If a dummy #MQTTGetCurrentTimeFunc_t was passed to #MQTT_Init, then this
- * timeout MUST be set to 0.
+ * @note If a dummy #MQTTGetCurrentTimeFunc_t was passed to #MQTT_Init, then the
+ * #MQTT_RECV_POLLING_TIMEOUT_MS and #MQTT_SEND_TIMEOUT_MS timeout configurations
+ * MUST be set to 0.
  *
  * @param[in] pContext Initialized and connected MQTT context.
- * @param[in] timeoutMs Minimum time in milliseconds that the receive loop will
- * run, unless an error occurs.
+ *
+ * @note Calling this function blocks the calling context for a time period that
+ * depends on the the configuration macros, #MQTT_RECV_POLLING_TIMEOUT_MS and
+ * #MQTT_SEND_TIMEOUT_MS, and the underlying transport interface implementation
+ * timeouts, unless an error occurs. The blocking period also depends on the execution time of the
+ * #MQTTEventCallback_t callback supplied to the library. It is recommended that the supplied
+ * #MQTTEventCallback_t callback does not contain blocking operations to prevent potential
+ * non-deterministic blocking period of the #MQTT_ReceiveLoop API call.
  *
  * @return #MQTTBadParameter if context is NULL;
  * #MQTTRecvFailed if a network error occurs during reception;
@@ -668,6 +1027,8 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  * #MQTTBadResponse if an invalid packet is received;
  * #MQTTIllegalState if an incoming QoS 1/2 publish or ack causes an
  * invalid transition for the internal state machine;
+ * #MQTTNeedMoreBytes if MQTT_ReceiveLoop has received
+ * incomplete data; it should be called again (probably after a delay);
  * #MQTTSuccess on success.
  *
  * <b>Example</b>
@@ -675,16 +1036,15 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  *
  * // Variables used in this example.
  * MQTTStatus_t status;
- * uint32_t timeoutMs = 100;
  * uint32_t keepAliveMs = 60 * 1000;
  * // This context is assumed to be initialized and connected.
  * MQTTContext_t * pContext;
  *
  * while( true )
  * {
- *      status = MQTT_ReceiveLoop( pContext, timeoutMs );
+ *      status = MQTT_ReceiveLoop( pContext );
  *
- *      if( status != MQTTSuccess )
+ *      if( status != MQTTSuccess && status != MQTTNeedMoreBytes )
  *      {
  *          // Determine the error. It's possible we might need to disconnect
  *          // the underlying transport connection.
@@ -693,7 +1053,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  *      {
  *          // Since this function does not send pings, the application may need
  *          // to in order to comply with keep alive.
- *          if( ( pContext->getTime() - pContext->lastPacketTime ) > keepAliveMs )
+ *          if( ( pContext->getTime() - pContext->lastPacketTxTime ) > keepAliveMs )
  *          {
  *              status = MQTT_Ping( pContext );
  *          }
@@ -704,8 +1064,7 @@ MQTTStatus_t MQTT_ProcessLoop( MQTTContext_t * pContext,
  * @endcode
  */
 /* @[declare_mqtt_receiveloop] */
-MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext,
-                               uint32_t timeoutMs );
+MQTTStatus_t MQTT_ReceiveLoop( MQTTContext_t * pContext );
 /* @[declare_mqtt_receiveloop] */
 
 /**
@@ -727,8 +1086,10 @@ uint16_t MQTT_GetPacketId( MQTTContext_t * pContext );
  * @param[in] topicNameLength Length of the topic name.
  * @param[in] pTopicFilter The topic filter to check.
  * @param[in] topicFilterLength Length of topic filter.
- * @param[out] pIsMatch This is filled with the whether there
- * exists a match or not.
+ * @param[out] pIsMatch If the match is performed without any error, that is if the
+ * return value is MQTTSuccess, then and only then the value in this parameter is valid
+ * and updated. In such a case, if the topic filter and the topic name match, then this
+ * value is set to true; otherwise if there is no match then it is set to false.
  *
  * @note The API assumes that the passed topic name is valid to meet the
  * requirements of the MQTT 3.1.1 specification. Invalid topic names (for example,
@@ -865,5 +1226,33 @@ MQTTStatus_t MQTT_GetSubAckStatusCodes( const MQTTPacketInfo_t * pSubackPacket,
 /* @[declare_mqtt_status_strerror] */
 const char * MQTT_Status_strerror( MQTTStatus_t status );
 /* @[declare_mqtt_status_strerror] */
+
+/**
+ * @brief Get the bytes in a #MQTTVec pointer which can store the whole array as a an MQTT packet when calling MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
+ *
+ * @param[in] pVec The #MQTTVec pointer.
+ *
+ * @return The bytes in the provided #MQTTVec array which can then be used to set aside memory to be used with MQTT_SerializeMQTTVec( void * pAllocatedMem, MQTTVec_t *pVec ) function.
+ */
+/* @[declare_mqtt_getbytesinmqttvec] */
+size_t MQTT_GetBytesInMQTTVec( MQTTVec_t * pVec );
+/* @[declare_mqtt_getbytesinmqttvec] */
+
+/**
+ * @brief Serialize the bytes in an array of #MQTTVec in the provided \p pAllocatedMem
+ *
+ * @param[in] pAllocatedMem Memory in which to serialize the data in the #MQTTVec array. It must be of size provided by MQTT_GetBytesInMQTTVec( MQTTVec_t *pVec ).
+ * @param[in] pVec The #MQTTVec pointer.
+ */
+/* @[declare_mqtt_serializemqttvec] */
+void MQTT_SerializeMQTTVec( uint8_t * pAllocatedMem,
+                            MQTTVec_t * pVec );
+/* @[declare_mqtt_serializemqttvec] */
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    }
+#endif
+/* *INDENT-ON* */
 
 #endif /* ifndef CORE_MQTT_H */

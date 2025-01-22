@@ -88,7 +88,12 @@ void tal_free(void *ptr)
  */
 void *tal_calloc(size_t nitems, size_t size)
 {
-    return tkl_system_calloc(nitems, size);
+    // PR_DEBUG("calloc nitems:%d size:%d 0x%x", nitems, size);
+    void *p = tkl_system_calloc(nitems, size);
+
+    if (p == NULL)
+        PR_ERR("calloc failed free:0x%x", tal_system_get_free_heap_size());
+    return p;
 }
 
 /**

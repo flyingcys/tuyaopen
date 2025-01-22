@@ -12,7 +12,7 @@
  */
 
 #include "iotdns.h"
-#include "http_parser.h"
+// #include "http_parser.h"
 #include "http_client_interface.h"
 #include "tal_time_service.h"
 #include "tal_log.h"
@@ -173,58 +173,58 @@ int tuya_http_client_post_simple(char *url, char *body, http_client_header_t *he
 {
     int rt = OPRT_OK;
 
-    http_client_request_t request = {0};
-    struct http_parser_url purl;
-    bool is_ssl = false;
+//     http_client_request_t request = {0};
+//     struct http_parser_url purl;
+//     bool is_ssl = false;
 
-    http_parser_url_init(&purl);
-    if (0 != http_parser_parse_url(url, strlen(url), 0, &purl)) {
-        rt = OPRT_COM_ERROR;
-        goto __exit;
-    }
-    if (0 == memcmp("https", url + purl.field_data[UF_SCHEMA].off, strlen("https"))) {
-        is_ssl = true;
-        request.port = 443;
-    } else {
-        request.port = 80;
-    }
-    if (purl.field_set & 1 << UF_PORT) {
-        request.port = purl.port;
-    }
-    request.body = body;
-    request.body_length = body ? strlen(body) : 0;
-    request.method = "POST";
-    request.headers = headers;
-    request.headers_count = headers_count;
-    request.host = tal_calloc(1, purl.field_data[UF_HOST].len + 1);
-    request.path = tal_calloc(1, strlen(url) - purl.field_data[UF_PATH].off + 1);
-    if (NULL == request.host || NULL == request.path) {
-        rt = OPRT_MALLOC_FAILED;
-        goto __exit;
-    }
-    memcpy(request.host, url + purl.field_data[UF_HOST].off, purl.field_data[UF_HOST].len);
-    memcpy(request.path, url + purl.field_data[UF_PATH].off, strlen(url) - purl.field_data[UF_PATH].off);
-    PR_DEBUG("path %s", request.path);
-    //! cert load
-    if (is_ssl) {
-        TUYA_CALL_ERR_GOTO(tuya_http_cert_load((char *)request.host, request.port, (uint8_t **)&request.cacert,
-                                               (uint16_t *)&request.cacert_len),
-                           __exit);
-    }
+//     http_parser_url_init(&purl);
+//     if (0 != http_parser_parse_url(url, strlen(url), 0, &purl)) {
+//         rt = OPRT_COM_ERROR;
+//         goto __exit;
+//     }
+//     if (0 == memcmp("https", url + purl.field_data[UF_SCHEMA].off, strlen("https"))) {
+//         is_ssl = true;
+//         request.port = 443;
+//     } else {
+//         request.port = 80;
+//     }
+//     if (purl.field_set & 1 << UF_PORT) {
+//         request.port = purl.port;
+//     }
+//     request.body = body;
+//     request.body_length = body ? strlen(body) : 0;
+//     request.method = "POST";
+//     request.headers = headers;
+//     request.headers_count = headers_count;
+//     request.host = tal_calloc(1, purl.field_data[UF_HOST].len + 1);
+//     request.path = tal_calloc(1, strlen(url) - purl.field_data[UF_PATH].off + 1);
+//     if (NULL == request.host || NULL == request.path) {
+//         rt = OPRT_MALLOC_FAILED;
+//         goto __exit;
+//     }
+//     memcpy(request.host, url + purl.field_data[UF_HOST].off, purl.field_data[UF_HOST].len);
+//     memcpy(request.path, url + purl.field_data[UF_PATH].off, strlen(url) - purl.field_data[UF_PATH].off);
+//     PR_DEBUG("path %s", request.path);
+//     //! cert load
+//     if (is_ssl) {
+//         TUYA_CALL_ERR_GOTO(tuya_http_cert_load((char *)request.host, request.port, (uint8_t **)&request.cacert,
+//                                                (uint16_t *)&request.cacert_len),
+//                            __exit);
+//     }
 
-    http_client_status_t http_status = http_client_request(&request, response);
-    if (HTTP_CLIENT_SUCCESS != http_status) {
-        PR_ERR("http_request_send error:%d", http_status);
-        rt = OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
-    }
+//     http_client_status_t http_status = http_client_request(&request, response);
+//     if (HTTP_CLIENT_SUCCESS != http_status) {
+//         PR_ERR("http_request_send error:%d", http_status);
+//         rt = OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
+//     }
 
-__exit:
-    if (request.host) {
-        tal_free(request.host);
-    }
-    if (request.path) {
-        tal_free(request.path);
-    }
+// __exit:
+//     if (request.host) {
+//         tal_free(request.host);
+//     }
+//     if (request.path) {
+//         tal_free(request.path);
+//     }
 
     return rt;
 }

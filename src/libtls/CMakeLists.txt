@@ -9,7 +9,7 @@ set(MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 # MODULE_NAME
 get_filename_component(MODULE_NAME ${MODULE_PATH} NAME)
 
-set(MBEDTLS mbedtls-3.1.0)
+set(MBEDTLS mbedtls-3.4.0)
 
 # LIB_SRCS
 file(GLOB_RECURSE 

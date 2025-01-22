@@ -1,0 +1,113 @@
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "buffer.h"
+#include "utils.h"
+
+#include "tal_log.h"
+#include "tal_memory.h"
+Buffer* buffer_new(int size) {
+  Buffer* rb;
+  rb = (Buffer*)tal_calloc(1, sizeof(Buffer));
+  if (rb == NULL) {
+    PR_ERR("buffer_new calloc failed\n");
+    return NULL;
+  }
+  rb->data = (uint8_t*)tal_calloc(1, size);
+  rb->size = size;
+  rb->head = 0;
+  rb->tail = 0;
+
+  return rb;
+}
+
+void buffer_clear(Buffer* rb) {
+  rb->head = 0;
+  rb->tail = 0;
+}
+
+void buffer_free(Buffer* rb) {
+  if (rb) {
+    tal_free(rb->data);
+    rb->data = NULL;
+    tal_free(rb);
+    rb = NULL;
+  }
+}
+
+int buffer_push_tail(Buffer* rb, const uint8_t* data, int size) {
+  if (!rb || !data || size <= 0) {
+    return -1;
+  }
+
+  int free_space = (rb->size + rb->head - rb->tail - 1) % rb->size;
+
+  int align_size = ALIGN32(size + 4);
+
+  if (align_size > free_space) {
+    PR_ERR("no enough space");
+    return -1;
+  }
+
+  int tail_end = (rb->tail + align_size) % rb->size;
+
+  if (tail_end < rb->tail) {
+    if (rb->head < align_size) {
+      PR_ERR("no enough space");
+      return -1;
+    }
+
+    int* p = (int*)(rb->data + rb->tail);
+    *p = size;
+    memcpy(rb->data, data, size);
+    rb->tail = size;
+
+  } else {
+    int* p = (int*)(rb->data + rb->tail);
+    *p = size;
+    memcpy(rb->data + rb->tail + 4, data, size);
+    rb->tail = tail_end;
+  }
+
+  return size;
+}
+
+uint8_t* buffer_peak_head(Buffer* rb, int* size) {
+  if (!rb || rb->head == rb->tail) {
+    return NULL;
+  }
+
+  *size = *((int*)(rb->data + rb->head));
+
+  int align_size = ALIGN32(*size + 4);
+
+  int head_end = (rb->head + align_size) % rb->size;
+
+  if (head_end < rb->head) {
+    return rb->data;
+
+  } else {
+    return rb->data + (rb->head + 4);
+  }
+}
+
+void buffer_pop_head(Buffer* rb) {
+  if (!rb || rb->head == rb->tail) {
+    return;
+  }
+
+  int* size = (int*)(rb->data + rb->head);
+
+  int align_size = ALIGN32(*size + 4);
+
+  int head_end = (rb->head + align_size) % rb->size;
+
+  if (head_end < rb->head) {
+    rb->head = *size;
+
+  } else {
+    rb->head = rb->head + align_size;
+  }
+}

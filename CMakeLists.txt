@@ -127,7 +127,7 @@ target_include_directories(${EXAMPLE_LIB}
     PUBLIC
     ${HEADER_DIR}
     )
-target_link_libraries(${EXAMPLE_LIB} ${COMPONENTS_ALL_LIB})
+target_link_libraries(${EXAMPLE_LIB} ${COMPONENTS_ALL_LIB} libp2p libtls)
 add_custom_target(example
     WORKING_DIRECTORY
     ${TOP_SOURCE_DIR}

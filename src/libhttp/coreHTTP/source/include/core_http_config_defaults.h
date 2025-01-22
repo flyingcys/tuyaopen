@@ -1,6 +1,8 @@
 /*
- * coreHTTP v2.0.1
- * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * coreHTTP v3.1.1
+ * Copyright (C) 2024 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ *
+ * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -20,8 +22,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "tal_log.h"
-
 /**
  * @file core_http_config_defaults.h
  * @brief The default values for the configuration macros for the HTTP Client
@@ -37,20 +37,11 @@
 #ifndef CORE_HTTP_CONFIG_DEFAULTS_
 #define CORE_HTTP_CONFIG_DEFAULTS_
 
-/**
- * @brief Maximum size, in bytes, of headers allowed from the server.
- *
- * If the total size in bytes of the headers received from the server exceeds
- * this configuration, then the status code
- * #HTTPSecurityAlertResponseHeadersSizeLimitExceeded is returned from
- * #HTTPClient_Send.
- *
- * <b>Possible values:</b> Any positive 32 bit integer. <br>
- * <b>Default value:</b> `2048`
- */
-#ifndef HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES
-    #define HTTP_MAX_RESPONSE_HEADERS_SIZE_BYTES    2048U
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    extern "C" {
 #endif
+/* *INDENT-ON* */
 
 /**
  * @brief The HTTP header "User-Agent" value.
@@ -130,7 +121,7 @@
  * to the macro in the HTTP Client library on compilation.
  */
 #ifndef LogError
-    #define LogError( message ) PR_ERR message
+    #define LogError( message )
 #endif
 
 /**
@@ -150,7 +141,7 @@
  * to the macro in the HTTP Client library on compilation.
  */
 #ifndef LogWarn
-    #define LogWarn( message )  PR_WARN message
+    #define LogWarn( message )
 #endif
 
 /**
@@ -170,7 +161,7 @@
  * to the macro in the HTTP Client library on compilation.
  */
 #ifndef LogInfo
-    #define LogInfo( message )  PR_INFO message
+    #define LogInfo( message )
 #endif
 
 /**
@@ -190,7 +181,13 @@
  * to the macro in the HTTP Client library on compilation.
  */
 #ifndef LogDebug
-    #define LogDebug( message )     PR_TRACE message
+    #define LogDebug( message )
 #endif
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    }
+#endif
+/* *INDENT-ON* */
 
 #endif /* ifndef CORE_HTTP_CONFIG_DEFAULTS_ */
