@@ -26,4 +26,6 @@ target_include_directories(${COMPONENT_NAME}
     ${INCS}
 )
 
+# target_compile_definitions(${COMPONENT_NAME} PUBLIC "-DHTTP_DO_NOT_USE_CUSTOM_CONFIG")
+
 target_link_libraries(${COMPONENT_NAME} PUBLIC tal_system tal_kv)

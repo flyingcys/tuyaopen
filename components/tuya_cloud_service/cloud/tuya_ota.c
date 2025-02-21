@@ -20,7 +20,7 @@
 #include "tuya_endpoint.h"
 #include "iotdns.h"
 #include "mix_method.h"
-#include "tkl_hash.h"
+#include "tal_hash.h"
 
 typedef struct {
     tuya_ota_config_t config;

@@ -13,6 +13,7 @@
 #ifndef _CORE_HTTP_CONFIG_
 #define _CORE_HTTP_CONFIG_
 
+#include "tal_memory.h"
 /**
  * @brief Maximum size, in bytes, of headers allowed from the server.
  *

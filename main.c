@@ -201,7 +201,9 @@ int main(int argc, char *argv[])
     tal_sw_timer_init();
     tal_workq_init();
 
-    #if 0
+#if 1
+    OPERATE_RET rt = OPRT_OK;
+
     tuya_tls_init();
     tuya_register_center_init();
     
@@ -228,7 +230,7 @@ int main(int argc, char *argv[])
                                         .headers_count = sizeof(headers) / sizeof(http_client_header_t),
                                         .body = "",
                                         .body_length = 0,
-                                        .timeout_ms = 10},
+                                        .timeout_ms = 1000},
         &http_response);
 
     if (HTTP_CLIENT_SUCCESS != http_status) {
@@ -240,7 +242,9 @@ int main(int argc, char *argv[])
     PR_DEBUG((char *)http_response.body);
 err_exit:
     http_client_free(&http_response);
-#endif
+
+    return 0;
+#else
 
     // network init
     netmgr_type_e type = 0;
@@ -277,5 +281,7 @@ err_exit:
         /* Loop to receive packets, and handles client keepalive */
         tuya_iot_yield(&client);
     }
+#endif
+
     return 0;
 }

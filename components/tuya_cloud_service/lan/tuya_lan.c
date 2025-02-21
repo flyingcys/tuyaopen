@@ -25,6 +25,7 @@
 #include "uni_random.h"
 #include "tuya_lan.h"
 #include "tal_network.h"
+#include "tal_hash.h"
 #include "mix_method.h"
 #include "lan_sock.h"
 #include "tuya_iot_dp.h"
