@@ -18,7 +18,9 @@ int main(int argc, char *argv[])
     printf("cJSON_Version: %s\n", cJSON_Version());
 
     OPERATE_RET rt = OPRT_OK;
-
+    uint16_t cacert_len = 0;
+    uint8_t *cacert = NULL;
+    
     cJSON_InitHooks(&(cJSON_Hooks){.malloc_fn = tal_malloc, .free_fn = tal_free});
 
     /* basic init */
@@ -29,9 +31,14 @@ int main(int argc, char *argv[])
     });
     tal_sw_timer_init();
     tal_workq_init();
-
+    tuya_tls_init();
+    tuya_register_center_init();
+    
     /* HTTP Response */
     http_client_response_t http_response = {0};
+
+    /* HTTPS cert */
+    TUYA_CALL_ERR_RETURN(tuya_iotdns_query_domain_certs(URL, &cacert, &cacert_len));
 
     /* HTTP headers */
     http_client_header_t headers[] = {{.key = "Content-Type", .value = "application/json"}};
@@ -39,14 +46,18 @@ int main(int argc, char *argv[])
     /* HTTP Request send */
     PR_DEBUG("http request send!");
     http_client_status_t http_status = http_client_request(
-        &(const http_client_request_t){.host = URL,
-                                       .method = "GET",
-                                       .path = PATH,
-                                       .headers = headers,
-                                       .headers_count = sizeof(headers) / sizeof(http_client_header_t),
-                                       .body = "",
-                                       .body_length = 0,
-                                       .timeout_ms = 10},
+        &(const http_client_request_t){
+                                        .cacert = cacert,
+                                        .cacert_len = cacert_len,
+                                        .host = URL,
+                                        .port = 443,
+                                        .method = "GET",
+                                        .path = PATH,
+                                        .headers = headers,
+                                        .headers_count = sizeof(headers) / sizeof(http_client_header_t),
+                                        .body = "",
+                                        .body_length = 0,
+                                        .timeout_ms = 10},
         &http_response);
 
     if (HTTP_CLIENT_SUCCESS != http_status) {

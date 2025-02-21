@@ -13,6 +13,8 @@ set(INCS
     "include/rtc"
     "include/wired"
     "include/security"
+    "include/wired"
+    "include/init/include"
 )
 
 add_library(${COMPONENT_NAME} 

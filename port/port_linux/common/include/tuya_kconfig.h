@@ -11,115 +11,62 @@
 extern "C" {
 #endif
 
-#define PROJECT_VERSION "1.0.0"
+
 //
-// configure open-sdk-for-device
+// config of linux-ubuntu-6.2.0_64Bit
 //
 
 //
-// configure tuya cloud service
+// board
 //
-// #define MBEDTLS_CONFIG_FILE "tuya_tls_config.h"
+#define OPERATING_SYSTEM 100
+#define ENABLE_WIRED 1
+#define LITTLE_END 1
+#define WLAN_DEV "wlan0"
+#define WLAN_AP "wlan1"
+// CONFIG_NL80211 is not set
+#define WIFI_DB_PATH "./tuya_db_files"
+// end of board
+
+// CONFIG_ENABLE_LIBLWIP is not set
+
+//
+// mbedtls Config
+//
+// CONFIG_ENABLE_BLACK_WHITE_LIST is not set
+#define MBEDTLS_CONFIG_FILE "tuya_tls_config.h"
+#define MAX_SECURITY_LEVEL 1
 #define TUYA_SECURITY_LEVEL 1
-#define ENABLE_BT_SERVICE 1
-#define ENABLE_BT_NETCFG 1
-#define ENABLE_BT_CTRL 1
-#define BT_ADV_INTERVAL_MIN 30
-#define BT_ADV_INTERVAL_MAX 60
-#define BT_REMOTE_CTRL_SCAN_INTERVAL 30
-#define BT_REMOTE_CTRL_SCAN_WINDOWS 10
-#define ENABLE_NIMBLE 1
-#define TUYA_HS_BLE_HOST_TASK_PRIORITY 9
-#define TUYA_HS_BLE_HOST_STACK_SIZE 5120
-// end of configure tuya cloud service
-
-//
-// configure enable/disable liblwip
-//
-#define ENABLE_LIBLWIP 1
-#define LWIP_TCP_HEAD_ALLOC_REUSE_POLL 0
-#define LWIP_TUYA_APP_TCPIP_THREAD_SWITCH 1
-#define IPEF_TEST_OPTIMIZE 0
-#define MEM_SIZE 13312
-#define MEMP_NUM_UDP_PCB 6
-#define MEMP_NUM_TCP_PCB 10
-#define MEMP_NUM_TCP_PCB_LISTEN 5
-#define MEMP_NUM_NETCONN 21
-#define MEMP_NUM_PBUF 100
-#define MEMP_NUM_TCP_SEG 20
-#define IP_REASS_MAX_PBUFS 10
-#define PBUF_POOL_SIZE 20
-#define PBUF_LINK_ENCAPSULATION_HLEN 0
-#define TCP_SND_BUF 7300
-#define TCP_SND_QUEUELEN 20
-#define MEMP_NUM_NETBUF 8
-#define TCPIP_MBOX_SIZE 6
-#define DEFAULT_UDP_RECVMBOX_SIZE 6
-#define DEFAULT_TCP_RECVMBOX_SIZE 6
-#define DEFAULT_RAW_RECVMBOX_SIZE 6
-#define DEFAULT_ACCEPTMBOX_SIZE 6
-#define MEMP_NUM_SYS_TIMEOUT 10
-#define LWIP_SO_SNDTIMEO 1
-#define LWIP_SO_RCVTIMEO 1
-#define LWIP_SO_LINGER 1
-#define LWIP_TUYA_SO_LINGER_RST 1
-#define LWIP_PROVIDE_ERRNO 1
-#define LWIP_IPV6 0
-#define LWIP_NETIF_HOSTNAME 1
-#define LWIP_TCPIP_CORE_LOCKING 1
-#define LWIP_EAPOL_SUPPORT 0
-#define TCPIP_THREAD_STACKSIZE 4096
-#define TCPIP_THREAD_PRIO 9
-#define DHCPC_THREAD_STACKSIZE 2048
-#define DHCPC_THREAD_PRIO 5
-#define LWIP_TX_PBUF_ZERO_COPY 0
-#define CONFIG_TUYA_SOCK_SHIM 0
-#define SOCK_API_SYNC 0
-#define LWIP_DHCPC_STATIC_IPADDR_ENABLE 1
-#define LWIP_NETCONN_SEM_PER_THREAD 1
-#define ETHARP_SUPPORT_STATIC_ENTRIES 1
-#define LWIP_NETIF_STATUS_CALLBACK 1
-#define LWIP_COMPAT_MUTEX_ALLOWED 1
-#define LWIP_TIMEVAL_PRIVATE 1
-// CONFIG_IN_ADDR_T_DEFINED is not set
-#define LWIP_NETCONN_FULLDUPLEX 1
-// CONFIG_MEM_LIBC_MALLOC is not set
-// end of configure enable/disable liblwip
-
-//
-// configure mbedtls
-//
 // CONFIG_ENABLE_MBEDTLS_DEBUG is not set
 // CONFIG_ENABLE_CUSTOM_CONFIG is not set
-// end of configure mbedtls
+// end of mbedtls Config
 
 //
-// configure system parameter
+// System function Config
 //
+#define ENABLE_LOG 1
 #define STACK_SIZE_TIMERQ 4096
 #define STACK_SIZE_WORK_QUEUE 5120
 #define MAX_NODE_NUM_WORK_QUEUE 100
 #define STACK_SIZE_MSG_QUEUE 4096
 #define MAX_NODE_NUM_MSG_QUEUE 100
-// end of configure system parameter
-// end of configure open-sdk-for-device
+// end of System function Config
 
 //
-// configure t2
+// tuya cloud
 //
-#define PLATFORM_T2 1
-#define OPERATING_SYSTEM 100
-#define ENABLE_WIFI 1
-#define ENABLE_BLUETOOTH 1
-#define ENABLE_ADC 1
-#define ENABLE_GPIO 1
-#define ENABLE_PWM 1
-#define ENABLE_I2C 1
-#define ENABLE_SPI 1
-#define ENABLE_TIMER 1
-#define ENABLE_WATCHDOG 1
-#define LITTLE_END 1
-// end of configure t2
+// CONFIG_ENABLE_BT_SERVICE=y
+// CONFIG_ENABLE_BT_NETCFG=y
+// CONFIG_ENABLE_BT_CTRL=y
+// CONFIG_BT_ADV_INTERVAL_MIN=30
+// CONFIG_BT_ADV_INTERVAL_MAX=60
+// CONFIG_BT_REMOTE_CTRL_SCAN_INTERVAL=30
+// CONFIG_BT_REMOTE_CTRL_SCAN_WINDOWS=10
+// CONFIG_TUYA_BLE_VER=4
+// CONFIG_ENABLE_TAL_BLUETOOTH=y
+// CONFIG_TAL_BLE_SERVICE_VERSION=2
+// CONFIG_ENABLE_NIMBLE is not set
+// end of tuya cloud
 
 
 #ifdef __cplusplus

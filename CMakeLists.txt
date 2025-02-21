@@ -17,6 +17,7 @@ set(CONFIG_ENABLE_TAL_SECURITY "Enable tal_security" ON)
 set(CONFIG_ENABLE_MBEDTLS "Enable mbedtls" ON)
 set(CONFIG_ENABLE_TAL_COMMUNICATION "Enable tal_communication" ON)
 set(CONFIG_ENABLE_UTILITIES "Enable utilities" ON)
+set(CONFIG_ENABLE_TUYA_CLOUD_SERVICE "Enable tuya_cloud_service" ON)
 
 add_executable(${PROJECT_NAME} 
     main.c
