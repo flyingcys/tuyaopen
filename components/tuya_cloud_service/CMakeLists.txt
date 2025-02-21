@@ -27,11 +27,11 @@ if(CONFIG_ENABLE_WIFI STREQUAL "y")
     list(APPEND  INCS netcfg)    
 endif()
 
-if(CONFIG_ENABLE_WIRED STREQUAL "y")
+# if(CONFIG_ENABLE_WIRED STREQUAL "y")
     file(GLOB_RECURSE WIRED_SRCS 
         "netmgr/netconn_wired.c")
     list(APPEND SRCS ${WIRED_SRCS})
-endif()
+# endif()
 
 if(CONFIG_ENABLE_BLUETOOTH STREQUAL "y")
     file(GLOB_RECURSE BLE_SRCS  

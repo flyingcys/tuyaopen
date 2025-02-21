@@ -19,11 +19,34 @@ set(CONFIG_ENABLE_TAL_COMMUNICATION "Enable tal_communication" ON)
 set(CONFIG_ENABLE_UTILITIES "Enable utilities" ON)
 set(CONFIG_ENABLE_TUYA_CLOUD_SERVICE "Enable tuya_cloud_service" ON)
 
-add_executable(${PROJECT_NAME} 
-    main.c
+
+set(CONFIG_ENABLE_WIRED "Enable wired" ON)
+
+set(SRCS 
+    "main.c"
+    "qrencode_print.c"
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC .)
+list(APPEND SRCS 
+    "libqrencode/qrencode.c"
+    "libqrencode/qrinput.c"
+    "libqrencode/bitstream.c"
+    "libqrencode/qrspec.c"
+    "libqrencode/rsecc.c"
+    "libqrencode/split.c"
+    "libqrencode/mask.c"
+    "libqrencode/mqrspec.c"
+    "libqrencode/mmask.c"
+)
+
+add_executable(${PROJECT_NAME} 
+    ${SRCS}
+)
+
+target_include_directories(${PROJECT_NAME} PUBLIC . "libqrencode")
+
+add_definitions(-DSTATIC_IN_RELEASE=static)
+add_definitions(-DMAJOR_VERSION=4 -DMINOR_VERSION=1 -DMICRO_VERSION=1 -DVERSION=\"4.1.1\")
 
 set(COMPONENT_LIBS "")
 
