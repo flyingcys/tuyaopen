@@ -169,6 +169,98 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
     }
 }
 
+#include "core_mqtt_config.h"
+#include "core_mqtt.h"
+#include "tuya_config_defaults.h"
+
+typedef struct {
+    mqtt_client_config_t config;
+    MQTTContext_t mqclient;
+    tuya_transporter_t network;
+    uint8_t mqttbuffer[CORE_MQTT_BUFFER_SIZE];
+} mqtt_client_context_t;
+
+static void mqtt_client_connected_cb(void *client, void *userdata)
+{
+    PR_INFO("mqtt client connected! try to subscribe tuya/tos-test");
+    uint16_t msgid = mqtt_client_subscribe(client, "tuya/tos-test", MQTT_QOS_0);
+    if (msgid <= 0) {
+        PR_ERR("Subscribe failed!");
+    }
+    PR_DEBUG("Subscribe topic tuya/tos-test ID:%d", msgid);
+}
+
+static void mqtt_client_disconnected_cb(void *client, void *userdata)
+{
+    PR_INFO("mqtt client disconnected!");
+
+    // PR_DEBUG("MQTT Client Deinit");
+    // mqtt_client_deinit(client);
+}
+
+static void mqtt_client_message_cb(void *client, uint16_t msgid, const mqtt_client_message_t *msg, void *userdata)
+{
+    PR_DEBUG("recv message TopicName:%s, payload len:%d", msg->topic, msg->length);
+}
+
+static void mqtt_client_subscribed_cb(void *client, uint16_t msgid, void *userdata)
+{
+    PR_DEBUG("Subscribe successed ID:%d", msgid);
+    uint16_t new_msgid = mqtt_client_publish(client, "tuya/tos-test", "hello, tuya-open-sdk-for-device",
+                                             strlen("hello, tuya-open-sdk-for-device") + 1, MQTT_QOS_1);
+    if (new_msgid <= 0) {
+        PR_ERR("Publish failed!");
+    }
+    PR_DEBUG("Publish msg ID:%d", new_msgid);
+}
+
+static void mqtt_client_puback_cb(void *client, uint16_t msgid, void *userdata)
+{
+    PR_DEBUG("PUBACK successed ID:%d", msgid);
+    PR_DEBUG("UnSubscribe topic tuya/tos-test");
+    mqtt_client_unsubscribe(client, "tuya/tos-test", MQTT_QOS_0);
+
+    // PR_DEBUG("MQTT Client Disconnect");
+    // mqtt_client_disconnect(client);
+}
+
+static void mqtt_client_example(void)
+{
+    PR_DEBUG("start mqtt client to broker.emqx.io");
+
+    /* MQTT Client init */
+    mqtt_client_context_t mqtt_client = {0};
+    mqtt_client_status_t mqtt_status;
+    const mqtt_client_config_t mqtt_config = {.cacert = NULL,
+                                              .cacert_len = 0,
+                                              .host = "broker.emqx.io",
+                                              .port = 1883,
+                                              .keepalive = MQTT_KEEPALIVE_INTERVALIN,
+                                              .timeout_ms = MATOP_TIMEOUT_MS_DEFAULT,
+                                              .clientid = "tuya-open-sdk-for-device-01",
+                                              .username = "emqx",
+                                              .password = "public",
+                                              .on_connected = mqtt_client_connected_cb,
+                                              .on_disconnected = mqtt_client_disconnected_cb,
+                                              .on_message = mqtt_client_message_cb,
+                                              .on_subscribed = mqtt_client_subscribed_cb,
+                                              .on_published = mqtt_client_puback_cb,
+                                              .userdata = NULL};
+    mqtt_status = mqtt_client_init(&mqtt_client, &mqtt_config);
+    if (mqtt_status != MQTT_STATUS_SUCCESS) {
+        PR_ERR("MQTT init failed: Status = %d.", mqtt_status);
+        return OPRT_COM_ERROR;
+    }
+
+    mqtt_status = mqtt_client_connect(&mqtt_client);
+    if (MQTT_STATUS_NOT_AUTHORIZED == mqtt_status) {
+        PR_ERR("MQTT connect fail:%d", mqtt_status);
+        return OPRT_AUTHENTICATION_FAIL;
+    }
+
+    mqtt_client_yield(&mqtt_client);
+}
+
 /**
  * @brief user defined network check callback, it will check the network every
  * 1sec, in this demo it alwasy return ture due to it's a wired demo
@@ -201,7 +293,10 @@ int main(int argc, char *argv[])
     tal_sw_timer_init();
     tal_workq_init();
 
-#if 1
+
+    // mqtt_client_example();
+
+#if 0
     OPERATE_RET rt = OPRT_OK;
 
     tuya_tls_init();
@@ -246,15 +341,7 @@ err_exit:
     return 0;
 #else
 
-    // network init
-    netmgr_type_e type = 0;
-#if defined(ENABLE_WIFI) && (ENABLE_WIFI == 1)
-    type |= NETCONN_WIFI;
-#endif
-#if defined(ENABLE_WIRED) && (ENABLE_WIRED == 1)
-    type |= NETCONN_WIRED;
-#endif
-    netmgr_init(type);
+
     
     OPERATE_RET rt = OPRT_OK;
 
@@ -270,8 +357,21 @@ err_exit:
                                      .event_handler = user_event_handler_on,
                                      .network_check = user_network_check,
                                  });
+    if (OPRT_OK != rt) {
+        PR_ERR("tuya_iot_init error:%d", rt);
+        return -1;
+    }
 
-    PR_ERR("tuya_iot_init error:%d", rt);
+    // network init
+    netmgr_type_e type = 0;
+    #if defined(ENABLE_WIFI) && (ENABLE_WIFI == 1)
+        type |= NETCONN_WIFI;
+    #endif
+    #if defined(ENABLE_WIRED) && (ENABLE_WIRED == 1)
+        type |= NETCONN_WIRED;
+    #endif
+
+    netmgr_init(type);
 
     PR_DEBUG("tuya_iot_init success");
     /* Start tuya iot task */
