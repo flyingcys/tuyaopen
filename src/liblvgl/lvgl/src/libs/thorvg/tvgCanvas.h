@@ -28,49 +28,48 @@
 
 #include "tvgPaint.h"
 
+struct Canvas::Impl {
+    enum Status : uint8_t { Synced = 0, Updating, Drawing };
 
-struct Canvas::Impl
-{
-    enum Status : uint8_t {Synced = 0, Updating, Drawing};
-
-    list<Paint*> paints;
-    RenderMethod* renderer;
+    list<Paint *> paints;
+    RenderMethod *renderer;
     RenderRegion vport = {0, 0, INT32_MAX, INT32_MAX};
     Status status = Status::Synced;
 
-    bool refresh = false;   //if all paints should be updated by force.
+    bool refresh = false; // if all paints should be updated by force.
 
-    Impl(RenderMethod* pRenderer) : renderer(pRenderer)
-    {
-        renderer->ref();
-    }
+    Impl(RenderMethod *pRenderer) : renderer(pRenderer) { renderer->ref(); }
 
     ~Impl()
     {
-        //make it sure any deferred jobs
+        // make it sure any deferred jobs
         renderer->sync();
         renderer->clear();
 
         clearPaints();
 
-        if (renderer->unref() == 0) delete(renderer);
+        if (renderer->unref() == 0)
+            delete (renderer);
     }
 
     void clearPaints()
     {
         for (auto paint : paints) {
-            if (P(paint)->unref() == 0) delete(paint);
+            if (P(paint)->unref() == 0)
+                delete (paint);
         }
         paints.clear();
     }
 
     Result push(unique_ptr<Paint> paint)
     {
-        //You cannot push paints during rendering.
-        if (status == Status::Drawing) return Result::InsufficientCondition;
+        // You cannot push paints during rendering.
+        if (status == Status::Drawing)
+            return Result::InsufficientCondition;
 
         auto p = paint.release();
-        if (!p) return Result::MemoryCorruption;
+        if (!p)
+            return Result::MemoryCorruption;
         PP(p)->ref();
         paints.push_back(p);
 
@@ -79,29 +78,30 @@ struct Canvas::Impl
 
     Result clear(bool free)
     {
-        //Clear render target before drawing
-        if (!renderer->clear()) return Result::InsufficientCondition;
+        // Clear render target before drawing
+        if (!renderer->clear())
+            return Result::InsufficientCondition;
 
-        //Free paints
-        if (free) clearPaints();
+        // Free paints
+        if (free)
+            clearPaints();
 
         status = Status::Synced;
 
         return Result::Success;
     }
 
-    void needRefresh()
-    {
-        refresh = true;
-    }
+    void needRefresh() { refresh = true; }
 
-    Result update(Paint* paint, bool force)
+    Result update(Paint *paint, bool force)
     {
-        if (paints.empty() || status == Status::Drawing) return Result::InsufficientCondition;
+        if (paints.empty() || status == Status::Drawing)
+            return Result::InsufficientCondition;
 
         Array<RenderData> clips;
         auto flag = RenderUpdateFlag::None;
-        if (refresh || force) flag = RenderUpdateFlag::All;
+        if (refresh || force)
+            flag = RenderUpdateFlag::All;
 
         if (paint) {
             paint->pImpl->update(renderer, nullptr, clips, 255, flag);
@@ -117,14 +117,17 @@ struct Canvas::Impl
 
     Result draw()
     {
-        if (status == Status::Drawing || paints.empty() || !renderer->preRender()) return Result::InsufficientCondition;
+        if (status == Status::Drawing || paints.empty() || !renderer->preRender())
+            return Result::InsufficientCondition;
 
         bool rendered = false;
         for (auto paint : paints) {
-            if (paint->pImpl->render(renderer)) rendered = true;
+            if (paint->pImpl->render(renderer))
+                rendered = true;
         }
 
-        if (!rendered || !renderer->postRender()) return Result::InsufficientCondition;
+        if (!rendered || !renderer->postRender())
+            return Result::InsufficientCondition;
 
         status = Status::Drawing;
         return Result::Success;
@@ -132,7 +135,8 @@ struct Canvas::Impl
 
     Result sync()
     {
-        if (status == Status::Synced) return Result::InsufficientCondition;
+        if (status == Status::Synced)
+            return Result::InsufficientCondition;
 
         if (renderer->sync()) {
             status = Status::Synced;
@@ -144,14 +148,16 @@ struct Canvas::Impl
 
     Result viewport(int32_t x, int32_t y, int32_t w, int32_t h)
     {
-        if (status != Status::Synced) return Result::InsufficientCondition;
+        if (status != Status::Synced)
+            return Result::InsufficientCondition;
         RenderRegion val = {x, y, w, h};
-        //intersect if the target buffer is already set.
+        // intersect if the target buffer is already set.
         auto surface = renderer->mainSurface();
         if (surface && surface->w > 0 && surface->h > 0) {
             val.intersect({0, 0, (int32_t)surface->w, (int32_t)surface->h});
         }
-        if (vport == val) return Result::Success;
+        if (vport == val)
+            return Result::Success;
         renderer->viewport(val);
         vport = val;
         needRefresh();
@@ -162,4 +168,3 @@ struct Canvas::Impl
 #endif /* _TVG_CANVAS_H_ */
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

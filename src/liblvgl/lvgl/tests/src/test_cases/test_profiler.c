@@ -6,7 +6,7 @@
 #include <string.h>
 
 #define OUTPUT_LINE_MAX 8
-#define OUTPUT_BUF_MAX 128
+#define OUTPUT_BUF_MAX  128
 
 static uint32_t profiler_tick = 0;
 static int output_line = 0;
@@ -17,7 +17,7 @@ static uint32_t get_tick_cb(void)
     return profiler_tick++;
 }
 
-static void flush_cb(const char * buf)
+static void flush_cb(const char *buf)
 {
     TEST_ASSERT_LESS_THAN(OUTPUT_LINE_MAX, output_line);
     TEST_ASSERT_LESS_THAN(OUTPUT_BUF_MAX, strlen(buf));

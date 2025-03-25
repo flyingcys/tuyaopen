@@ -36,7 +36,7 @@ extern "C" {
  * @return Pointer to the destination array.
  * @note The function does not check for any overlapping of the source and destination memory blocks.
  */
-void * lv_memcpy(void * dst, const void * src, size_t len);
+void *lv_memcpy(void *dst, const void *src, size_t len);
 
 /**
  * @brief Fills a block of memory with a specified value.
@@ -45,7 +45,7 @@ void * lv_memcpy(void * dst, const void * src, size_t len);
  *          the block of memory using the unsigned char conversion of this value.
  * @param len Number of bytes to be set to the value.
  */
-void lv_memset(void * dst, uint8_t v, size_t len);
+void lv_memset(void *dst, uint8_t v, size_t len);
 
 /**
  * @brief Move a block of memory from source to destination
@@ -54,7 +54,7 @@ void lv_memset(void * dst, uint8_t v, size_t len);
  * @param len Number of bytes to copy
  * @return Pointer to the destination array.
  */
-void * lv_memmove(void * dst, const void * src, size_t len);
+void *lv_memmove(void *dst, const void *src, size_t len);
 
 /**
  * @brief This function will compare two memory blocks
@@ -63,14 +63,14 @@ void * lv_memmove(void * dst, const void * src, size_t len);
  * @param len Number of bytes to compare
  * @return The difference between the value of the first unmatching byte.
  */
-int lv_memcmp(const void * p1, const void * p2, size_t len);
+int lv_memcmp(const void *p1, const void *p2, size_t len);
 
 /**
  * Same as `memset(dst, 0x00, len)`.
  * @param dst pointer to the destination buffer
  * @param len number of byte to set
  */
-static inline void lv_memzero(void * dst, size_t len)
+static inline void lv_memzero(void *dst, size_t len)
 {
     lv_memset(dst, 0x00, len);
 }
@@ -80,7 +80,7 @@ static inline void lv_memzero(void * dst, size_t len)
  * @param str Pointer to the null-terminated byte string to be examined.
  * @return The length of the string in bytes.
  */
-size_t lv_strlen(const char * str);
+size_t lv_strlen(const char *str);
 
 /**
  * @brief Copies up to dst_size-1 (non-null) characters from src to dst. A null terminator is always added.
@@ -89,7 +89,7 @@ size_t lv_strlen(const char * str);
  * @param dst_size Maximum number of characters to be copied to dst, including the null character.
  * @return The length of src. The return value is equivalent to the value returned by lv_strlen(src)
  */
-size_t lv_strlcpy(char * dst, const char * src, size_t dst_size);
+size_t lv_strlcpy(char *dst, const char *src, size_t dst_size);
 
 /**
  * @brief Copies up to dest_size characters from the string pointed to by src to the character array pointed to by dst
@@ -100,7 +100,7 @@ size_t lv_strlcpy(char * dst, const char * src, size_t dst_size);
  * @return A pointer to the destination array, which is dst.
  * @note dst will not be null terminated if dest_size bytes were copied from src before the end of src was reached.
  */
-char * lv_strncpy(char * dst, const char * src, size_t dest_size);
+char *lv_strncpy(char *dst, const char *src, size_t dest_size);
 
 /**
  * @brief Copies the string pointed to by src, including the terminating null character,
@@ -109,7 +109,7 @@ char * lv_strncpy(char * dst, const char * src, size_t dest_size);
  * @param src Pointer to the source of data to be copied.
  * @return A pointer to the destination array, which is dst.
  */
-char * lv_strcpy(char * dst, const char * src);
+char *lv_strcpy(char *dst, const char *src);
 
 /**
  * @brief  This function will compare two strings without specified length.
@@ -117,14 +117,14 @@ char * lv_strcpy(char * dst, const char * src);
  * @param s2    pointer to the second string
  * @return      the difference between the value of the first unmatching character.
  */
-int lv_strcmp(const char * s1, const char * s2);
+int lv_strcmp(const char *s1, const char *s2);
 
 /**
  * @brief Duplicate a string by allocating a new one and copying the content.
  * @param src Pointer to the source of data to be copied.
  * @return A pointer to the new allocated string. NULL if failed.
  */
-char * lv_strdup(const char * src);
+char *lv_strdup(const char *src);
 
 /**
  * @brief Copies the string pointed to by src, including the terminating null character,
@@ -133,7 +133,7 @@ char * lv_strdup(const char * src);
  * @param src Pointer to the source of data to be copied.
  * @return A pointer to the destination string, which is dst.
  */
-char * lv_strcat(char * dst, const char * src);
+char *lv_strcat(char *dst, const char *src);
 
 /**
  * @brief Copies up to src_len characters from the string pointed to by src
@@ -145,7 +145,7 @@ char * lv_strcat(char * dst, const char * src);
  * @param src_len Maximum number of characters from src to be copied to the end of dst.
  * @return A pointer to the destination string, which is dst.
  */
-char * lv_strncat(char * dst, const char * src, size_t src_len);
+char *lv_strncat(char *dst, const char *src, size_t src_len);
 
 /**********************
  *      MACROS

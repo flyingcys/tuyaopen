@@ -23,12 +23,12 @@ typedef struct _my_theme_t my_theme_t;
 
 #define theme_def (*(my_theme_t **)(&LV_GLOBAL_DEFAULT()->theme_simple))
 
-#define COLOR_SCR     lv_palette_lighten(LV_PALETTE_GREY, 4)
-#define COLOR_WHITE   lv_color_white()
-#define COLOR_LIGHT   lv_palette_lighten(LV_PALETTE_GREY, 2)
-#define COLOR_DARK    lv_palette_main(LV_PALETTE_GREY)
-#define COLOR_DIM     lv_palette_darken(LV_PALETTE_GREY, 2)
-#define SCROLLBAR_WIDTH     2
+#define COLOR_SCR       lv_palette_lighten(LV_PALETTE_GREY, 4)
+#define COLOR_WHITE     lv_color_white()
+#define COLOR_LIGHT     lv_palette_lighten(LV_PALETTE_GREY, 2)
+#define COLOR_DARK      lv_palette_main(LV_PALETTE_GREY)
+#define COLOR_DIM       lv_palette_darken(LV_PALETTE_GREY, 2)
+#define SCROLLBAR_WIDTH 2
 
 /**********************
  *      TYPEDEFS
@@ -59,8 +59,8 @@ struct _my_theme_t {
 /**********************
  *  STATIC PROTOTYPES
  **********************/
-static void style_init_reset(lv_style_t * style);
-static void theme_apply(lv_theme_t * th, lv_obj_t * obj);
+static void style_init_reset(lv_style_t *style);
+static void theme_apply(lv_theme_t *th, lv_obj_t *obj);
 
 /**********************
  *  STATIC VARIABLES
@@ -74,12 +74,12 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj);
  *   STATIC FUNCTIONS
  **********************/
 
-static void style_init(my_theme_t * theme)
+static void style_init(my_theme_t *theme)
 {
     style_init_reset(&theme->styles.scrollbar);
     lv_style_set_bg_opa(&theme->styles.scrollbar, LV_OPA_COVER);
     lv_style_set_bg_color(&theme->styles.scrollbar, COLOR_DARK);
-    lv_style_set_width(&theme->styles.scrollbar,  SCROLLBAR_WIDTH);
+    lv_style_set_width(&theme->styles.scrollbar, SCROLLBAR_WIDTH);
 
     style_init_reset(&theme->styles.scr);
     lv_style_set_bg_opa(&theme->styles.scr, LV_OPA_COVER);
@@ -144,14 +144,15 @@ static void style_init(my_theme_t * theme)
 
 bool lv_theme_simple_is_inited(void)
 {
-    my_theme_t * theme = theme_def;
-    if(theme == NULL) return false;
+    my_theme_t *theme = theme_def;
+    if (theme == NULL)
+        return false;
     return theme->inited;
 }
 
-lv_theme_t * lv_theme_simple_get(void)
+lv_theme_t *lv_theme_simple_get(void)
 {
-    if(!lv_theme_simple_is_inited()) {
+    if (!lv_theme_simple_is_inited()) {
         return NULL;
     }
 
@@ -160,12 +161,12 @@ lv_theme_t * lv_theme_simple_get(void)
 
 void lv_theme_simple_deinit(void)
 {
-    my_theme_t * theme = theme_def;
-    if(theme) {
-        if(theme->inited) {
-            lv_style_t * theme_styles = (lv_style_t *)(&(theme->styles));
+    my_theme_t *theme = theme_def;
+    if (theme) {
+        if (theme->inited) {
+            lv_style_t *theme_styles = (lv_style_t *)(&(theme->styles));
             uint32_t i;
-            for(i = 0; i < sizeof(my_theme_styles_t) / sizeof(lv_style_t); i++) {
+            for (i = 0; i < sizeof(my_theme_styles_t) / sizeof(lv_style_t); i++) {
                 lv_style_reset(theme_styles + i);
             }
         }
@@ -174,16 +175,16 @@ void lv_theme_simple_deinit(void)
     }
 }
 
-lv_theme_t * lv_theme_simple_init(lv_display_t * disp)
+lv_theme_t *lv_theme_simple_init(lv_display_t *disp)
 {
     /*This trick is required only to avoid the garbage collection of
      *styles' data if LVGL is used in a binding (e.g. MicroPython)
      *In a general case styles could be in simple `static lv_style_t my_style...` variables*/
-    if(!lv_theme_simple_is_inited()) {
-        theme_def  = lv_malloc_zeroed(sizeof(my_theme_t));
+    if (!lv_theme_simple_is_inited()) {
+        theme_def = lv_malloc_zeroed(sizeof(my_theme_t));
     }
 
-    my_theme_t * theme = theme_def;
+    my_theme_t *theme = theme_def;
 
     theme->base.disp = disp;
     theme->base.font_small = LV_FONT_DEFAULT;
@@ -193,7 +194,7 @@ lv_theme_t * lv_theme_simple_init(lv_display_t * disp)
 
     style_init(theme);
 
-    if(disp == NULL || lv_display_get_theme(disp) == (lv_theme_t *)theme) {
+    if (disp == NULL || lv_display_get_theme(disp) == (lv_theme_t *)theme) {
         lv_obj_report_style_change(NULL);
     }
 
@@ -202,28 +203,28 @@ lv_theme_t * lv_theme_simple_init(lv_display_t * disp)
     return (lv_theme_t *)theme_def;
 }
 
-static void theme_apply(lv_theme_t * th, lv_obj_t * obj)
+static void theme_apply(lv_theme_t *th, lv_obj_t *obj)
 {
     LV_UNUSED(th);
 
-    my_theme_t * theme = theme_def;
-    lv_obj_t * parent = lv_obj_get_parent(obj);
+    my_theme_t *theme = theme_def;
+    lv_obj_t *parent = lv_obj_get_parent(obj);
 
-    if(parent == NULL) {
+    if (parent == NULL) {
         lv_obj_add_style(obj, &theme->styles.scr, 0);
         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
         return;
     }
 
-    if(lv_obj_check_type(obj, &lv_obj_class)) {
+    if (lv_obj_check_type(obj, &lv_obj_class)) {
 #if LV_USE_TABVIEW
         /*Tabview content area*/
-        if(lv_obj_check_type(parent, &lv_tabview_class)) {
+        if (lv_obj_check_type(parent, &lv_tabview_class)) {
             lv_obj_add_style(obj, &theme->styles.scr, 0);
             return;
         }
         /*Tabview pages*/
-        else if(lv_obj_check_type(lv_obj_get_parent(parent), &lv_tabview_class)) {
+        else if (lv_obj_check_type(lv_obj_get_parent(parent), &lv_tabview_class)) {
             lv_obj_add_style(obj, &theme->styles.scr, 0);
             lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
             return;
@@ -232,12 +233,12 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj)
 
 #if LV_USE_WIN
         /*Header*/
-        if(lv_obj_check_type(parent, &lv_win_class) && lv_obj_get_child(parent, 0) == obj) {
+        if (lv_obj_check_type(parent, &lv_win_class) && lv_obj_get_child(parent, 0) == obj) {
             lv_obj_add_style(obj, &theme->styles.light, 0);
             return;
         }
         /*Content*/
-        else if(lv_obj_check_type(parent, &lv_win_class) && lv_obj_get_child(parent, 1) == obj) {
+        else if (lv_obj_check_type(parent, &lv_win_class) && lv_obj_get_child(parent, 1) == obj) {
             lv_obj_add_style(obj, &theme->styles.light, 0);
             lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
             return;
@@ -247,21 +248,21 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj)
         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
     }
 #if LV_USE_BUTTON
-    else if(lv_obj_check_type(obj, &lv_button_class)) {
+    else if (lv_obj_check_type(obj, &lv_button_class)) {
         lv_obj_add_style(obj, &theme->styles.dark, 0);
     }
 #endif
 
 #if LV_USE_BUTTONMATRIX
-    else if(lv_obj_check_type(obj, &lv_buttonmatrix_class)) {
+    else if (lv_obj_check_type(obj, &lv_buttonmatrix_class)) {
 #if LV_USE_MSGBOX
-        if(lv_obj_check_type(parent, &lv_msgbox_class)) {
+        if (lv_obj_check_type(parent, &lv_msgbox_class)) {
             lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS);
             return;
         }
 #endif
 #if LV_USE_TABVIEW
-        if(lv_obj_check_type(parent, &lv_tabview_class)) {
+        if (lv_obj_check_type(parent, &lv_tabview_class)) {
             lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS);
             return;
         }
@@ -272,14 +273,14 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj)
 #endif
 
 #if LV_USE_BAR
-    else if(lv_obj_check_type(obj, &lv_bar_class)) {
+    else if (lv_obj_check_type(obj, &lv_bar_class)) {
         lv_obj_add_style(obj, &theme->styles.light, 0);
         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_INDICATOR);
     }
 #endif
 
 #if LV_USE_SLIDER
-    else if(lv_obj_check_type(obj, &lv_slider_class)) {
+    else if (lv_obj_check_type(obj, &lv_slider_class)) {
         lv_obj_add_style(obj, &theme->styles.light, 0);
         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_INDICATOR);
         lv_obj_add_style(obj, &theme->styles.dim, LV_PART_KNOB);
@@ -287,28 +288,28 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj)
 #endif
 
 #if LV_USE_TABLE
-    else if(lv_obj_check_type(obj, &lv_table_class)) {
+    else if (lv_obj_check_type(obj, &lv_table_class)) {
         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
         lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS);
     }
 #endif
 
 #if LV_USE_CHECKBOX
-    else if(lv_obj_check_type(obj, &lv_checkbox_class)) {
+    else if (lv_obj_check_type(obj, &lv_checkbox_class)) {
         lv_obj_add_style(obj, &theme->styles.light, LV_PART_INDICATOR);
         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_INDICATOR | LV_STATE_CHECKED);
     }
 #endif
 
 #if LV_USE_SWITCH
-    else if(lv_obj_check_type(obj, &lv_switch_class)) {
+    else if (lv_obj_check_type(obj, &lv_switch_class)) {
         lv_obj_add_style(obj, &theme->styles.light, 0);
         lv_obj_add_style(obj, &theme->styles.dim, LV_PART_KNOB);
     }
 #endif
 
 #if LV_USE_CHART
-    else if(lv_obj_check_type(obj, &lv_chart_class)) {
+    else if (lv_obj_check_type(obj, &lv_chart_class)) {
         lv_obj_add_style(obj, &theme->styles.white, 0);
         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
         lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS);
@@ -317,17 +318,16 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj)
 #endif
 
 #if LV_USE_ROLLER
-    else if(lv_obj_check_type(obj, &lv_roller_class)) {
+    else if (lv_obj_check_type(obj, &lv_roller_class)) {
         lv_obj_add_style(obj, &theme->styles.light, 0);
         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_SELECTED);
     }
 #endif
 
 #if LV_USE_DROPDOWN
-    else if(lv_obj_check_type(obj, &lv_dropdown_class)) {
+    else if (lv_obj_check_type(obj, &lv_dropdown_class)) {
         lv_obj_add_style(obj, &theme->styles.white, 0);
-    }
-    else if(lv_obj_check_type(obj, &lv_dropdownlist_class)) {
+    } else if (lv_obj_check_type(obj, &lv_dropdownlist_class)) {
         lv_obj_add_style(obj, &theme->styles.white, 0);
         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
         lv_obj_add_style(obj, &theme->styles.light, LV_PART_SELECTED);
@@ -336,7 +336,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj)
 #endif
 
 #if LV_USE_ARC
-    else if(lv_obj_check_type(obj, &lv_arc_class)) {
+    else if (lv_obj_check_type(obj, &lv_arc_class)) {
         lv_obj_add_style(obj, &theme->styles.light, 0);
         lv_obj_add_style(obj, &theme->styles.transp, 0);
         lv_obj_add_style(obj, &theme->styles.arc_line, 0);
@@ -348,7 +348,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj)
 #endif
 
 #if LV_USE_SPINNER
-    else if(lv_obj_check_type(obj, &lv_spinner_class)) {
+    else if (lv_obj_check_type(obj, &lv_spinner_class)) {
         lv_obj_add_style(obj, &theme->styles.light, 0);
         lv_obj_add_style(obj, &theme->styles.transp, 0);
         lv_obj_add_style(obj, &theme->styles.arc_line, 0);
@@ -358,7 +358,7 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj)
 #endif
 
 #if LV_USE_TEXTAREA
-    else if(lv_obj_check_type(obj, &lv_textarea_class)) {
+    else if (lv_obj_check_type(obj, &lv_textarea_class)) {
         lv_obj_add_style(obj, &theme->styles.white, 0);
         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
         lv_obj_add_style(obj, &theme->styles.ta_cursor, LV_PART_CURSOR | LV_STATE_FOCUSED);
@@ -366,56 +366,53 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj)
 #endif
 
 #if LV_USE_CALENDAR
-    else if(lv_obj_check_type(obj, &lv_calendar_class)) {
+    else if (lv_obj_check_type(obj, &lv_calendar_class)) {
         lv_obj_add_style(obj, &theme->styles.light, 0);
     }
 #endif
 
 #if LV_USE_KEYBOARD
-    else if(lv_obj_check_type(obj, &lv_keyboard_class)) {
+    else if (lv_obj_check_type(obj, &lv_keyboard_class)) {
         lv_obj_add_style(obj, &theme->styles.scr, 0);
         lv_obj_add_style(obj, &theme->styles.white, LV_PART_ITEMS);
         lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS | LV_STATE_CHECKED);
     }
 #endif
 #if LV_USE_LIST
-    else if(lv_obj_check_type(obj, &lv_list_class)) {
+    else if (lv_obj_check_type(obj, &lv_list_class)) {
         lv_obj_add_style(obj, &theme->styles.light, 0);
         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
         return;
-    }
-    else if(lv_obj_check_type(obj, &lv_list_text_class)) {
+    } else if (lv_obj_check_type(obj, &lv_list_text_class)) {
 
-    }
-    else if(lv_obj_check_type(obj, &lv_list_button_class)) {
+    } else if (lv_obj_check_type(obj, &lv_list_button_class)) {
         lv_obj_add_style(obj, &theme->styles.dark, 0);
 
     }
 #endif
 #if LV_USE_MSGBOX
-    else if(lv_obj_check_type(obj, &lv_msgbox_class)) {
+    else if (lv_obj_check_type(obj, &lv_msgbox_class)) {
         lv_obj_add_style(obj, &theme->styles.light, 0);
         return;
     }
 #endif
 #if LV_USE_SPINBOX
-    else if(lv_obj_check_type(obj, &lv_spinbox_class)) {
+    else if (lv_obj_check_type(obj, &lv_spinbox_class)) {
         lv_obj_add_style(obj, &theme->styles.light, 0);
         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_CURSOR);
     }
 #endif
 #if LV_USE_TILEVIEW
-    else if(lv_obj_check_type(obj, &lv_tileview_class)) {
+    else if (lv_obj_check_type(obj, &lv_tileview_class)) {
         lv_obj_add_style(obj, &theme->styles.scr, 0);
         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
-    }
-    else if(lv_obj_check_type(obj, &lv_tileview_tile_class)) {
+    } else if (lv_obj_check_type(obj, &lv_tileview_tile_class)) {
         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
     }
 #endif
 
 #if LV_USE_LED
-    else if(lv_obj_check_type(obj, &lv_led_class)) {
+    else if (lv_obj_check_type(obj, &lv_led_class)) {
         lv_obj_add_style(obj, &theme->styles.light, 0);
     }
 #endif
@@ -425,12 +422,11 @@ static void theme_apply(lv_theme_t * th, lv_obj_t * obj)
  *   STATIC FUNCTIONS
  **********************/
 
-static void style_init_reset(lv_style_t * style)
+static void style_init_reset(lv_style_t *style)
 {
-    if(lv_theme_simple_is_inited()) {
+    if (lv_theme_simple_is_inited()) {
         lv_style_reset(style);
-    }
-    else {
+    } else {
         lv_style_init(style);
     }
 }

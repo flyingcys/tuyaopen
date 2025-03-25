@@ -77,7 +77,7 @@ extern "C" {
  *               needs by lv_demo_xxx.
  * @size    size of information.
  */
-bool lv_demos_create(char * info[], int size);
+bool lv_demos_create(char *info[], int size);
 
 /**
  * Show help for lv_demos.

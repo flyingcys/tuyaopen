@@ -28,13 +28,12 @@
 
 #define SPLINE_TABLE_SIZE 11
 
-struct LottieInterpolator
-{
-    char* key;
+struct LottieInterpolator {
+    char *key;
     Point outTangent, inTangent;
 
     float progress(float t);
-    void set(const char* key, Point& inTangent, Point& outTangent);
+    void set(const char *key, Point &inTangent, Point &outTangent);
 
 private:
     static constexpr float SAMPLE_STEP_SIZE = 1.0f / float(SPLINE_TABLE_SIZE - 1);
@@ -48,4 +47,3 @@ private:
 #endif //_TVG_LOTTIE_INTERPOLATOR_H_
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

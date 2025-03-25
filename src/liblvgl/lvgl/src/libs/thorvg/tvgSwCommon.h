@@ -43,109 +43,87 @@ static double timeStamp()
 
 #define SW_CURVE_TYPE_POINT 0
 #define SW_CURVE_TYPE_CUBIC 1
-#define SW_ANGLE_PI (180L << 16)
-#define SW_ANGLE_2PI (SW_ANGLE_PI << 1)
-#define SW_ANGLE_PI2 (SW_ANGLE_PI >> 1)
+#define SW_ANGLE_PI         (180L << 16)
+#define SW_ANGLE_2PI        (SW_ANGLE_PI << 1)
+#define SW_ANGLE_PI2        (SW_ANGLE_PI >> 1)
 
 using SwCoord = signed long;
 using SwFixed = signed long long;
-
 
 static inline float TO_FLOAT(SwCoord val)
 {
     return static_cast<float>(val) / 64.0f;
 }
 
-struct SwPoint
-{
+struct SwPoint {
     SwCoord x, y;
 
-    SwPoint& operator+=(const SwPoint& rhs)
+    SwPoint &operator+=(const SwPoint &rhs)
     {
         x += rhs.x;
         y += rhs.y;
         return *this;
     }
 
-    SwPoint operator+(const SwPoint& rhs) const
-    {
-        return {x + rhs.x, y + rhs.y};
-    }
+    SwPoint operator+(const SwPoint &rhs) const { return {x + rhs.x, y + rhs.y}; }
 
-    SwPoint operator-(const SwPoint& rhs) const
-    {
-        return {x - rhs.x, y - rhs.y};
-    }
+    SwPoint operator-(const SwPoint &rhs) const { return {x - rhs.x, y - rhs.y}; }
 
-    bool operator==(const SwPoint& rhs) const
-    {
-        return (x == rhs.x && y == rhs.y);
-    }
+    bool operator==(const SwPoint &rhs) const { return (x == rhs.x && y == rhs.y); }
 
-    bool operator!=(const SwPoint& rhs) const
-    {
-        return (x != rhs.x || y != rhs.y);
-    }
+    bool operator!=(const SwPoint &rhs) const { return (x != rhs.x || y != rhs.y); }
 
     bool zero() const
     {
-        if (x == 0 && y == 0) return true;
-        else return false;
+        if (x == 0 && y == 0)
+            return true;
+        else
+            return false;
     }
 
     bool small() const
     {
-        //2 is epsilon...
-        if (abs(x) < 2 && abs(y) < 2) return true;
-        else return false;
+        // 2 is epsilon...
+        if (abs(x) < 2 && abs(y) < 2)
+            return true;
+        else
+            return false;
     }
 
-    Point toPoint() const
-    {
-        return {TO_FLOAT(x),  TO_FLOAT(y)};
-    }
+    Point toPoint() const { return {TO_FLOAT(x), TO_FLOAT(y)}; }
 };
 
-struct SwSize
-{
+struct SwSize {
     SwCoord w, h;
 };
 
-struct SwOutline
-{
-    Array<SwPoint> pts;             //the outline's points
-    Array<uint32_t> cntrs;          //the contour end points
-    Array<uint8_t> types;           //curve type
-    Array<bool> closed;             //opened or closed path?
+struct SwOutline {
+    Array<SwPoint> pts;    // the outline's points
+    Array<uint32_t> cntrs; // the contour end points
+    Array<uint8_t> types;  // curve type
+    Array<bool> closed;    // opened or closed path?
     FillRule fillRule;
 };
 
-struct SwSpan
-{
+struct SwSpan {
     uint16_t x, y;
     uint16_t len;
     uint8_t coverage;
 };
 
-struct SwRleData
-{
+struct SwRleData {
     SwSpan *spans;
     uint32_t alloc;
     uint32_t size;
 };
 
-struct SwBBox
-{
+struct SwBBox {
     SwPoint min, max;
 
-    void reset()
-    {
-        min.x = min.y = max.x = max.y = 0;
-    }
+    void reset() { min.x = min.y = max.x = max.y = 0; }
 };
 
-struct SwFill
-{
+struct SwFill {
     struct SwLinear {
         float dx, dy;
         float len;
@@ -165,24 +143,22 @@ struct SwFill
         SwRadial radial;
     };
 
-    uint32_t* ctable;
+    uint32_t *ctable;
     FillSpread spread;
 
     bool translucent;
 };
 
-struct SwStrokeBorder
-{
+struct SwStrokeBorder {
     uint32_t ptsCnt;
     uint32_t maxPts;
-    SwPoint* pts;
-    uint8_t* tags;
-    int32_t start;     //index of current sub-path start point
-    bool movable;      //true: for ends of lineto borders
+    SwPoint *pts;
+    uint8_t *tags;
+    int32_t start; // index of current sub-path start point
+    bool movable;  // true: for ends of lineto borders
 };
 
-struct SwStroke
-{
+struct SwStroke {
     SwFixed angleIn;
     SwFixed angleOut;
     SwPoint center;
@@ -196,7 +172,7 @@ struct SwStroke
     StrokeCap cap;
     StrokeJoin join;
     StrokeJoin joinSaved;
-    SwFill* fill = nullptr;
+    SwFill *fill = nullptr;
 
     SwStrokeBorder borders[2];
 
@@ -207,99 +183,91 @@ struct SwStroke
     bool handleWideStrokes;
 };
 
-struct SwDashStroke
-{
-    SwOutline* outline = nullptr;
+struct SwDashStroke {
+    SwOutline *outline = nullptr;
     float curLen = 0;
     int32_t curIdx = 0;
     Point ptStart = {0, 0};
     Point ptCur = {0, 0};
-    float* pattern = nullptr;
+    float *pattern = nullptr;
     uint32_t cnt = 0;
     bool curOpGap = false;
     bool move = true;
 };
 
-struct SwShape
-{
-    SwOutline*   outline = nullptr;
-    SwStroke*    stroke = nullptr;
-    SwFill*      fill = nullptr;
-    SwRleData*   rle = nullptr;
-    SwRleData*   strokeRle = nullptr;
-    SwBBox       bbox;           //Keep it boundary without stroke region. Using for optimal filling.
+struct SwShape {
+    SwOutline *outline = nullptr;
+    SwStroke *stroke = nullptr;
+    SwFill *fill = nullptr;
+    SwRleData *rle = nullptr;
+    SwRleData *strokeRle = nullptr;
+    SwBBox bbox; // Keep it boundary without stroke region. Using for optimal filling.
 
-    bool         fastTrack = false;   //Fast Track: axis-aligned rectangle without any clips?
+    bool fastTrack = false; // Fast Track: axis-aligned rectangle without any clips?
 };
 
-struct SwImage
-{
-    SwOutline*   outline = nullptr;
-    SwRleData*   rle = nullptr;
+struct SwImage {
+    SwOutline *outline = nullptr;
+    SwRleData *rle = nullptr;
     union {
-        pixel_t*  data;      //system based data pointer
-        uint32_t* buf32;     //for explicit 32bits channels
-        uint8_t*  buf8;      //for explicit 8bits grayscale
+        pixel_t *data;   // system based data pointer
+        uint32_t *buf32; // for explicit 32bits channels
+        uint8_t *buf8;   // for explicit 8bits grayscale
     };
-    uint32_t     w, h, stride;
-    int32_t      ox = 0;         //offset x
-    int32_t      oy = 0;         //offset y
-    float        scale;
-    uint8_t      channelSize;
+    uint32_t w, h, stride;
+    int32_t ox = 0; // offset x
+    int32_t oy = 0; // offset y
+    float scale;
+    uint8_t channelSize;
 
-    bool         direct = false;  //draw image directly (with offset)
-    bool         scaled = false;  //draw scaled image
+    bool direct = false; // draw image directly (with offset)
+    bool scaled = false; // draw scaled image
 };
 
-typedef uint8_t(*SwMask)(uint8_t s, uint8_t d, uint8_t a);                  //src, dst, alpha
-typedef uint32_t(*SwBlender)(uint32_t s, uint32_t d, uint8_t a);            //src, dst, alpha
-typedef uint32_t(*SwJoin)(uint8_t r, uint8_t g, uint8_t b, uint8_t a);      //color channel join
-typedef uint8_t(*SwAlpha)(uint8_t*);                                        //blending alpha
+typedef uint8_t (*SwMask)(uint8_t s, uint8_t d, uint8_t a);             // src, dst, alpha
+typedef uint32_t (*SwBlender)(uint32_t s, uint32_t d, uint8_t a);       // src, dst, alpha
+typedef uint32_t (*SwJoin)(uint8_t r, uint8_t g, uint8_t b, uint8_t a); // color channel join
+typedef uint8_t (*SwAlpha)(uint8_t *);                                  // blending alpha
 
 struct SwCompositor;
 
-struct SwSurface : Surface
-{
-    SwJoin  join;
-    SwAlpha alphas[4];                    //Alpha:2, InvAlpha:3, Luma:4, InvLuma:5
-    SwBlender blender = nullptr;          //blender (optional)
-    SwCompositor* compositor = nullptr;   //compositor (optional)
-    BlendMethod blendMethod;              //blending method (uint8_t)
+struct SwSurface : Surface {
+    SwJoin join;
+    SwAlpha alphas[4];                  // Alpha:2, InvAlpha:3, Luma:4, InvLuma:5
+    SwBlender blender = nullptr;        // blender (optional)
+    SwCompositor *compositor = nullptr; // compositor (optional)
+    BlendMethod blendMethod;            // blending method (uint8_t)
 
     SwAlpha alpha(CompositeMethod method)
     {
-        auto idx = (int)(method) - 2;       //0: None, 1: ClipPath
-        return alphas[idx > 3 ? 0 : idx];   //CompositeMethod has only four Matting methods.
+        auto idx = (int)(method)-2;       // 0: None, 1: ClipPath
+        return alphas[idx > 3 ? 0 : idx]; // CompositeMethod has only four Matting methods.
     }
 
-    SwSurface()
-    {
-    }
+    SwSurface() {}
 
-    SwSurface(const SwSurface* rhs) : Surface(rhs)
+    SwSurface(const SwSurface *rhs) : Surface(rhs)
     {
         join = rhs->join;
         memcpy(alphas, rhs->alphas, sizeof(alphas));
         blender = rhs->blender;
         compositor = rhs->compositor;
         blendMethod = rhs->blendMethod;
-     }
+    }
 };
 
-struct SwCompositor : Compositor
-{
-    SwSurface* recoverSfc;                  //Recover surface when composition is started
-    SwCompositor* recoverCmp;               //Recover compositor when composition is done
+struct SwCompositor : Compositor {
+    SwSurface *recoverSfc;    // Recover surface when composition is started
+    SwCompositor *recoverCmp; // Recover compositor when composition is done
     SwImage image;
     SwBBox bbox;
     bool valid;
 };
 
-struct SwMpool
-{
-    SwOutline* outline;
-    SwOutline* strokeOutline;
-    SwOutline* dashOutline;
+struct SwMpool {
+    SwOutline *outline;
+    SwOutline *strokeOutline;
+    SwOutline *dashOutline;
     unsigned allocSize;
 };
 
@@ -321,7 +289,8 @@ static inline uint32_t ALPHA_BLEND(uint32_t c, uint32_t a)
 
 static inline uint32_t INTERPOLATE(uint32_t s, uint32_t d, uint8_t a)
 {
-    return (((((((s >> 8) & 0xff00ff) - ((d >> 8) & 0xff00ff)) * a) + (d & 0xff00ff00)) & 0xff00ff00) + ((((((s & 0xff00ff) - (d & 0xff00ff)) * a) >> 8) + (d & 0xff00ff)) & 0xff00ff));
+    return (((((((s >> 8) & 0xff00ff) - ((d >> 8) & 0xff00ff)) * a) + (d & 0xff00ff00)) & 0xff00ff00) +
+            ((((((s & 0xff00ff) - (d & 0xff00ff)) * a) >> 8) + (d & 0xff00ff)) & 0xff00ff));
 }
 
 static inline uint8_t INTERPOLATE8(uint8_t s, uint8_t d, uint8_t a)
@@ -380,11 +349,11 @@ static inline uint32_t opBlendSrcOver(uint32_t s, TVG_UNUSED uint32_t d, TVG_UNU
     return s;
 }
 
-//TODO: BlendMethod could remove the alpha parameter.
+// TODO: BlendMethod could remove the alpha parameter.
 static inline uint32_t opBlendDifference(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
 {
-    //if (s > d) => s - d
-    //else => d - s
+    // if (s > d) => s - d
+    // else => d - s
     auto c1 = (C1(s) > C1(d)) ? (C1(s) - C1(d)) : (C1(d) - C1(s));
     auto c2 = (C2(s) > C2(d)) ? (C2(s) - C2(d)) : (C2(d) - C2(s));
     auto c3 = (C3(s) > C3(d)) ? (C3(s) - C3(d)) : (C3(d) - C3(s));
@@ -393,7 +362,7 @@ static inline uint32_t opBlendDifference(uint32_t s, uint32_t d, TVG_UNUSED uint
 
 static inline uint32_t opBlendExclusion(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
 {
-    //A + B - 2AB
+    // A + B - 2AB
     auto c1 = std::min(255, C1(s) + C1(d) - std::min(255, (C1(s) * C1(d)) << 1));
     auto c2 = std::min(255, C2(s) + C2(d) - std::min(255, (C2(s) * C2(d)) << 1));
     auto c3 = std::min(255, C3(s) + C3(d) - std::min(255, (C3(s) * C3(d)) << 1));
@@ -418,7 +387,6 @@ static inline uint32_t opBlendScreen(uint32_t s, uint32_t d, TVG_UNUSED uint8_t 
     return JOIN(255, c1, c2, c3);
 }
 
-
 static inline uint32_t opBlendMultiply(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
 {
     // s * d
@@ -428,14 +396,16 @@ static inline uint32_t opBlendMultiply(uint32_t s, uint32_t d, TVG_UNUSED uint8_
     return JOIN(255, c1, c2, c3);
 }
 
-
 static inline uint32_t opBlendOverlay(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
 {
     // if (2 * d < da) => 2 * s * d,
     // else => 1 - 2 * (1 - s) * (1 - d)
-    auto c1 = (C1(d) < 128) ? std::min(255, 2 * MULTIPLY(C1(s), C1(d))) : (255 - std::min(255, 2 * MULTIPLY(255 - C1(s), 255 - C1(d))));
-    auto c2 = (C2(d) < 128) ? std::min(255, 2 * MULTIPLY(C2(s), C2(d))) : (255 - std::min(255, 2 * MULTIPLY(255 - C2(s), 255 - C2(d))));
-    auto c3 = (C3(d) < 128) ? std::min(255, 2 * MULTIPLY(C3(s), C3(d))) : (255 - std::min(255, 2 * MULTIPLY(255 - C3(s), 255 - C3(d))));
+    auto c1 = (C1(d) < 128) ? std::min(255, 2 * MULTIPLY(C1(s), C1(d)))
+                            : (255 - std::min(255, 2 * MULTIPLY(255 - C1(s), 255 - C1(d))));
+    auto c2 = (C2(d) < 128) ? std::min(255, 2 * MULTIPLY(C2(s), C2(d)))
+                            : (255 - std::min(255, 2 * MULTIPLY(255 - C2(s), 255 - C2(d))));
+    auto c3 = (C3(d) < 128) ? std::min(255, 2 * MULTIPLY(C3(s), C3(d)))
+                            : (255 - std::min(255, 2 * MULTIPLY(255 - C3(s), 255 - C3(d))));
     return JOIN(255, c1, c2, c3);
 }
 
@@ -479,115 +449,136 @@ static inline uint32_t opBlendColorBurn(uint32_t s, uint32_t d, TVG_UNUSED uint8
 
 static inline uint32_t opBlendHardLight(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
 {
-    auto c1 = (C1(s) < 128) ? std::min(255, 2 * MULTIPLY(C1(s), C1(d))) : (255 - std::min(255, 2 * MULTIPLY(255 - C1(s), 255 - C1(d))));
-    auto c2 = (C2(s) < 128) ? std::min(255, 2 * MULTIPLY(C2(s), C2(d))) : (255 - std::min(255, 2 * MULTIPLY(255 - C2(s), 255 - C2(d))));
-    auto c3 = (C3(s) < 128) ? std::min(255, 2 * MULTIPLY(C3(s), C3(d))) : (255 - std::min(255, 2 * MULTIPLY(255 - C3(s), 255 - C3(d))));
+    auto c1 = (C1(s) < 128) ? std::min(255, 2 * MULTIPLY(C1(s), C1(d)))
+                            : (255 - std::min(255, 2 * MULTIPLY(255 - C1(s), 255 - C1(d))));
+    auto c2 = (C2(s) < 128) ? std::min(255, 2 * MULTIPLY(C2(s), C2(d)))
+                            : (255 - std::min(255, 2 * MULTIPLY(255 - C2(s), 255 - C2(d))));
+    auto c3 = (C3(s) < 128) ? std::min(255, 2 * MULTIPLY(C3(s), C3(d)))
+                            : (255 - std::min(255, 2 * MULTIPLY(255 - C3(s), 255 - C3(d))));
     return JOIN(255, c1, c2, c3);
 }
 
 static inline uint32_t opBlendSoftLight(uint32_t s, uint32_t d, TVG_UNUSED uint8_t a)
 {
     //(255 - 2 * s) * (d * d) + (2 * s * b)
-    auto c1 = std::min(255, MULTIPLY(255 - std::min(255, 2 * C1(s)), MULTIPLY(C1(d), C1(d))) + 2 * MULTIPLY(C1(s), C1(d)));
-    auto c2 = std::min(255, MULTIPLY(255 - std::min(255, 2 * C2(s)), MULTIPLY(C2(d), C2(d))) + 2 * MULTIPLY(C2(s), C2(d)));
-    auto c3 = std::min(255, MULTIPLY(255 - std::min(255, 2 * C3(s)), MULTIPLY(C3(d), C3(d))) + 2 * MULTIPLY(C3(s), C3(d)));
+    auto c1 =
+        std::min(255, MULTIPLY(255 - std::min(255, 2 * C1(s)), MULTIPLY(C1(d), C1(d))) + 2 * MULTIPLY(C1(s), C1(d)));
+    auto c2 =
+        std::min(255, MULTIPLY(255 - std::min(255, 2 * C2(s)), MULTIPLY(C2(d), C2(d))) + 2 * MULTIPLY(C2(s), C2(d)));
+    auto c3 =
+        std::min(255, MULTIPLY(255 - std::min(255, 2 * C3(s)), MULTIPLY(C3(d), C3(d))) + 2 * MULTIPLY(C3(s), C3(d)));
     return JOIN(255, c1, c2, c3);
 }
-
 
 int64_t mathMultiply(int64_t a, int64_t b);
 int64_t mathDivide(int64_t a, int64_t b);
 int64_t mathMulDiv(int64_t a, int64_t b, int64_t c);
-void mathRotate(SwPoint& pt, SwFixed angle);
+void mathRotate(SwPoint &pt, SwFixed angle);
 SwFixed mathTan(SwFixed angle);
-SwFixed mathAtan(const SwPoint& pt);
+SwFixed mathAtan(const SwPoint &pt);
 SwFixed mathCos(SwFixed angle);
 SwFixed mathSin(SwFixed angle);
-void mathSplitCubic(SwPoint* base);
+void mathSplitCubic(SwPoint *base);
 SwFixed mathDiff(SwFixed angle1, SwFixed angle2);
-SwFixed mathLength(const SwPoint& pt);
-bool mathSmallCubic(const SwPoint* base, SwFixed& angleIn, SwFixed& angleMid, SwFixed& angleOut);
+SwFixed mathLength(const SwPoint &pt);
+bool mathSmallCubic(const SwPoint *base, SwFixed &angleIn, SwFixed &angleMid, SwFixed &angleOut);
 SwFixed mathMean(SwFixed angle1, SwFixed angle2);
-SwPoint mathTransform(const Point* to, const Matrix* transform);
-bool mathUpdateOutlineBBox(const SwOutline* outline, const SwBBox& clipRegion, SwBBox& renderRegion, bool fastTrack);
-bool mathClipBBox(const SwBBox& clipper, SwBBox& clipee);
+SwPoint mathTransform(const Point *to, const Matrix *transform);
+bool mathUpdateOutlineBBox(const SwOutline *outline, const SwBBox &clipRegion, SwBBox &renderRegion, bool fastTrack);
+bool mathClipBBox(const SwBBox &clipper, SwBBox &clipee);
 
-void shapeReset(SwShape* shape);
-bool shapePrepare(SwShape* shape, const RenderShape* rshape, const Matrix* transform, const SwBBox& clipRegion, SwBBox& renderRegion, SwMpool* mpool, unsigned tid, bool hasComposite);
-bool shapePrepared(const SwShape* shape);
-bool shapeGenRle(SwShape* shape, const RenderShape* rshape, bool antiAlias);
-void shapeDelOutline(SwShape* shape, SwMpool* mpool, uint32_t tid);
-void shapeResetStroke(SwShape* shape, const RenderShape* rshape, const Matrix* transform);
-bool shapeGenStrokeRle(SwShape* shape, const RenderShape* rshape, const Matrix* transform, const SwBBox& clipRegion, SwBBox& renderRegion, SwMpool* mpool, unsigned tid);
-void shapeFree(SwShape* shape);
-void shapeDelStroke(SwShape* shape);
-bool shapeGenFillColors(SwShape* shape, const Fill* fill, const Matrix* transform, SwSurface* surface, uint8_t opacity, bool ctable);
-bool shapeGenStrokeFillColors(SwShape* shape, const Fill* fill, const Matrix* transform, SwSurface* surface, uint8_t opacity, bool ctable);
-void shapeResetFill(SwShape* shape);
-void shapeResetStrokeFill(SwShape* shape);
-void shapeDelFill(SwShape* shape);
-void shapeDelStrokeFill(SwShape* shape);
+void shapeReset(SwShape *shape);
+bool shapePrepare(SwShape *shape, const RenderShape *rshape, const Matrix *transform, const SwBBox &clipRegion,
+                  SwBBox &renderRegion, SwMpool *mpool, unsigned tid, bool hasComposite);
+bool shapePrepared(const SwShape *shape);
+bool shapeGenRle(SwShape *shape, const RenderShape *rshape, bool antiAlias);
+void shapeDelOutline(SwShape *shape, SwMpool *mpool, uint32_t tid);
+void shapeResetStroke(SwShape *shape, const RenderShape *rshape, const Matrix *transform);
+bool shapeGenStrokeRle(SwShape *shape, const RenderShape *rshape, const Matrix *transform, const SwBBox &clipRegion,
+                       SwBBox &renderRegion, SwMpool *mpool, unsigned tid);
+void shapeFree(SwShape *shape);
+void shapeDelStroke(SwShape *shape);
+bool shapeGenFillColors(SwShape *shape, const Fill *fill, const Matrix *transform, SwSurface *surface, uint8_t opacity,
+                        bool ctable);
+bool shapeGenStrokeFillColors(SwShape *shape, const Fill *fill, const Matrix *transform, SwSurface *surface,
+                              uint8_t opacity, bool ctable);
+void shapeResetFill(SwShape *shape);
+void shapeResetStrokeFill(SwShape *shape);
+void shapeDelFill(SwShape *shape);
+void shapeDelStrokeFill(SwShape *shape);
 
-void strokeReset(SwStroke* stroke, const RenderShape* shape, const Matrix* transform);
-bool strokeParseOutline(SwStroke* stroke, const SwOutline& outline);
-SwOutline* strokeExportOutline(SwStroke* stroke, SwMpool* mpool, unsigned tid);
-void strokeFree(SwStroke* stroke);
+void strokeReset(SwStroke *stroke, const RenderShape *shape, const Matrix *transform);
+bool strokeParseOutline(SwStroke *stroke, const SwOutline &outline);
+SwOutline *strokeExportOutline(SwStroke *stroke, SwMpool *mpool, unsigned tid);
+void strokeFree(SwStroke *stroke);
 
-bool imagePrepare(SwImage* image, const RenderMesh* mesh, const Matrix* transform, const SwBBox& clipRegion, SwBBox& renderRegion, SwMpool* mpool, unsigned tid);
-bool imageGenRle(SwImage* image, const SwBBox& renderRegion, bool antiAlias);
-void imageDelOutline(SwImage* image, SwMpool* mpool, uint32_t tid);
-void imageReset(SwImage* image);
-void imageFree(SwImage* image);
+bool imagePrepare(SwImage *image, const RenderMesh *mesh, const Matrix *transform, const SwBBox &clipRegion,
+                  SwBBox &renderRegion, SwMpool *mpool, unsigned tid);
+bool imageGenRle(SwImage *image, const SwBBox &renderRegion, bool antiAlias);
+void imageDelOutline(SwImage *image, SwMpool *mpool, uint32_t tid);
+void imageReset(SwImage *image);
+void imageFree(SwImage *image);
 
-bool fillGenColorTable(SwFill* fill, const Fill* fdata, const Matrix* transform, SwSurface* surface, uint8_t opacity, bool ctable);
-void fillReset(SwFill* fill);
-void fillFree(SwFill* fill);
+bool fillGenColorTable(SwFill *fill, const Fill *fdata, const Matrix *transform, SwSurface *surface, uint8_t opacity,
+                       bool ctable);
+void fillReset(SwFill *fill);
+void fillFree(SwFill *fill);
 
-//OPTIMIZE_ME: Skip the function pointer access
-void fillLinear(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32_t len, SwMask maskOp, uint8_t opacity);                                   //composite masking ver.
-void fillLinear(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwMask maskOp, uint8_t opacity);                     //direct masking ver.
-void fillLinear(const SwFill* fill, uint32_t* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender op, uint8_t a);                                         //blending ver.
-void fillLinear(const SwFill* fill, uint32_t* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender op, SwBlender op2, uint8_t a);                          //blending + BlendingMethod(op2) ver.
-void fillLinear(const SwFill* fill, uint32_t* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwAlpha alpha, uint8_t csize, uint8_t opacity);     //matting ver.
+// OPTIMIZE_ME: Skip the function pointer access
+void fillLinear(const SwFill *fill, uint8_t *dst, uint32_t y, uint32_t x, uint32_t len, SwMask maskOp,
+                uint8_t opacity); // composite masking ver.
+void fillLinear(const SwFill *fill, uint8_t *dst, uint32_t y, uint32_t x, uint32_t len, uint8_t *cmp, SwMask maskOp,
+                uint8_t opacity); // direct masking ver.
+void fillLinear(const SwFill *fill, uint32_t *dst, uint32_t y, uint32_t x, uint32_t len, SwBlender op,
+                uint8_t a); // blending ver.
+void fillLinear(const SwFill *fill, uint32_t *dst, uint32_t y, uint32_t x, uint32_t len, SwBlender op, SwBlender op2,
+                uint8_t a); // blending + BlendingMethod(op2) ver.
+void fillLinear(const SwFill *fill, uint32_t *dst, uint32_t y, uint32_t x, uint32_t len, uint8_t *cmp, SwAlpha alpha,
+                uint8_t csize, uint8_t opacity); // matting ver.
 
-void fillRadial(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32_t len, SwMask op, uint8_t a);                                             //composite masking ver.
-void fillRadial(const SwFill* fill, uint8_t* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwMask op, uint8_t a) ;                              //direct masking ver.
-void fillRadial(const SwFill* fill, uint32_t* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender op, uint8_t a);                                         //blending ver.
-void fillRadial(const SwFill* fill, uint32_t* dst, uint32_t y, uint32_t x, uint32_t len, SwBlender op, SwBlender op2, uint8_t a);                          //blending + BlendingMethod(op2) ver.
-void fillRadial(const SwFill* fill, uint32_t* dst, uint32_t y, uint32_t x, uint32_t len, uint8_t* cmp, SwAlpha alpha, uint8_t csize, uint8_t opacity);     //matting ver.
+void fillRadial(const SwFill *fill, uint8_t *dst, uint32_t y, uint32_t x, uint32_t len, SwMask op,
+                uint8_t a); // composite masking ver.
+void fillRadial(const SwFill *fill, uint8_t *dst, uint32_t y, uint32_t x, uint32_t len, uint8_t *cmp, SwMask op,
+                uint8_t a); // direct masking ver.
+void fillRadial(const SwFill *fill, uint32_t *dst, uint32_t y, uint32_t x, uint32_t len, SwBlender op,
+                uint8_t a); // blending ver.
+void fillRadial(const SwFill *fill, uint32_t *dst, uint32_t y, uint32_t x, uint32_t len, SwBlender op, SwBlender op2,
+                uint8_t a); // blending + BlendingMethod(op2) ver.
+void fillRadial(const SwFill *fill, uint32_t *dst, uint32_t y, uint32_t x, uint32_t len, uint8_t *cmp, SwAlpha alpha,
+                uint8_t csize, uint8_t opacity); // matting ver.
 
-SwRleData* rleRender(SwRleData* rle, const SwOutline* outline, const SwBBox& renderRegion, bool antiAlias);
-SwRleData* rleRender(const SwBBox* bbox);
-void rleFree(SwRleData* rle);
-void rleReset(SwRleData* rle);
-void rleMerge(SwRleData* rle, SwRleData* clip1, SwRleData* clip2);
-void rleClipPath(SwRleData* rle, const SwRleData* clip);
-void rleClipRect(SwRleData* rle, const SwBBox* clip);
+SwRleData *rleRender(SwRleData *rle, const SwOutline *outline, const SwBBox &renderRegion, bool antiAlias);
+SwRleData *rleRender(const SwBBox *bbox);
+void rleFree(SwRleData *rle);
+void rleReset(SwRleData *rle);
+void rleMerge(SwRleData *rle, SwRleData *clip1, SwRleData *clip2);
+void rleClipPath(SwRleData *rle, const SwRleData *clip);
+void rleClipRect(SwRleData *rle, const SwBBox *clip);
 
-SwMpool* mpoolInit(uint32_t threads);
-bool mpoolTerm(SwMpool* mpool);
-bool mpoolClear(SwMpool* mpool);
-SwOutline* mpoolReqOutline(SwMpool* mpool, unsigned idx);
-void mpoolRetOutline(SwMpool* mpool, unsigned idx);
-SwOutline* mpoolReqStrokeOutline(SwMpool* mpool, unsigned idx);
-void mpoolRetStrokeOutline(SwMpool* mpool, unsigned idx);
-SwOutline* mpoolReqDashOutline(SwMpool* mpool, unsigned idx);
-void mpoolRetDashOutline(SwMpool* mpool, unsigned idx);
+SwMpool *mpoolInit(uint32_t threads);
+bool mpoolTerm(SwMpool *mpool);
+bool mpoolClear(SwMpool *mpool);
+SwOutline *mpoolReqOutline(SwMpool *mpool, unsigned idx);
+void mpoolRetOutline(SwMpool *mpool, unsigned idx);
+SwOutline *mpoolReqStrokeOutline(SwMpool *mpool, unsigned idx);
+void mpoolRetStrokeOutline(SwMpool *mpool, unsigned idx);
+SwOutline *mpoolReqDashOutline(SwMpool *mpool, unsigned idx);
+void mpoolRetDashOutline(SwMpool *mpool, unsigned idx);
 
-bool rasterCompositor(SwSurface* surface);
-bool rasterGradientShape(SwSurface* surface, SwShape* shape, unsigned id);
-bool rasterShape(SwSurface* surface, SwShape* shape, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-bool rasterImage(SwSurface* surface, SwImage* image, const RenderMesh* mesh, const Matrix* transform, const SwBBox& bbox, uint8_t opacity);
-bool rasterStroke(SwSurface* surface, SwShape* shape, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-bool rasterGradientStroke(SwSurface* surface, SwShape* shape, unsigned id);
-bool rasterClear(SwSurface* surface, uint32_t x, uint32_t y, uint32_t w, uint32_t h);
+bool rasterCompositor(SwSurface *surface);
+bool rasterGradientShape(SwSurface *surface, SwShape *shape, unsigned id);
+bool rasterShape(SwSurface *surface, SwShape *shape, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+bool rasterImage(SwSurface *surface, SwImage *image, const RenderMesh *mesh, const Matrix *transform,
+                 const SwBBox &bbox, uint8_t opacity);
+bool rasterStroke(SwSurface *surface, SwShape *shape, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+bool rasterGradientStroke(SwSurface *surface, SwShape *shape, unsigned id);
+bool rasterClear(SwSurface *surface, uint32_t x, uint32_t y, uint32_t w, uint32_t h);
 void rasterPixel32(uint32_t *dst, uint32_t val, uint32_t offset, int32_t len);
 void rasterGrayscale8(uint8_t *dst, uint8_t val, uint32_t offset, int32_t len);
-void rasterUnpremultiply(Surface* surface);
-void rasterPremultiply(Surface* surface);
-bool rasterConvertCS(Surface* surface, ColorSpace to);
+void rasterUnpremultiply(Surface *surface);
+void rasterPremultiply(Surface *surface);
+bool rasterConvertCS(Surface *surface, ColorSpace to);
 
 #endif /* _TVG_SW_COMMON_H_ */
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

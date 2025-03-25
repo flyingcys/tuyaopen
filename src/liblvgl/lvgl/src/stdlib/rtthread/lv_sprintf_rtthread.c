@@ -13,7 +13,7 @@
 #include "../lv_sprintf.h"
 
 #if LV_USE_FLOAT == 1
-    #warning "lv_sprintf_rtthread: rtthread not support float in sprintf"
+#warning "lv_sprintf_rtthread: rtthread not support float in sprintf"
 #endif
 
 /*********************
@@ -40,7 +40,7 @@
  *   GLOBAL FUNCTIONS
  **********************/
 
-int lv_snprintf(char * buffer, size_t count, const char * format, ...)
+int lv_snprintf(char *buffer, size_t count, const char *format, ...)
 {
     va_list va;
     va_start(va, format);
@@ -49,7 +49,7 @@ int lv_snprintf(char * buffer, size_t count, const char * format, ...)
     return ret;
 }
 
-int lv_vsnprintf(char * buffer, size_t count, const char * format, va_list va)
+int lv_vsnprintf(char *buffer, size_t count, const char *format, va_list va)
 {
     return rt_vsnprintf(buffer, count, format, va);
 }

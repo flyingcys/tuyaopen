@@ -29,40 +29,32 @@
 /* External Class Implementation                                        */
 /************************************************************************/
 
-Canvas::Canvas(RenderMethod *pRenderer):pImpl(new Impl(pRenderer))
-{
-}
-
+Canvas::Canvas(RenderMethod *pRenderer) : pImpl(new Impl(pRenderer)) {}
 
 Canvas::~Canvas()
 {
-    delete(pImpl);
+    delete (pImpl);
 }
-
 
 Result Canvas::reserve(TVG_UNUSED uint32_t n) noexcept
 {
     return Result::NonSupport;
 }
 
-
-list<Paint*>& Canvas::paints() noexcept
+list<Paint *> &Canvas::paints() noexcept
 {
     return pImpl->paints;
 }
-
 
 Result Canvas::push(unique_ptr<Paint> paint) noexcept
 {
     return pImpl->push(std::move(paint));
 }
 
-
 Result Canvas::clear(bool free) noexcept
 {
     return pImpl->clear(free);
 }
-
 
 Result Canvas::draw() noexcept
 {
@@ -73,8 +65,7 @@ Result Canvas::draw() noexcept
     return ret;
 }
 
-
-Result Canvas::update(Paint* paint) noexcept
+Result Canvas::update(Paint *paint) noexcept
 {
     TVGLOG("RENDERER", "Update S. ------------------------------ Canvas(%p)", this);
     auto ret = pImpl->update(paint, false);
@@ -83,12 +74,10 @@ Result Canvas::update(Paint* paint) noexcept
     return ret;
 }
 
-
 Result Canvas::viewport(int32_t x, int32_t y, int32_t w, int32_t h) noexcept
 {
     return pImpl->viewport(x, y, w, h);
 }
-
 
 Result Canvas::sync() noexcept
 {
@@ -96,4 +85,3 @@ Result Canvas::sync() noexcept
 }
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

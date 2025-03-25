@@ -26,8 +26,7 @@
  *  STATIC PROTOTYPES
  **********************/
 
-static unsigned int __stdcall lv_windows_display_thread_entrypoint(
-    void * parameter);
+static unsigned int __stdcall lv_windows_display_thread_entrypoint(void *parameter);
 
 /**********************
  *  STATIC VARIABLES
@@ -41,13 +40,8 @@ static unsigned int __stdcall lv_windows_display_thread_entrypoint(
  *   GLOBAL FUNCTIONS
  **********************/
 
-lv_display_t * lv_windows_create_display(
-    const wchar_t * title,
-    int32_t hor_res,
-    int32_t ver_res,
-    int32_t zoom_level,
-    bool allow_dpi_override,
-    bool simulator_mode)
+lv_display_t *lv_windows_create_display(const wchar_t *title, int32_t hor_res, int32_t ver_res, int32_t zoom_level,
+                                        bool allow_dpi_override, bool simulator_mode)
 {
     lv_windows_create_display_data_t data;
 
@@ -60,33 +54,27 @@ lv_display_t * lv_windows_create_display(
     data.simulator_mode = simulator_mode;
     data.mutex = CreateEventExW(NULL, NULL, 0, EVENT_ALL_ACCESS);
     data.display = NULL;
-    if(!data.mutex) {
+    if (!data.mutex) {
         return NULL;
     }
 
-    HANDLE thread = (HANDLE)_beginthreadex(
-                        NULL,
-                        0,
-                        lv_windows_display_thread_entrypoint,
-                        &data,
-                        0,
-                        NULL);
+    HANDLE thread = (HANDLE)_beginthreadex(NULL, 0, lv_windows_display_thread_entrypoint, &data, 0, NULL);
     LV_ASSERT(thread);
 
     WaitForSingleObjectEx(data.mutex, INFINITE, FALSE);
 
-    if(thread) {
+    if (thread) {
         CloseHandle(thread);
     }
 
-    if(data.mutex) {
+    if (data.mutex) {
         CloseHandle(data.mutex);
     }
 
     return data.display;
 }
 
-HWND lv_windows_get_display_window_handle(lv_display_t * display)
+HWND lv_windows_get_display_window_handle(lv_display_t *display)
 {
     return (HWND)lv_display_get_driver_data(display);
 }
@@ -115,37 +103,24 @@ int32_t lv_windows_dpi_to_physical(int32_t logical, int32_t dpi)
  *   STATIC FUNCTIONS
  **********************/
 
-static unsigned int __stdcall lv_windows_display_thread_entrypoint(
-    void * parameter)
+static unsigned int __stdcall lv_windows_display_thread_entrypoint(void *parameter)
 {
-    lv_windows_create_display_data_t * data = parameter;
+    lv_windows_create_display_data_t *data = parameter;
     LV_ASSERT_NULL(data);
 
     DWORD window_style = WS_OVERLAPPEDWINDOW;
-    if(data->simulator_mode) {
+    if (data->simulator_mode) {
         window_style &= ~(WS_SIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME);
     }
 
-    HWND window_handle = CreateWindowExW(
-                             WS_EX_CLIENTEDGE,
-                             L"LVGL.Window",
-                             data->title,
-                             window_style,
-                             CW_USEDEFAULT,
-                             0,
-                             data->hor_res,
-                             data->ver_res,
-                             NULL,
-                             NULL,
-                             NULL,
-                             data);
-    if(!window_handle) {
+    HWND window_handle = CreateWindowExW(WS_EX_CLIENTEDGE, L"LVGL.Window", data->title, window_style, CW_USEDEFAULT, 0,
+                                         data->hor_res, data->ver_res, NULL, NULL, NULL, data);
+    if (!window_handle) {
         return 0;
     }
 
-    lv_windows_window_context_t * context = lv_windows_get_window_context(
-                                                window_handle);
-    if(!context) {
+    lv_windows_window_context_t *context = lv_windows_get_window_context(window_handle);
+    if (!context) {
         return 0;
     }
 
@@ -159,7 +134,7 @@ static unsigned int __stdcall lv_windows_display_thread_entrypoint(
     data = NULL;
 
     MSG message;
-    while(GetMessageW(&message, NULL, 0, 0)) {
+    while (GetMessageW(&message, NULL, 0, 0)) {
         TranslateMessage(&message);
         DispatchMessageW(&message);
     }

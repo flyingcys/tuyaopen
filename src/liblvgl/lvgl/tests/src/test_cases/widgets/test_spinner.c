@@ -4,8 +4,8 @@
 
 #include "unity/unity.h"
 
-static lv_obj_t * active_screen = NULL;
-static lv_obj_t * spinner = NULL;
+static lv_obj_t *active_screen = NULL;
+static lv_obj_t *spinner = NULL;
 
 void setUp(void)
 {
@@ -22,7 +22,7 @@ void tearDown(void)
 
 void test_spinner_spinning(void)
 {
-    for(int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 10; ++i) {
         lv_tick_inc(50);
         lv_timer_handler();
 

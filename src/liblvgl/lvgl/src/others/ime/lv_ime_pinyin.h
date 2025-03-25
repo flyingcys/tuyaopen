@@ -20,7 +20,7 @@ extern "C" {
 /*********************
  *      DEFINES
  *********************/
-#define LV_IME_PINYIN_K9_MAX_INPUT  7
+#define LV_IME_PINYIN_K9_MAX_INPUT 7
 
 /**********************
  *      TYPEDEFS
@@ -34,8 +34,8 @@ typedef enum {
 
 /*Data of pinyin_dict*/
 typedef struct {
-    const char * const py;
-    const char * const py_mb;
+    const char *const py;
+    const char *const py_mb;
 } lv_pinyin_dict_t;
 
 /*Data of 9-key input(k9) mode*/
@@ -52,7 +52,7 @@ extern const lv_obj_class_t lv_ime_pinyin_class;
 /**********************
  * GLOBAL PROTOTYPES
  **********************/
-lv_obj_t * lv_ime_pinyin_create(lv_obj_t * parent);
+lv_obj_t *lv_ime_pinyin_create(lv_obj_t *parent);
 
 /*=====================
  * Setter functions
@@ -63,21 +63,21 @@ lv_obj_t * lv_ime_pinyin_create(lv_obj_t * parent);
  * @param obj  pointer to a Pinyin input method object
  * @param kb pointer to a Pinyin input method keyboard
  */
-void lv_ime_pinyin_set_keyboard(lv_obj_t * obj, lv_obj_t * kb);
+void lv_ime_pinyin_set_keyboard(lv_obj_t *obj, lv_obj_t *kb);
 
 /**
  * Set the dictionary of Pinyin input method.
  * @param obj  pointer to a Pinyin input method object
  * @param dict pointer to a Pinyin input method dictionary
  */
-void lv_ime_pinyin_set_dict(lv_obj_t * obj, lv_pinyin_dict_t * dict);
+void lv_ime_pinyin_set_dict(lv_obj_t *obj, lv_pinyin_dict_t *dict);
 
 /**
  * Set mode, 26-key input(k26) or 9-key input(k9).
  * @param obj  pointer to a Pinyin input method object
  * @param mode   the mode from 'lv_ime_pinyin_mode_t'
  */
-void lv_ime_pinyin_set_mode(lv_obj_t * obj, lv_ime_pinyin_mode_t mode);
+void lv_ime_pinyin_set_mode(lv_obj_t *obj, lv_ime_pinyin_mode_t mode);
 
 /*=====================
  * Getter functions
@@ -88,21 +88,21 @@ void lv_ime_pinyin_set_mode(lv_obj_t * obj, lv_ime_pinyin_mode_t mode);
  * @param obj  pointer to a Pinyin IME object
  * @return     pointer to the Pinyin IME keyboard
  */
-lv_obj_t * lv_ime_pinyin_get_kb(lv_obj_t * obj);
+lv_obj_t *lv_ime_pinyin_get_kb(lv_obj_t *obj);
 
 /**
  * Set the dictionary of Pinyin input method.
  * @param obj  pointer to a Pinyin input method object
  * @return     pointer to the Pinyin input method candidate panel
  */
-lv_obj_t * lv_ime_pinyin_get_cand_panel(lv_obj_t * obj);
+lv_obj_t *lv_ime_pinyin_get_cand_panel(lv_obj_t *obj);
 
 /**
  * Set the dictionary of Pinyin input method.
  * @param obj  pointer to a Pinyin input method object
  * @return     pointer to the Pinyin input method dictionary
  */
-const lv_pinyin_dict_t * lv_ime_pinyin_get_dict(lv_obj_t * obj);
+const lv_pinyin_dict_t *lv_ime_pinyin_get_dict(lv_obj_t *obj);
 
 /*=====================
  * Other functions
@@ -112,7 +112,7 @@ const lv_pinyin_dict_t * lv_ime_pinyin_get_dict(lv_obj_t * obj);
  *      MACROS
  **********************/
 
-#endif  /*LV_IME_PINYIN*/
+#endif /*LV_IME_PINYIN*/
 
 #ifdef __cplusplus
 } /*extern "C"*/

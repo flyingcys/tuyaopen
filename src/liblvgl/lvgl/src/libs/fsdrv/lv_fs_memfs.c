@@ -48,16 +48,16 @@
  *      DEFINES
  *********************/
 #if LV_FS_MEMFS_LETTER == '\0'
-    #error "LV_FS_MEMFS_LETTER must be set to a valid value"
+#error "LV_FS_MEMFS_LETTER must be set to a valid value"
 #else
-    #if (LV_FS_MEMFS_LETTER < 'A') || (LV_FS_MEMFS_LETTER > 'Z')
-        #if LV_FS_DEFAULT_DRIVE_LETTER != '\0' /*When using default drive letter, strict format (X:) is mandatory*/
-            #error "LV_FS_MEMFS_LETTER must be an upper case ASCII letter"
-        #else /*Lean rules for backward compatibility*/
-            #warning LV_FS_MEMFS_LETTER should be an upper case ASCII letter. \
+#if (LV_FS_MEMFS_LETTER < 'A') || (LV_FS_MEMFS_LETTER > 'Z')
+#if LV_FS_DEFAULT_DRIVE_LETTER != '\0' /*When using default drive letter, strict format (X:) is mandatory*/
+#error "LV_FS_MEMFS_LETTER must be an upper case ASCII letter"
+#else /*Lean rules for backward compatibility*/
+#warning LV_FS_MEMFS_LETTER should be an upper case ASCII letter. \
             Using a slash symbol as drive letter should be replaced with LV_FS_DEFAULT_DRIVE_LETTER mechanism
-        #endif
-    #endif
+#endif
+#endif
 #endif
 
 /**********************
@@ -65,14 +65,14 @@
  **********************/
 
 /**********************
-*  STATIC PROTOTYPES
-**********************/
+ *  STATIC PROTOTYPES
+ **********************/
 
-static void * fs_open(lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode);
-static lv_fs_res_t fs_close(lv_fs_drv_t * drv, void * file_p);
-static lv_fs_res_t fs_read(lv_fs_drv_t * drv, void * file_p, void * buf, uint32_t btr, uint32_t * br);
-static lv_fs_res_t fs_seek(lv_fs_drv_t * drv, void * file_p, uint32_t pos, lv_fs_whence_t whence);
-static lv_fs_res_t fs_tell(lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p);
+static void *fs_open(lv_fs_drv_t *drv, const char *path, lv_fs_mode_t mode);
+static lv_fs_res_t fs_close(lv_fs_drv_t *drv, void *file_p);
+static lv_fs_res_t fs_read(lv_fs_drv_t *drv, void *file_p, void *buf, uint32_t btr, uint32_t *br);
+static lv_fs_res_t fs_seek(lv_fs_drv_t *drv, void *file_p, uint32_t pos, lv_fs_whence_t whence);
+static lv_fs_res_t fs_tell(lv_fs_drv_t *drv, void *file_p, uint32_t *pos_p);
 
 /**********************
  *  STATIC VARIABLES
@@ -128,7 +128,7 @@ void lv_fs_memfs_init(void)
  * @param mode  read: FS_MODE_RD (currently only reading from the buffer is supported)
  * @return pointer to FIL struct or NULL in case of fail
  */
-static void * fs_open(lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode)
+static void *fs_open(lv_fs_drv_t *drv, const char *path, lv_fs_mode_t mode)
 {
     LV_UNUSED(drv);
     LV_UNUSED(mode);
@@ -142,7 +142,7 @@ static void * fs_open(lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode)
  * @return LV_FS_RES_OK: no error, the file is read
  *         any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_close(lv_fs_drv_t * drv, void * file_p)
+static lv_fs_res_t fs_close(lv_fs_drv_t *drv, void *file_p)
 {
     LV_UNUSED(drv);
     LV_UNUSED(file_p);
@@ -159,7 +159,7 @@ static lv_fs_res_t fs_close(lv_fs_drv_t * drv, void * file_p)
  * @return LV_FS_RES_OK: no error, the file is read
  *         any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_read(lv_fs_drv_t * drv, void * file_p, void * buf, uint32_t btr, uint32_t * br)
+static lv_fs_res_t fs_read(lv_fs_drv_t *drv, void *file_p, void *buf, uint32_t btr, uint32_t *br)
 {
     LV_UNUSED(drv);
     LV_UNUSED(file_p);
@@ -177,28 +177,29 @@ static lv_fs_res_t fs_read(lv_fs_drv_t * drv, void * file_p, void * buf, uint32_
  * @return LV_FS_RES_OK: no error, the file is read
  *         any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_seek(lv_fs_drv_t * drv, void * file_p, uint32_t pos, lv_fs_whence_t whence)
+static lv_fs_res_t fs_seek(lv_fs_drv_t *drv, void *file_p, uint32_t pos, lv_fs_whence_t whence)
 {
-    /* NOTE: this function is only called to determine the end of the buffer when LV_FS_SEEK_END was given to lv_fs_seek() */
+    /* NOTE: this function is only called to determine the end of the buffer when LV_FS_SEEK_END was given to
+     * lv_fs_seek() */
     LV_UNUSED(drv);
-    lv_fs_file_t * fp = (lv_fs_file_t *)file_p;
-    switch(whence) {
-        case LV_FS_SEEK_SET: {
-                fp->cache->file_position = pos;
-                break;
-            }
-        case LV_FS_SEEK_CUR: {
-                fp->cache->file_position += pos;
-                break;
-            }
-        case LV_FS_SEEK_END: {
-                fp->cache->file_position = fp->cache->end - pos;
-                break;
-            }
+    lv_fs_file_t *fp = (lv_fs_file_t *)file_p;
+    switch (whence) {
+    case LV_FS_SEEK_SET: {
+        fp->cache->file_position = pos;
+        break;
     }
-    if(fp->cache->file_position < fp->cache->start)
+    case LV_FS_SEEK_CUR: {
+        fp->cache->file_position += pos;
+        break;
+    }
+    case LV_FS_SEEK_END: {
+        fp->cache->file_position = fp->cache->end - pos;
+        break;
+    }
+    }
+    if (fp->cache->file_position < fp->cache->start)
         fp->cache->file_position = fp->cache->start;
-    else if(fp->cache->file_position > fp->cache->end)
+    else if (fp->cache->file_position > fp->cache->end)
         fp->cache->file_position = fp->cache->end;
     return LV_FS_RES_OK;
 }
@@ -211,7 +212,7 @@ static lv_fs_res_t fs_seek(lv_fs_drv_t * drv, void * file_p, uint32_t pos, lv_fs
  * @return LV_FS_RES_OK: no error, the file is read
  *         any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_tell(lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p)
+static lv_fs_res_t fs_tell(lv_fs_drv_t *drv, void *file_p, uint32_t *pos_p)
 {
     LV_UNUSED(drv);
     *pos_p = ((lv_fs_file_t *)file_p)->cache->file_position;
@@ -221,7 +222,7 @@ static lv_fs_res_t fs_tell(lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p)
 #else /*LV_USE_FS_MEMFS == 0*/
 
 #if defined(LV_FS_MEMFS_LETTER) && LV_FS_MEMFS_LETTER != '\0'
-    #warning "LV_USE_FS_MEMFS is not enabled but LV_FS_MEMFS_LETTER is set"
+#warning "LV_USE_FS_MEMFS is not enabled but LV_FS_MEMFS_LETTER is set"
 #endif
 
 #endif /*LV_USE_FS_MEMFS*/

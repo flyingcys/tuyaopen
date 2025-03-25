@@ -31,122 +31,127 @@
 
 namespace tvg
 {
-    enum ContextFlag : uint8_t {Invalid = 0, FastTrack = 1};
+enum ContextFlag : uint8_t { Invalid = 0, FastTrack = 1 };
 
-    struct Iterator
+struct Iterator {
+    virtual ~Iterator() {}
+    virtual const Paint *next() = 0;
+    virtual uint32_t count() = 0;
+    virtual void begin() = 0;
+};
+
+struct Composite {
+    Paint *target;
+    Paint *source;
+    CompositeMethod method;
+};
+
+struct Paint::Impl {
+    Paint *paint = nullptr;
+    RenderTransform *rTransform = nullptr;
+    Composite *compData = nullptr;
+    RenderMethod *renderer = nullptr;
+    BlendMethod blendMethod = BlendMethod::Normal; // uint8_t
+    uint8_t renderFlag = RenderUpdateFlag::None;
+    uint8_t ctxFlag = ContextFlag::Invalid;
+    uint8_t id;
+    uint8_t opacity = 255;
+    uint8_t refCnt = 0; // reference count
+
+    Impl(Paint *pnt) : paint(pnt) {}
+
+    ~Impl()
     {
-        virtual ~Iterator() {}
-        virtual const Paint* next() = 0;
-        virtual uint32_t count() = 0;
-        virtual void begin() = 0;
-    };
+        if (compData) {
+            if (P(compData->target)->unref() == 0)
+                delete (compData->target);
+            free(compData);
+        }
+        delete (rTransform);
+        if (renderer && (renderer->unref() == 0))
+            delete (renderer);
+    }
 
-    struct Composite
+    uint8_t ref()
     {
-        Paint* target;
-        Paint* source;
-        CompositeMethod method;
-    };
+        if (refCnt == 255)
+            TVGERR("RENDERER", "Corrupted reference count!");
+        return ++refCnt;
+    }
 
-    struct Paint::Impl
+    uint8_t unref()
     {
-        Paint* paint = nullptr;
-        RenderTransform* rTransform = nullptr;
-        Composite* compData = nullptr;
-        RenderMethod* renderer = nullptr;
-        BlendMethod blendMethod = BlendMethod::Normal;   //uint8_t
-        uint8_t renderFlag = RenderUpdateFlag::None;
-        uint8_t ctxFlag = ContextFlag::Invalid;
-        uint8_t id;
-        uint8_t opacity = 255;
-        uint8_t refCnt = 0;                              //reference count
+        if (refCnt == 0)
+            TVGERR("RENDERER", "Corrupted reference count!");
+        return --refCnt;
+    }
 
-        Impl(Paint* pnt) : paint(pnt) {}
+    bool transform(const Matrix &m)
+    {
+        if (!rTransform) {
+            if (mathIdentity(&m))
+                return true;
+            rTransform = new RenderTransform();
+            if (!rTransform)
+                return false;
+        }
+        rTransform->override(m);
+        renderFlag |= RenderUpdateFlag::Transform;
 
-        ~Impl()
-        {
-            if (compData) {
-                if (P(compData->target)->unref() == 0) delete(compData->target);
+        return true;
+    }
+
+    Matrix *transform()
+    {
+        if (rTransform) {
+            rTransform->update();
+            return &rTransform->m;
+        }
+        return nullptr;
+    }
+
+    bool composite(Paint *source, Paint *target, CompositeMethod method)
+    {
+        // Invalid case
+        if ((!target && method != CompositeMethod::None) || (target && method == CompositeMethod::None))
+            return false;
+
+        if (compData) {
+            P(compData->target)->unref();
+            if ((compData->target != target) && P(compData->target)->refCnt == 0) {
+                delete (compData->target);
+            }
+            // Reset scenario
+            if (!target && method == CompositeMethod::None) {
                 free(compData);
+                compData = nullptr;
+                return true;
             }
-            delete(rTransform);
-            if (renderer && (renderer->unref() == 0)) delete(renderer);
+        } else {
+            if (!target && method == CompositeMethod::None)
+                return true;
+            compData = static_cast<Composite *>(calloc(1, sizeof(Composite)));
         }
+        P(target)->ref();
+        compData->target = target;
+        compData->source = source;
+        compData->method = method;
+        return true;
+    }
 
-        uint8_t ref()
-        {
-            if (refCnt == 255) TVGERR("RENDERER", "Corrupted reference count!");
-            return ++refCnt;
-        }
-
-        uint8_t unref()
-        {
-            if (refCnt == 0) TVGERR("RENDERER", "Corrupted reference count!");
-            return --refCnt;
-        }
-
-        bool transform(const Matrix& m)
-        {
-            if (!rTransform) {
-                if (mathIdentity(&m)) return true;
-                rTransform = new RenderTransform();
-                if (!rTransform) return false;
-            }
-            rTransform->override(m);
-            renderFlag |= RenderUpdateFlag::Transform;
-
-            return true;
-        }
-
-        Matrix* transform()
-        {
-            if (rTransform) {
-                rTransform->update();
-                return &rTransform->m;
-            }
-            return nullptr;
-        }
-
-        bool composite(Paint* source, Paint* target, CompositeMethod method)
-        {
-            //Invalid case
-            if ((!target && method != CompositeMethod::None) || (target && method == CompositeMethod::None)) return false;
-
-            if (compData) {
-                P(compData->target)->unref();
-                if ((compData->target != target) && P(compData->target)->refCnt == 0) {
-                    delete(compData->target);
-                }
-                //Reset scenario
-                if (!target && method == CompositeMethod::None) {
-                    free(compData);
-                    compData = nullptr;
-                    return true;
-                }
-            } else {
-                if (!target && method == CompositeMethod::None) return true;
-                compData = static_cast<Composite*>(calloc(1, sizeof(Composite)));
-            }
-            P(target)->ref();
-            compData->target = target;
-            compData->source = source;
-            compData->method = method;
-            return true;
-        }
-
-        RenderRegion bounds(RenderMethod* renderer) const;
-        Iterator* iterator();
-        bool rotate(float degree);
-        bool scale(float factor);
-        bool translate(float x, float y);
-        bool bounds(float* x, float* y, float* w, float* h, bool transformed, bool stroking);
-        RenderData update(RenderMethod* renderer, const RenderTransform* pTransform, Array<RenderData>& clips, uint8_t opacity, RenderUpdateFlag pFlag, bool clipper = false);
-        bool render(RenderMethod* renderer);
-        Paint* duplicate();
-    };
-}
+    RenderRegion bounds(RenderMethod *renderer) const;
+    Iterator *iterator();
+    bool rotate(float degree);
+    bool scale(float factor);
+    bool translate(float x, float y);
+    bool bounds(float *x, float *y, float *w, float *h, bool transformed, bool stroking);
+    RenderData update(RenderMethod *renderer, const RenderTransform *pTransform, Array<RenderData> &clips,
+                      uint8_t opacity, RenderUpdateFlag pFlag, bool clipper = false);
+    bool render(RenderMethod *renderer);
+    Paint *duplicate();
+};
+} // namespace tvg
 
 #endif //_TVG_PAINT_H_
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

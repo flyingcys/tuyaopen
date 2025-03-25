@@ -35,7 +35,6 @@ struct lv_calendar_chinese_t {
     bool leep_month;
 };
 
-
 /**********************
  * GLOBAL PROTOTYPES
  **********************/

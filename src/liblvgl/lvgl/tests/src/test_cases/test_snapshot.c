@@ -15,17 +15,17 @@ void test_snapshot_should_not_leak_memory(void)
     size_t final_available_memory = 0;
     lv_mem_monitor_t monitor;
 
-    lv_draw_buf_t * snapshots[NUM_SNAPSHOTS] = {NULL};
+    lv_draw_buf_t *snapshots[NUM_SNAPSHOTS] = {NULL};
 
     lv_mem_monitor(&monitor);
     initial_available_memory = monitor.free_size;
 
-    for(idx = 0; idx < NUM_SNAPSHOTS; idx++) {
+    for (idx = 0; idx < NUM_SNAPSHOTS; idx++) {
         snapshots[idx] = lv_snapshot_take(lv_screen_active(), LV_COLOR_FORMAT_NATIVE_WITH_ALPHA);
         TEST_ASSERT_NOT_NULL(snapshots[idx]);
     }
 
-    for(idx = 0; idx < NUM_SNAPSHOTS; idx++) {
+    for (idx = 0; idx < NUM_SNAPSHOTS; idx++) {
         lv_draw_buf_destroy(snapshots[idx]);
     }
 
@@ -42,8 +42,8 @@ void test_snapshot_with_transform_should_not_leak_memory(void)
     size_t final_available_memory = 0;
     lv_mem_monitor_t monitor;
 
-    lv_draw_buf_t * snapshots[NUM_SNAPSHOTS] = {NULL};
-    lv_obj_t * label = lv_label_create(lv_screen_active());
+    lv_draw_buf_t *snapshots[NUM_SNAPSHOTS] = {NULL};
+    lv_obj_t *label = lv_label_create(lv_screen_active());
     lv_obj_center(label);
     lv_obj_set_style_text_font(label, &lv_font_montserrat_28, 0);
     lv_label_set_text(label, "Wubba lubba dub dub!");
@@ -52,12 +52,12 @@ void test_snapshot_with_transform_should_not_leak_memory(void)
     lv_mem_monitor(&monitor);
     initial_available_memory = monitor.free_size;
 
-    for(idx = 0; idx < NUM_SNAPSHOTS; idx++) {
+    for (idx = 0; idx < NUM_SNAPSHOTS; idx++) {
         snapshots[idx] = lv_snapshot_take(lv_screen_active(), LV_COLOR_FORMAT_NATIVE_WITH_ALPHA);
         TEST_ASSERT_NOT_NULL(snapshots[idx]);
     }
 
-    for(idx = 0; idx < NUM_SNAPSHOTS; idx++) {
+    for (idx = 0; idx < NUM_SNAPSHOTS; idx++) {
         lv_draw_buf_destroy(snapshots[idx]);
     }
 
@@ -70,12 +70,12 @@ void test_snapshot_with_transform_should_not_leak_memory(void)
 
 void test_snapshot_take_snapshot_immediately_after_obj_create(void)
 {
-    lv_obj_t * label = lv_label_create(lv_screen_active());
+    lv_obj_t *label = lv_label_create(lv_screen_active());
     lv_obj_set_style_text_font(label, &lv_font_montserrat_28, 0);
     lv_label_set_text(label, "Wubba lubba dub dub!");
 
-    lv_draw_buf_t * draw_dsc = lv_snapshot_take(label, LV_COLOR_FORMAT_ARGB8888);
-    lv_obj_t * img_obj = lv_image_create(lv_screen_active());
+    lv_draw_buf_t *draw_dsc = lv_snapshot_take(label, LV_COLOR_FORMAT_ARGB8888);
+    lv_obj_t *img_obj = lv_image_create(lv_screen_active());
     lv_image_set_src(img_obj, draw_dsc);
 
     lv_obj_delete(label);
@@ -94,16 +94,16 @@ void test_snapshot_take_snapshot_immediately_after_obj_create(void)
 
 void test_snapshot_take_snapshot_with_transform(void)
 {
-    lv_obj_t * label = lv_label_create(lv_screen_active());
+    lv_obj_t *label = lv_label_create(lv_screen_active());
     lv_obj_set_style_text_font(label, &lv_font_montserrat_28, 0);
     lv_label_set_text(label, "Wubba lubba dub dub!");
     lv_obj_set_style_transform_rotation(label, 450, 0);
 
-    lv_draw_buf_t * draw_dsc = lv_snapshot_take(lv_screen_active(), LV_COLOR_FORMAT_ARGB8888);
+    lv_draw_buf_t *draw_dsc = lv_snapshot_take(lv_screen_active(), LV_COLOR_FORMAT_ARGB8888);
 
     lv_obj_delete(label);
 
-    lv_obj_t * img_obj = lv_image_create(lv_screen_active());
+    lv_obj_t *img_obj = lv_image_create(lv_screen_active());
     lv_image_set_src(img_obj, draw_dsc);
 
     TEST_ASSERT_EQUAL_SCREENSHOT("snapshot_2.png");
@@ -114,25 +114,13 @@ void test_snapshot_take_snapshot_with_transform(void)
 
 #else /*LV_USE_SNAPSHOT*/
 
-void test_snapshot_should_not_leak_memory(void)
-{
+void test_snapshot_should_not_leak_memory(void) {}
 
-}
+void test_snapshot_with_transform_should_not_leak_memory(void) {}
 
-void test_snapshot_with_transform_should_not_leak_memory(void)
-{
+void test_snapshot_take_snapshot_immediately_after_obj_create(void) {}
 
-}
-
-void test_snapshot_take_snapshot_immediately_after_obj_create(void)
-{
-
-}
-
-void test_snapshot_take_snapshot_with_transform(void)
-{
-
-}
+void test_snapshot_take_snapshot_with_transform(void) {}
 
 #endif
 

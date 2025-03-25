@@ -29,85 +29,83 @@
 #include "tvgRender.h"
 #include "tvgInlist.h"
 
-
-struct LoadModule
-{
+struct LoadModule {
     INLIST_ITEM(LoadModule);
 
-    //Use either hashkey(data) or hashpath(path)
+    // Use either hashkey(data) or hashpath(path)
     union {
         uintptr_t hashkey;
-        char* hashpath = nullptr;
+        char *hashpath = nullptr;
     };
 
-    FileType type;                                  //current loader file type
-    uint16_t sharing = 0;                           //reference count
-    bool readied = false;                           //read done already.
-    bool pathcache = false;                         //cached by path
+    FileType type;          // current loader file type
+    uint16_t sharing = 0;   // reference count
+    bool readied = false;   // read done already.
+    bool pathcache = false; // cached by path
 
     LoadModule(FileType type) : type(type) {}
     virtual ~LoadModule()
     {
-        if (pathcache) free(hashpath);
+        if (pathcache)
+            free(hashpath);
     }
 
-    virtual bool open(const string& path) { return false; }
-    virtual bool open(const char* data, uint32_t size, bool copy) { return false; }
-    virtual bool resize(Paint* paint, float w, float h) { return false; }
-    virtual void sync() {};  //finish immediately if any async update jobs.
+    virtual bool open(const string &path) { return false; }
+    virtual bool open(const char *data, uint32_t size, bool copy) { return false; }
+    virtual bool resize(Paint *paint, float w, float h) { return false; }
+    virtual void sync(){}; // finish immediately if any async update jobs.
 
     virtual bool read()
     {
-        if (readied) return false;
+        if (readied)
+            return false;
         readied = true;
         return true;
     }
 
     bool cached()
     {
-        if (hashkey) return true;
+        if (hashkey)
+            return true;
         return false;
     }
 
     virtual bool close()
     {
-        if (sharing == 0) return true;
+        if (sharing == 0)
+            return true;
         --sharing;
         return false;
     }
 };
 
+struct ImageLoader : LoadModule {
+    static ColorSpace cs; // desired value
 
-struct ImageLoader : LoadModule
-{
-    static ColorSpace cs;                           //desired value
-
-    float w = 0, h = 0;                             //default image size
+    float w = 0, h = 0; // default image size
     Surface surface;
 
     ImageLoader(FileType type) : LoadModule(type) {}
 
-    virtual bool animatable() { return false; }  //true if this loader supports animation.
-    virtual Paint* paint() { return nullptr; }
+    virtual bool animatable() { return false; } // true if this loader supports animation.
+    virtual Paint *paint() { return nullptr; }
 
-    virtual Surface* bitmap()
+    virtual Surface *bitmap()
     {
-        if (surface.data) return &surface;
+        if (surface.data)
+            return &surface;
         return nullptr;
     }
 };
 
-
-struct FontLoader : LoadModule
-{
+struct FontLoader : LoadModule {
     float scale = 1.0f;
 
     FontLoader(FileType type) : LoadModule(type) {}
 
-    virtual bool request(Shape* shape, char* text, bool italic = false) = 0;
+    virtual bool request(Shape *shape, char *text, bool italic = false) = 0;
 };
 
 #endif //_TVG_LOAD_MODULE_H_
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

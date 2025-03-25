@@ -15,17 +15,50 @@
  */
 /* *INDENT-OFF* */
 const lv_property_name_t lv_image_property_names[11] = {
-    {"antialias",              LV_PROPERTY_IMAGE_ANTIALIAS,},
-    {"blend_mode",             LV_PROPERTY_IMAGE_BLEND_MODE,},
-    {"inner_align",            LV_PROPERTY_IMAGE_INNER_ALIGN,},
-    {"offset_x",               LV_PROPERTY_IMAGE_OFFSET_X,},
-    {"offset_y",               LV_PROPERTY_IMAGE_OFFSET_Y,},
-    {"pivot",                  LV_PROPERTY_IMAGE_PIVOT,},
-    {"rotation",               LV_PROPERTY_IMAGE_ROTATION,},
-    {"scale",                  LV_PROPERTY_IMAGE_SCALE,},
-    {"scale_x",                LV_PROPERTY_IMAGE_SCALE_X,},
-    {"scale_y",                LV_PROPERTY_IMAGE_SCALE_Y,},
-    {"src",                    LV_PROPERTY_IMAGE_SRC,},
+    {
+        "antialias",
+        LV_PROPERTY_IMAGE_ANTIALIAS,
+    },
+    {
+        "blend_mode",
+        LV_PROPERTY_IMAGE_BLEND_MODE,
+    },
+    {
+        "inner_align",
+        LV_PROPERTY_IMAGE_INNER_ALIGN,
+    },
+    {
+        "offset_x",
+        LV_PROPERTY_IMAGE_OFFSET_X,
+    },
+    {
+        "offset_y",
+        LV_PROPERTY_IMAGE_OFFSET_Y,
+    },
+    {
+        "pivot",
+        LV_PROPERTY_IMAGE_PIVOT,
+    },
+    {
+        "rotation",
+        LV_PROPERTY_IMAGE_ROTATION,
+    },
+    {
+        "scale",
+        LV_PROPERTY_IMAGE_SCALE,
+    },
+    {
+        "scale_x",
+        LV_PROPERTY_IMAGE_SCALE_X,
+    },
+    {
+        "scale_y",
+        LV_PROPERTY_IMAGE_SCALE_Y,
+    },
+    {
+        "src",
+        LV_PROPERTY_IMAGE_SRC,
+    },
 };
 #endif /*LV_USE_IMAGE*/
 

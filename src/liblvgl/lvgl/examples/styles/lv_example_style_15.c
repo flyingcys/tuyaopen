@@ -6,8 +6,8 @@
  */
 void lv_example_style_15(void)
 {
-    lv_obj_t * btn;
-    lv_obj_t * label;
+    lv_obj_t *btn;
+    lv_obj_t *label;
 
     /*Normal button*/
     btn = lv_button_create(lv_screen_active());
@@ -33,8 +33,8 @@ void lv_example_style_15(void)
      *The button and the label is rendered to a layer first and that layer is transformed*/
     btn = lv_button_create(lv_screen_active());
     lv_obj_set_size(btn, 100, 40);
-    lv_obj_set_style_transform_rotation(btn, 150, 0);        /*15 deg*/
-    lv_obj_set_style_transform_scale(btn, 256 + 64, 0);   /*1.25x*/
+    lv_obj_set_style_transform_rotation(btn, 150, 0);   /*15 deg*/
+    lv_obj_set_style_transform_scale(btn, 256 + 64, 0); /*1.25x*/
     lv_obj_set_style_transform_pivot_x(btn, 50, 0);
     lv_obj_set_style_transform_pivot_y(btn, 20, 0);
     lv_obj_set_style_opa(btn, LV_OPA_50, 0);

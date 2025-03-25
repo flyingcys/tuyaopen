@@ -28,9 +28,8 @@
 
 #include "tvgCommon.h"
 
-bool svgPathToShape(const char* svgPath, Shape* shape);
+bool svgPathToShape(const char *svgPath, Shape *shape);
 
 #endif //_TVG_SVG_PATH_H_
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

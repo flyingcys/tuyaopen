@@ -3,12 +3,12 @@
 #include "../../lvgl_private.h"
 #include "unity/unity.h"
 
-static lv_obj_t * active_screen = NULL;
-static lv_obj_t * win = NULL;
-static lv_obj_t * header = NULL;
-static lv_obj_t * content = NULL;
+static lv_obj_t *active_screen = NULL;
+static lv_obj_t *win = NULL;
+static lv_obj_t *header = NULL;
+static lv_obj_t *content = NULL;
 
-const char * dummy_text = "Hello LVGL!";
+const char *dummy_text = "Hello LVGL!";
 
 void setUp(void)
 {
@@ -62,7 +62,7 @@ void test_win_add_title_single(void)
     TEST_ASSERT_EQUAL(1, lv_obj_get_child_count(header));
 
     // Check that the title is a label and has been created properly
-    lv_obj_t * title = lv_obj_get_child(header, 0);
+    lv_obj_t *title = lv_obj_get_child(header, 0);
     TEST_ASSERT_EQUAL_STRING(dummy_text, lv_label_get_text(title));
     TEST_ASSERT_EQUAL(1, lv_label_get_long_mode(title));
 }
@@ -103,7 +103,7 @@ void test_win_add_button(void)
     TEST_ASSERT_EQUAL(1, lv_obj_get_child_count(header));
 
     // Check that the button has been created properly
-    lv_obj_t * btn = lv_obj_get_child(header, 0);
+    lv_obj_t *btn = lv_obj_get_child(header, 0);
     TEST_ASSERT_EQUAL(1, lv_obj_get_child_count(btn));
     TEST_ASSERT_EQUAL(win_button_width, lv_obj_get_width(btn));
 
@@ -113,8 +113,8 @@ void test_win_add_button(void)
 
 void test_win_add_multiple_elements(void)
 {
-    lv_obj_t * btn;
-    lv_obj_t * title;
+    lv_obj_t *btn;
+    lv_obj_t *title;
 
     int win_button_width = 50;
     int win_button_close_width = 60;

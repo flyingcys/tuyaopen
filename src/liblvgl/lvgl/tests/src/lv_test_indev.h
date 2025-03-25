@@ -9,7 +9,7 @@ extern "C" {
 #include <stdio.h>
 #include "../lvgl.h"
 
-void lv_test_mouse_read_cb(lv_indev_t * indev, lv_indev_data_t * data);
+void lv_test_mouse_read_cb(lv_indev_t *indev, lv_indev_data_t *data);
 
 void lv_test_mouse_move_to(int32_t x, int32_t y);
 void lv_test_mouse_move_by(int32_t x, int32_t y);
@@ -17,14 +17,14 @@ void lv_test_mouse_press(void);
 void lv_test_mouse_release(void);
 void lv_test_mouse_click_at(int32_t x, int32_t y);
 
-void lv_test_keypad_read_cb(lv_indev_t * indev, lv_indev_data_t * data);
+void lv_test_keypad_read_cb(lv_indev_t *indev, lv_indev_data_t *data);
 
 void lv_test_key_press(uint32_t k);
 void lv_test_key_release(void);
 void lv_test_key_hit(uint32_t k);
 
 /* encoder read callback */
-void lv_test_encoder_read_cb(lv_indev_t * indev, lv_indev_data_t * data) ;
+void lv_test_encoder_read_cb(lv_indev_t *indev, lv_indev_data_t *data);
 
 /* Simulate encoder rotation, use positive parameter to rotate to the right
  * and negative to rotate to the left */
@@ -41,9 +41,9 @@ void lv_test_encoder_click(void);
 /* Simulate delay */
 void lv_test_indev_wait(uint32_t ms);
 
-extern lv_indev_t * lv_test_mouse_indev;
-extern lv_indev_t * lv_test_keypad_indev;
-extern lv_indev_t * lv_test_encoder_indev;
+extern lv_indev_t *lv_test_mouse_indev;
+extern lv_indev_t *lv_test_keypad_indev;
+extern lv_indev_t *lv_test_encoder_indev;
 
 #ifdef __cplusplus
 } /*extern "C"*/

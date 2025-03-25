@@ -29,19 +29,20 @@
 /* Internal Class Implementation                                        */
 /************************************************************************/
 
-static bool accessChildren(Iterator* it, function<bool(const Paint* paint)> func)
+static bool accessChildren(Iterator *it, function<bool(const Paint *paint)> func)
 {
     while (auto child = it->next()) {
-        //Access the child
-        if (!func(child)) return false;
+        // Access the child
+        if (!func(child))
+            return false;
 
-        //Access the children of the child
+        // Access the children of the child
         if (auto it2 = IteratorAccessor::iterator(child)) {
             if (!accessChildren(it2, func)) {
-                delete(it2);
+                delete (it2);
                 return false;
             }
-            delete(it2);
+            delete (it2);
         }
     }
     return true;
@@ -51,36 +52,29 @@ static bool accessChildren(Iterator* it, function<bool(const Paint* paint)> func
 /* External Class Implementation                                        */
 /************************************************************************/
 
-unique_ptr<Picture> Accessor::set(unique_ptr<Picture> picture, function<bool(const Paint* paint)> func) noexcept
+unique_ptr<Picture> Accessor::set(unique_ptr<Picture> picture, function<bool(const Paint *paint)> func) noexcept
 {
     auto p = picture.get();
-    if (!p || !func) return picture;
+    if (!p || !func)
+        return picture;
 
-    //Use the Preorder Tree-Search
+    // Use the Preorder Tree-Search
 
-    //Root
-    if (!func(p)) return picture;
+    // Root
+    if (!func(p))
+        return picture;
 
-    //Children
+    // Children
     if (auto it = IteratorAccessor::iterator(p)) {
         accessChildren(it, func);
-        delete(it);
+        delete (it);
     }
     return picture;
 }
 
+Accessor::~Accessor() {}
 
-Accessor::~Accessor()
-{
-
-}
-
-
-Accessor::Accessor() : pImpl(nullptr)
-{
-
-}
-
+Accessor::Accessor() : pImpl(nullptr) {}
 
 unique_ptr<Accessor> Accessor::gen() noexcept
 {
@@ -88,4 +82,3 @@ unique_ptr<Accessor> Accessor::gen() noexcept
 }
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

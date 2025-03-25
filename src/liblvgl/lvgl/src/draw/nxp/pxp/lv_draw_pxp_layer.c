@@ -20,7 +20,7 @@
 
 #include "../../../stdlib/lv_string.h"
 #if LV_USE_PARALLEL_DRAW_DEBUG
-    #include "../../../core/lv_global.h"
+#include "../../../core/lv_global.h"
 #endif
 
 /*********************
@@ -40,7 +40,7 @@
  **********************/
 
 #if LV_USE_PARALLEL_DRAW_DEBUG
-    #define _draw_info LV_GLOBAL_DEFAULT()->draw_info
+#define _draw_info LV_GLOBAL_DEFAULT()->draw_info
 #endif
 
 /**********************
@@ -51,24 +51,18 @@
  *   GLOBAL FUNCTIONS
  **********************/
 
-void lv_draw_pxp_layer(lv_draw_unit_t * draw_unit, const lv_draw_image_dsc_t * draw_dsc,
-                       const lv_area_t * coords)
+void lv_draw_pxp_layer(lv_draw_unit_t *draw_unit, const lv_draw_image_dsc_t *draw_dsc, const lv_area_t *coords)
 {
-    lv_layer_t * layer_to_draw = (lv_layer_t *)draw_dsc->src;
-    const lv_draw_buf_t * draw_buf = layer_to_draw->draw_buf;
+    lv_layer_t *layer_to_draw = (lv_layer_t *)draw_dsc->src;
+    const lv_draw_buf_t *draw_buf = layer_to_draw->draw_buf;
 
     /* It can happen that nothing was draw on a layer and therefore its buffer is not allocated.
      * In this case just return.
      */
-    if(draw_buf == NULL)
+    if (draw_buf == NULL)
         return;
 
-    const lv_area_t area_to_draw = {
-        .x1 = 0,
-        .y1 = 0,
-        .x2 = draw_buf->header.w - 1,
-        .y2 = draw_buf->header.h - 1
-    };
+    const lv_area_t area_to_draw = {.x1 = 0, .y1 = 0, .x2 = draw_buf->header.w - 1, .y2 = draw_buf->header.h - 1};
     lv_draw_buf_invalidate_cache(draw_buf, &area_to_draw);
 
     lv_draw_image_dsc_t new_draw_dsc = *draw_dsc;
@@ -78,7 +72,7 @@ void lv_draw_pxp_layer(lv_draw_unit_t * draw_unit, const lv_draw_image_dsc_t * d
 #if LV_USE_LAYER_DEBUG || LV_USE_PARALLEL_DRAW_DEBUG
     lv_area_t area_rot;
     lv_area_copy(&area_rot, coords);
-    if(draw_dsc->rotation || draw_dsc->scale_x != LV_SCALE_NONE || draw_dsc->scale_y != LV_SCALE_NONE) {
+    if (draw_dsc->rotation || draw_dsc->scale_x != LV_SCALE_NONE || draw_dsc->scale_y != LV_SCALE_NONE) {
         int32_t w = lv_area_get_width(coords);
         int32_t h = lv_area_get_height(coords);
 
@@ -91,7 +85,8 @@ void lv_draw_pxp_layer(lv_draw_unit_t * draw_unit, const lv_draw_image_dsc_t * d
         area_rot.y2 += coords->y1;
     }
     lv_area_t draw_area;
-    if(!lv_area_intersect(&draw_area, &area_rot, draw_unit->clip_area)) return;
+    if (!lv_area_intersect(&draw_area, &area_rot, draw_unit->clip_area))
+        return;
 #endif
 
 #if LV_USE_LAYER_DEBUG
@@ -112,8 +107,8 @@ void lv_draw_pxp_layer(lv_draw_unit_t * draw_unit, const lv_draw_image_dsc_t * d
 
 #if LV_USE_PARALLEL_DRAW_DEBUG
     uint32_t idx = 0;
-    lv_draw_unit_t * draw_unit_tmp = _draw_info.unit_head;
-    while(draw_unit_tmp != draw_unit) {
+    lv_draw_unit_t *draw_unit_tmp = _draw_info.unit_head;
+    while (draw_unit_tmp != draw_unit) {
         draw_unit_tmp = draw_unit_tmp->next;
         idx++;
     }

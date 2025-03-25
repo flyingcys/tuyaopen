@@ -30,89 +30,73 @@
 #include <cstring>
 #include "tvgCommon.h"
 
-template<typename T>
-struct DuplicateMethod
-{
+template <typename T> struct DuplicateMethod {
     virtual ~DuplicateMethod() {}
-    virtual T* duplicate() = 0;
+    virtual T *duplicate() = 0;
 };
 
-template<class T>
-struct FillDup : DuplicateMethod<Fill>
-{
-    T* inst = nullptr;
+template <class T> struct FillDup : DuplicateMethod<Fill> {
+    T *inst = nullptr;
 
-    FillDup(T* _inst) : inst(_inst) {}
+    FillDup(T *_inst) : inst(_inst) {}
     ~FillDup() {}
 
-    Fill* duplicate() override
-    {
-        return inst->duplicate();
-    }
+    Fill *duplicate() override { return inst->duplicate(); }
 };
 
-struct Fill::Impl
-{
-    ColorStop* colorStops = nullptr;
-    Matrix* transform = nullptr;
+struct Fill::Impl {
+    ColorStop *colorStops = nullptr;
+    Matrix *transform = nullptr;
     uint32_t cnt = 0;
     FillSpread spread;
-    DuplicateMethod<Fill>* dup = nullptr;
+    DuplicateMethod<Fill> *dup = nullptr;
     uint8_t id;
 
     ~Impl()
     {
-        delete(dup);
+        delete (dup);
         free(colorStops);
         free(transform);
     }
 
-    void method(DuplicateMethod<Fill>* dup)
-    {
-        this->dup = dup;
-    }
+    void method(DuplicateMethod<Fill> *dup) { this->dup = dup; }
 
-    Fill* duplicate()
+    Fill *duplicate()
     {
         auto ret = dup->duplicate();
-        if (!ret) return nullptr;
+        if (!ret)
+            return nullptr;
 
         ret->pImpl->cnt = cnt;
         ret->pImpl->spread = spread;
-        ret->pImpl->colorStops = static_cast<ColorStop*>(malloc(sizeof(ColorStop) * cnt));
+        ret->pImpl->colorStops = static_cast<ColorStop *>(malloc(sizeof(ColorStop) * cnt));
         memcpy(ret->pImpl->colorStops, colorStops, sizeof(ColorStop) * cnt);
         if (transform) {
-            ret->pImpl->transform = static_cast<Matrix*>(malloc(sizeof(Matrix)));
+            ret->pImpl->transform = static_cast<Matrix *>(malloc(sizeof(Matrix)));
             *ret->pImpl->transform = *transform;
         }
         return ret;
     }
 };
 
-
-struct RadialGradient::Impl
-{
+struct RadialGradient::Impl {
     float cx = 0.0f, cy = 0.0f;
     float fx = 0.0f, fy = 0.0f;
     float r = 0.0f, fr = 0.0f;
 
-    Fill* duplicate();
+    Fill *duplicate();
     Result radial(float cx, float cy, float r, float fx, float fy, float fr);
 };
 
-
-struct LinearGradient::Impl
-{
+struct LinearGradient::Impl {
     float x1 = 0.0f;
     float y1 = 0.0f;
     float x2 = 0.0f;
     float y2 = 0.0f;
 
-    Fill* duplicate();
+    Fill *duplicate();
 };
 
-
-#endif  //_TVG_FILL_H_
+#endif //_TVG_FILL_H_
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

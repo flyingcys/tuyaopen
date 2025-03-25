@@ -35,46 +35,42 @@
 
 void LottieLoader::run(unsigned tid)
 {
-    //update frame
+    // update frame
     if (comp) {
         builder->update(comp, frameNo);
-    //initial loading
+        // initial loading
     } else {
         LottieParser parser(content, dirName);
-        if (!parser.parse()) return;
+        if (!parser.parse())
+            return;
         comp = parser.comp;
         builder->build(comp);
     }
     rebuild = false;
 }
 
-
 /************************************************************************/
 /* External Class Implementation                                        */
 /************************************************************************/
 
-LottieLoader::LottieLoader() : FrameModule(FileType::Lottie), builder(new LottieBuilder)
-{
-
-}
-
+LottieLoader::LottieLoader() : FrameModule(FileType::Lottie), builder(new LottieBuilder) {}
 
 LottieLoader::~LottieLoader()
 {
     this->done();
 
-    if (copy) free((char*)content);
+    if (copy)
+        free((char *)content);
     free(dirName);
 
-    //TODO: correct position?
-    delete(comp);
-    delete(builder);
+    // TODO: correct position?
+    delete (comp);
+    delete (builder);
 }
-
 
 bool LottieLoader::header()
 {
-    //A single thread doesn't need to perform intensive tasks.
+    // A single thread doesn't need to perform intensive tasks.
     if (TaskScheduler::threads() == 0) {
         run(0);
         if (comp) {
@@ -88,7 +84,7 @@ bool LottieLoader::header()
         }
     }
 
-    //Quickly validate the given Lottie file without parsing in order to get the animation info.
+    // Quickly validate the given Lottie file without parsing in order to get the animation info.
     auto startFrame = 0.0f;
     auto endFrame = 0.0f;
     auto frameRate = 0.0f;
@@ -111,56 +107,61 @@ bool LottieLoader::header()
             ++p;
             continue;
         }
-        //version.
+        // version.
         if (!strncmp(p, "\"v\":", 4)) {
             p += 4;
             continue;
         }
 
-        //framerate
+        // framerate
         if (!strncmp(p, "\"fr\":", 5)) {
             p += 5;
             auto e = strstr(p, ",");
-            if (!e) e = strstr(p, "}");
+            if (!e)
+                e = strstr(p, "}");
             frameRate = strToFloat(p, nullptr);
             p = e;
             continue;
         }
 
-        //start frame
+        // start frame
         if (!strncmp(p, "\"ip\":", 5)) {
             p += 5;
             auto e = strstr(p, ",");
-            if (!e) e = strstr(p, "}");
+            if (!e)
+                e = strstr(p, "}");
             startFrame = strToFloat(p, nullptr);
             p = e;
             continue;
         }
 
-        //end frame
+        // end frame
         if (!strncmp(p, "\"op\":", 5)) {
             p += 5;
             auto e = strstr(p, ",");
-            if (!e) e = strstr(p, "}");
+            if (!e)
+                e = strstr(p, "}");
             endFrame = strToFloat(p, nullptr);
             p = e;
             continue;
         }
 
-        //width
+        // width
         if (!strncmp(p, "\"w\":", 4)) {
             p += 4;
             auto e = strstr(p, ",");
-            if (!e) e = strstr(p, "}");
+            if (!e)
+                e = strstr(p, "}");
             w = strToFloat(p, nullptr);
             p = e;
             continue;
         }
-        //height
+        // height
         if (!strncmp(p, "\"h\":", 4)) {
             p += 4;
             auto e = strstr(p, ",");
-            if (!e) e = strstr(p, "}");
+            if (!e)
+                e = strstr(p, "}");
             h = strToFloat(p, nullptr);
             p = e;
             continue;
@@ -181,14 +182,15 @@ bool LottieLoader::header()
     return true;
 }
 
-
-bool LottieLoader::open(const char* data, uint32_t size, bool copy)
+bool LottieLoader::open(const char *data, uint32_t size, bool copy)
 {
     if (copy) {
-        content = (char*)malloc(size);
-        if (!content) return false;
-        memcpy((char*)content, data, size);
-    } else content = data;
+        content = (char *)malloc(size);
+        if (!content)
+            return false;
+        memcpy((char *)content, data, size);
+    } else
+        content = data;
 
     this->size = size;
     this->copy = copy;
@@ -196,11 +198,11 @@ bool LottieLoader::open(const char* data, uint32_t size, bool copy)
     return header();
 }
 
-
-bool LottieLoader::open(const string& path)
+bool LottieLoader::open(const string &path)
 {
     auto f = fopen(path.c_str(), "r");
-    if (!f) return false;
+    if (!f)
+        return false;
 
     fseek(f, 0, SEEK_END);
 
@@ -210,7 +212,7 @@ bool LottieLoader::open(const string& path)
         return false;
     }
 
-    auto content = (char*)(malloc(sizeof(char) * size + 1));
+    auto content = (char *)(malloc(sizeof(char) * size + 1));
     fseek(f, 0, SEEK_SET);
     auto ret = fread(content, sizeof(char), size, f);
     if (ret < size) {
@@ -228,78 +230,84 @@ bool LottieLoader::open(const string& path)
     return header();
 }
 
-
-bool LottieLoader::resize(Paint* paint, float w, float h)
+bool LottieLoader::resize(Paint *paint, float w, float h)
 {
-    if (!paint) return false;
+    if (!paint)
+        return false;
 
     auto sx = w / this->w;
     auto sy = h / this->h;
     Matrix m = {sx, 0, 0, 0, sy, 0, 0, 0, 1};
     paint->transform(m);
 
-    //apply the scale to the base clipper
-    const Paint* clipper;
+    // apply the scale to the base clipper
+    const Paint *clipper;
     paint->composite(&clipper);
-    if (clipper) const_cast<Paint*>(clipper)->transform(m);
+    if (clipper)
+        const_cast<Paint *>(clipper)->transform(m);
 
     return true;
 }
 
-
 bool LottieLoader::read()
 {
-    if (!content || size == 0) return false;
+    if (!content || size == 0)
+        return false;
 
-    //the loading has been already completed
-    if (comp || !LoadModule::read()) return true;
+    // the loading has been already completed
+    if (comp || !LoadModule::read())
+        return true;
 
     TaskScheduler::request(this);
 
     return true;
 }
 
-
-Paint* LottieLoader::paint()
+Paint *LottieLoader::paint()
 {
     done();
 
-    if (!comp) return nullptr;
+    if (!comp)
+        return nullptr;
     comp->initiated = true;
     return comp->root->scene;
 }
 
-
-bool LottieLoader::override(const char* slot)
+bool LottieLoader::override(const char *slot)
 {
-    if (!comp) done();
+    if (!comp)
+        done();
 
-    if (!comp || comp->slots.count == 0) return false;
+    if (!comp || comp->slots.count == 0)
+        return false;
 
     auto success = true;
 
-    //override slots
+    // override slots
     if (slot) {
-        //Copy the input data because the JSON parser will encode the data immediately.
+        // Copy the input data because the JSON parser will encode the data immediately.
         auto temp = strdup(slot);
 
-        //parsing slot json
+        // parsing slot json
         LottieParser parser(temp, dirName);
 
         auto idx = 0;
         while (auto sid = parser.sid(idx == 0)) {
             for (auto s = comp->slots.begin(); s < comp->slots.end(); ++s) {
-                if (strcmp((*s)->sid, sid)) continue;
-                if (!parser.apply(*s)) success = false;
+                if (strcmp((*s)->sid, sid))
+                    continue;
+                if (!parser.apply(*s))
+                    success = false;
                 break;
             }
             ++idx;
         }
 
-        if (idx < 1) success = false;
+        if (idx < 1)
+            success = false;
         free(temp);
         rebuild = overridden = success;
-    //reset slots
+        // reset slots
     } else if (overridden) {
         for (auto s = comp->slots.begin(); s < comp->slots.end(); ++s) {
             (*s)->reset();
@@ -310,18 +318,18 @@ bool LottieLoader::override(const char* slot)
     return success;
 }
 
-
 bool LottieLoader::frame(float no)
 {
     auto frameNo = no + startFrame();
 
-    //This ensures that the target frame number is reached.
+    // This ensures that the target frame number is reached.
     frameNo *= 10000.0f;
     frameNo = roundf(frameNo);
     frameNo *= 0.0001f;
 
-    //Skip update if frame diff is too small.
-    if (fabsf(this->frameNo - frameNo) <= 0.0009f) return false;
+    // Skip update if frame diff is too small.
+    if (fabsf(this->frameNo - frameNo) <= 0.0009f)
+        return false;
 
     this->done();
 
@@ -332,66 +340,68 @@ bool LottieLoader::frame(float no)
     return true;
 }
 
-
 float LottieLoader::startFrame()
 {
     return frameCnt * segmentBegin;
 }
-
 
 float LottieLoader::totalFrame()
 {
     return (segmentEnd - segmentBegin) * frameCnt;
 }
 
-
 float LottieLoader::curFrame()
 {
     return frameNo - startFrame();
 }
 
-
 float LottieLoader::duration()
 {
-    if (segmentBegin == 0.0f && segmentEnd == 1.0f) return frameDuration;
+    if (segmentBegin == 0.0f && segmentEnd == 1.0f)
+        return frameDuration;
 
-    if (!comp) done();
-    if (!comp) return 0.0f;
+    if (!comp)
+        done();
+    if (!comp)
+        return 0.0f;
 
     return frameCnt * (segmentEnd - segmentBegin) / comp->frameRate;
 }
-
 
 void LottieLoader::sync()
 {
     this->done();
 
-    if (rebuild) run(0);
+    if (rebuild)
+        run(0);
 }
-
 
 uint32_t LottieLoader::markersCnt()
 {
-    if (!comp) done();
-    if (!comp) return 0;
+    if (!comp)
+        done();
+    if (!comp)
+        return 0;
     return comp->markers.count;
 }
 
-
-const char* LottieLoader::markers(uint32_t index)
+const char *LottieLoader::markers(uint32_t index)
 {
-    if (!comp) done();
-    if (!comp || index >= comp->markers.count) return nullptr;
+    if (!comp)
+        done();
+    if (!comp || index >= comp->markers.count)
+        return nullptr;
     auto marker = comp->markers.begin() + index;
     return (*marker)->name;
 }
 
-
-bool LottieLoader::segment(const char* marker, float& begin, float& end)
+bool LottieLoader::segment(const char *marker, float &begin, float &end)
 {
-    if (!comp) done();
-    if (!comp) return false;
-    
+    if (!comp)
+        done();
+    if (!comp)
+        return false;
+
     for (auto m = comp->markers.begin(); m < comp->markers.end(); ++m) {
         if (!strcmp(marker, (*m)->name)) {
             begin = (*m)->time / frameCnt;
@@ -402,6 +412,4 @@ bool LottieLoader::segment(const char* marker, float& begin, float& end)
     return false;
 }
 
-
 #endif /* LV_USE_THORVG_INTERNAL */
-

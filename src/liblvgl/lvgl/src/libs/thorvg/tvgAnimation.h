@@ -30,9 +30,8 @@
 #include "tvgPaint.h"
 #include "tvgPicture.h"
 
-struct Animation::Impl
-{
-    Picture* picture = nullptr;
+struct Animation::Impl {
+    Picture *picture = nullptr;
 
     Impl()
     {
@@ -43,7 +42,7 @@ struct Animation::Impl
     ~Impl()
     {
         if (PP(picture)->unref() == 0) {
-            delete(picture);
+            delete (picture);
         }
     }
 };
@@ -51,4 +50,3 @@ struct Animation::Impl
 #endif //_TVG_ANIMATION_H_
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

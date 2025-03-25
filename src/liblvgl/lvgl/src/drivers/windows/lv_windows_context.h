@@ -20,13 +20,13 @@ extern "C" {
 #if LV_USE_WINDOWS
 
 #if LV_USE_OS != LV_OS_WINDOWS
-#error [lv_windows] LV_OS_WINDOWS is required. Enable it in lv_conf.h (LV_USE_OS LV_OS_WINDOWS)
+#error[lv_windows] LV_OS_WINDOWS is required. Enable it in lv_conf.h (LV_USE_OS LV_OS_WINDOWS)
 #endif
 
 #include <windows.h>
 
 #ifndef CREATE_WAITABLE_TIMER_MANUAL_RESET
-#define CREATE_WAITABLE_TIMER_MANUAL_RESET  0x00000001
+#define CREATE_WAITABLE_TIMER_MANUAL_RESET 0x00000001
 #endif
 
 #ifndef CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
@@ -44,7 +44,7 @@ extern "C" {
 typedef struct lv_windows_pointer_context_t {
     lv_indev_state_t state;
     lv_point_t point;
-    lv_indev_t * indev;
+    lv_indev_t *indev;
 } lv_windows_pointer_context_t;
 
 typedef struct lv_windows_keypad_queue_item_t {
@@ -56,18 +56,18 @@ typedef struct lv_windows_keypad_context_t {
     lv_ll_t queue;
     uint16_t utf16_high_surrogate;
     uint16_t utf16_low_surrogate;
-    lv_indev_t * indev;
+    lv_indev_t *indev;
 } lv_windows_keypad_context_t;
 
 typedef struct lv_windows_encoder_context_t {
     lv_indev_state_t state;
     int16_t enc_diff;
-    lv_indev_t * indev;
+    lv_indev_t *indev;
 } lv_windows_encoder_context_t;
 
 typedef struct lv_windows_window_context_t {
-    lv_display_t * display_device_object;
-    lv_timer_t * display_timer_object;
+    lv_display_t *display_device_object;
+    lv_timer_t *display_timer_object;
 
     int32_t window_dpi;
     int32_t zoom_level;
@@ -77,7 +77,7 @@ typedef struct lv_windows_window_context_t {
     lv_point_t requested_display_resolution;
 
     HDC display_framebuffer_context_handle;
-    uint32_t * display_framebuffer_base;
+    uint32_t *display_framebuffer_base;
     size_t display_framebuffer_size;
 
     lv_windows_pointer_context_t pointer;
@@ -87,14 +87,14 @@ typedef struct lv_windows_window_context_t {
 } lv_windows_window_context_t;
 
 typedef struct lv_windows_create_display_data_t {
-    const wchar_t * title;
+    const wchar_t *title;
     int32_t hor_res;
     int32_t ver_res;
     int32_t zoom_level;
     bool allow_dpi_override;
     bool simulator_mode;
     HANDLE mutex;
-    lv_display_t * display;
+    lv_display_t *display;
 } lv_windows_create_display_data_t;
 
 /**********************
@@ -106,7 +106,7 @@ typedef struct lv_windows_create_display_data_t {
  * @remark This is a private API which is used for LVGL Windows backend
  *         implementation. LVGL users shouldn't use that because the
  *         LVGL has already used it in lv_init.
-*/
+ */
 void lv_windows_platform_init(void);
 
 /**
@@ -117,9 +117,8 @@ void lv_windows_platform_init(void);
  *         implementation. LVGL users shouldn't use that because the
  *         maintainer doesn't promise the application binary interface
  *         compatibility for this API.
-*/
-lv_windows_window_context_t * lv_windows_get_window_context(
-    HWND window_handle);
+ */
+lv_windows_window_context_t *lv_windows_get_window_context(HWND window_handle);
 
 /**********************
  *      MACROS

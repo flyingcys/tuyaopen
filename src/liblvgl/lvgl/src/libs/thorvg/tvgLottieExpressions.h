@@ -36,19 +36,16 @@ struct RGB24;
 
 #include "jerryscript.h"
 
-
-struct LottieExpressions
-{
+struct LottieExpressions {
 public:
-    template<typename Property, typename NumType>
-    bool result(float frameNo, NumType& out, LottieExpression* exp)
+    template <typename Property, typename NumType> bool result(float frameNo, NumType &out, LottieExpression *exp)
     {
         auto bm_rt = evaluate(frameNo, exp);
 
-        if (auto prop = static_cast<Property*>(jerry_object_get_native_ptr(bm_rt, nullptr))) {
+        if (auto prop = static_cast<Property *>(jerry_object_get_native_ptr(bm_rt, nullptr))) {
             out = (*prop)(frameNo);
         } else if (jerry_value_is_number(bm_rt)) {
-            out = (NumType) jerry_value_as_number(bm_rt);
+            out = (NumType)jerry_value_as_number(bm_rt);
         } else {
             TVGERR("LOTTIE", "Failed dispatching a Value!");
             return false;
@@ -57,13 +54,12 @@ public:
         return true;
     }
 
-    template<typename Property>
-    bool result(float frameNo, Point& out, LottieExpression* exp)
+    template <typename Property> bool result(float frameNo, Point &out, LottieExpression *exp)
     {
         auto bm_rt = evaluate(frameNo, exp);
 
         if (jerry_value_is_object(bm_rt)) {
-            if (auto prop = static_cast<Property*>(jerry_object_get_native_ptr(bm_rt, nullptr))) {
+            if (auto prop = static_cast<Property *>(jerry_object_get_native_ptr(bm_rt, nullptr))) {
                 out = (*prop)(frameNo);
             } else {
                 auto x = jerry_object_get_index(bm_rt, 0);
@@ -81,12 +77,11 @@ public:
         return true;
     }
 
-    template<typename Property>
-    bool result(float frameNo, RGB24& out, LottieExpression* exp)
+    template <typename Property> bool result(float frameNo, RGB24 &out, LottieExpression *exp)
     {
         auto bm_rt = evaluate(frameNo, exp);
 
-        if (auto color = static_cast<Property*>(jerry_object_get_native_ptr(bm_rt, nullptr))) {
+        if (auto color = static_cast<Property *>(jerry_object_get_native_ptr(bm_rt, nullptr))) {
             out = (*color)(frameNo);
         } else {
             TVGERR("LOTTIE", "Failed dispatching Color!");
@@ -96,12 +91,11 @@ public:
         return true;
     }
 
-    template<typename Property>
-    bool result(float frameNo, Fill* fill, LottieExpression* exp)
+    template <typename Property> bool result(float frameNo, Fill *fill, LottieExpression *exp)
     {
         auto bm_rt = evaluate(frameNo, exp);
 
-        if (auto colorStop = static_cast<Property*>(jerry_object_get_native_ptr(bm_rt, nullptr))) {
+        if (auto colorStop = static_cast<Property *>(jerry_object_get_native_ptr(bm_rt, nullptr))) {
             (*colorStop)(frameNo, fill, this);
         } else {
             TVGERR("LOTTIE", "Failed dispatching ColorStop!");
@@ -111,36 +105,37 @@ public:
         return true;
     }
 
-    template<typename Property>
-    bool result(float frameNo, Array<PathCommand>& cmds, Array<Point>& pts, Matrix* transform, float roundness, LottieExpression* exp)
+    template <typename Property>
+    bool result(float frameNo, Array<PathCommand> &cmds, Array<Point> &pts, Matrix *transform, float roundness,
+                LottieExpression *exp)
     {
         auto bm_rt = evaluate(frameNo, exp);
 
-        if (auto pathset = static_cast<Property*>(jerry_object_get_native_ptr(bm_rt, nullptr))) {
+        if (auto pathset = static_cast<Property *>(jerry_object_get_native_ptr(bm_rt, nullptr))) {
             (*pathset)(frameNo, cmds, pts, transform, roundness);
-         } else {
+        } else {
             TVGERR("LOTTIE", "Failed dispatching PathSet!");
             return false;
-         }
+        }
         jerry_value_free(bm_rt);
         return true;
     }
 
     void update(float curTime);
 
-    //singleton (no thread safety)
-    static LottieExpressions* instance();
-    static void retrieve(LottieExpressions* instance);
+    // singleton (no thread safety)
+    static LottieExpressions *instance();
+    static void retrieve(LottieExpressions *instance);
 
 private:
     LottieExpressions();
     ~LottieExpressions();
 
-    jerry_value_t evaluate(float frameNo, LottieExpression* exp);
+    jerry_value_t evaluate(float frameNo, LottieExpression *exp);
     jerry_value_t buildGlobal();
-    void buildComp(LottieComposition* comp);
+    void buildComp(LottieComposition *comp);
 
-    //global object, attributes, methods
+    // global object, attributes, methods
     jerry_value_t global;
     jerry_value_t comp;
     jerry_value_t layer;
@@ -151,21 +146,34 @@ private:
 
 #else
 
-struct LottieExpressions
-{
-    template<typename Property, typename NumType> bool result(TVG_UNUSED float, TVG_UNUSED NumType&, TVG_UNUSED LottieExpression*) { return false; }
-    template<typename Property> bool result(TVG_UNUSED float, TVG_UNUSED Point&, LottieExpression*) { return false; }
-    template<typename Property> bool result(TVG_UNUSED float, TVG_UNUSED RGB24&, TVG_UNUSED LottieExpression*) { return false; }
-    template<typename Property> bool result(TVG_UNUSED float, TVG_UNUSED Fill*, TVG_UNUSED LottieExpression*) { return false; }
-    template<typename Property> bool result(TVG_UNUSED float, TVG_UNUSED Array<PathCommand>&, TVG_UNUSED Array<Point>&, TVG_UNUSED Matrix* transform, TVG_UNUSED float, TVG_UNUSED LottieExpression*) { return false; }
+struct LottieExpressions {
+    template <typename Property, typename NumType>
+    bool result(TVG_UNUSED float, TVG_UNUSED NumType &, TVG_UNUSED LottieExpression *)
+    {
+        return false;
+    }
+    template <typename Property> bool result(TVG_UNUSED float, TVG_UNUSED Point &, LottieExpression *) { return false; }
+    template <typename Property> bool result(TVG_UNUSED float, TVG_UNUSED RGB24 &, TVG_UNUSED LottieExpression *)
+    {
+        return false;
+    }
+    template <typename Property> bool result(TVG_UNUSED float, TVG_UNUSED Fill *, TVG_UNUSED LottieExpression *)
+    {
+        return false;
+    }
+    template <typename Property>
+    bool result(TVG_UNUSED float, TVG_UNUSED Array<PathCommand> &, TVG_UNUSED Array<Point> &,
+                TVG_UNUSED Matrix *transform, TVG_UNUSED float, TVG_UNUSED LottieExpression *)
+    {
+        return false;
+    }
     void update(TVG_UNUSED float) {}
-    static LottieExpressions* instance() { return nullptr; }
-    static void retrieve(TVG_UNUSED LottieExpressions* instance) {}
+    static LottieExpressions *instance() { return nullptr; }
+    static void retrieve(TVG_UNUSED LottieExpressions *instance) {}
 };
 
-#endif //THORVG_LOTTIE_EXPRESSIONS_SUPPORT
+#endif // THORVG_LOTTIE_EXPRESSIONS_SUPPORT
 
 #endif //_TVG_LOTTIE_EXPRESSIONS_H_
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

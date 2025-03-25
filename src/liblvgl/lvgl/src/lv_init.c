@@ -41,31 +41,31 @@
 #include "osal/lv_os_private.h"
 
 #if LV_USE_DRAW_VGLITE
-    #include "draw/nxp/vglite/lv_draw_vglite.h"
+#include "draw/nxp/vglite/lv_draw_vglite.h"
 #endif
 #if LV_USE_PXP
-    #if LV_USE_DRAW_PXP || LV_USE_ROTATE_PXP
-        #include "draw/nxp/pxp/lv_draw_pxp.h"
-    #endif
+#if LV_USE_DRAW_PXP || LV_USE_ROTATE_PXP
+#include "draw/nxp/pxp/lv_draw_pxp.h"
+#endif
 #endif
 #if LV_USE_DRAW_DAVE2D
-    #include "draw/renesas/dave2d/lv_draw_dave2d.h"
+#include "draw/renesas/dave2d/lv_draw_dave2d.h"
 #endif
 #if LV_USE_DRAW_SDL
-    #include "draw/sdl/lv_draw_sdl.h"
+#include "draw/sdl/lv_draw_sdl.h"
 #endif
 #if LV_USE_DRAW_VG_LITE
-    #include "draw/vg_lite/lv_draw_vg_lite.h"
+#include "draw/vg_lite/lv_draw_vg_lite.h"
 #endif
 #if LV_USE_WINDOWS
-    #include "drivers/windows/lv_windows_context.h"
+#include "drivers/windows/lv_windows_context.h"
 #endif
 
 /*********************
  *      DEFINES
  *********************/
-#define lv_initialized  LV_GLOBAL_DEFAULT()->inited
-#define lv_deinit_in_progress  LV_GLOBAL_DEFAULT()->deinit_in_progress
+#define lv_initialized        LV_GLOBAL_DEFAULT()->inited
+#define lv_deinit_in_progress LV_GLOBAL_DEFAULT()->deinit_in_progress
 
 /**********************
  *      TYPEDEFS
@@ -79,7 +79,7 @@
  *  STATIC VARIABLES
  **********************/
 #if LV_ENABLE_GLOBAL_CUSTOM == 0
-    lv_global_t lv_global;
+lv_global_t lv_global;
 #endif
 
 /**********************
@@ -87,17 +87,17 @@
  **********************/
 
 #ifndef LV_GLOBAL_INIT
-    #define LV_GLOBAL_INIT(__GLOBAL_PTR)    lv_global_init((lv_global_t *)(__GLOBAL_PTR))
+#define LV_GLOBAL_INIT(__GLOBAL_PTR) lv_global_init((lv_global_t *)(__GLOBAL_PTR))
 #endif
 
 /**********************
  *   GLOBAL FUNCTIONS
  **********************/
-static inline void lv_global_init(lv_global_t * global)
+static inline void lv_global_init(lv_global_t *global)
 {
     LV_ASSERT_NULL(global);
 
-    if(global == NULL) {
+    if (global == NULL) {
         LV_LOG_ERROR("lv_global cannot be null");
         return;
     }
@@ -115,7 +115,7 @@ static inline void lv_global_init(lv_global_t * global)
     lv_rand_set_seed(0x1234ABCD);
 
 #ifdef LV_LOG_PRINT_CB
-    void LV_LOG_PRINT_CB(lv_log_level_t, const char * txt);
+    void LV_LOG_PRINT_CB(lv_log_level_t, const char *txt);
     global->custom_log_print_cb = LV_LOG_PRINT_CB;
 #endif
 
@@ -125,22 +125,24 @@ static inline void lv_global_init(lv_global_t * global)
 #endif
 }
 
-static inline void lv_cleanup_devices(lv_global_t * global)
+static inline void lv_cleanup_devices(lv_global_t *global)
 {
     LV_ASSERT_NULL(global);
 
-    if(global) {
+    if (global) {
         /* cleanup indev and display */
-        lv_ll_clear_custom(&(global->indev_ll), (void (*)(void *)) lv_indev_delete);
-        lv_ll_clear_custom(&(global->disp_ll), (void (*)(void *)) lv_display_delete);
+        lv_ll_clear_custom(&(global->indev_ll), (void (*)(void *))lv_indev_delete);
+        lv_ll_clear_custom(&(global->disp_ll), (void (*)(void *))lv_display_delete);
     }
 }
 
 bool lv_is_initialized(void)
 {
 #if LV_ENABLE_GLOBAL_CUSTOM
-    if(LV_GLOBAL_DEFAULT()) return lv_initialized;
-    else return false;
+    if (LV_GLOBAL_DEFAULT())
+        return lv_initialized;
+    else
+        return false;
 #else
     return lv_initialized;
 #endif
@@ -154,7 +156,7 @@ void lv_init(void)
 #endif
 
     /*Do nothing if already initialized*/
-    if(lv_initialized) {
+    if (lv_initialized) {
         LV_LOG_WARN("lv_init: already initialized");
         return;
     }
@@ -228,29 +230,28 @@ void lv_init(void)
 #endif
 
     lv_image_decoder_init(LV_CACHE_DEF_SIZE, LV_IMAGE_HEADER_CACHE_DEF_CNT);
-    lv_bin_decoder_init();  /*LVGL built-in binary image decoder*/
+    lv_bin_decoder_init(); /*LVGL built-in binary image decoder*/
 
 #if LV_USE_DRAW_VG_LITE
     lv_draw_vg_lite_init();
 #endif
 
     /*Test if the IDE has UTF-8 encoding*/
-    const char * txt = "Á";
+    const char *txt = "Á";
 
-    uint8_t * txt_u8 = (uint8_t *)txt;
-    if(txt_u8[0] != 0xc3 || txt_u8[1] != 0x81 || txt_u8[2] != 0x00) {
+    uint8_t *txt_u8 = (uint8_t *)txt;
+    if (txt_u8[0] != 0xc3 || txt_u8[1] != 0x81 || txt_u8[2] != 0x00) {
         LV_LOG_WARN("The strings have no UTF-8 encoding. Non-ASCII characters won't be displayed.");
     }
 
     uint32_t endianness_test = 0x11223344;
-    uint8_t * endianness_test_p = (uint8_t *) &endianness_test;
+    uint8_t *endianness_test_p = (uint8_t *)&endianness_test;
     bool big_endian = endianness_test_p[0] == 0x11;
 
-    if(big_endian) {
+    if (big_endian) {
         LV_ASSERT_MSG(LV_BIG_ENDIAN_SYSTEM == 1,
                       "It's a big endian system but LV_BIG_ENDIAN_SYSTEM is not enabled in lv_conf.h");
-    }
-    else {
+    } else {
         LV_ASSERT_MSG(LV_BIG_ENDIAN_SYSTEM == 0,
                       "It's a little endian system but LV_BIG_ENDIAN_SYSTEM is enabled in lv_conf.h");
     }
@@ -342,12 +343,13 @@ void lv_init(void)
 void lv_deinit(void)
 {
     /*Do nothing if already deinit*/
-    if(!lv_initialized) {
+    if (!lv_initialized) {
         LV_LOG_WARN("lv_deinit: already deinit!");
         return;
     }
 
-    if(lv_deinit_in_progress) return;
+    if (lv_deinit_in_progress)
+        return;
 
     lv_deinit_in_progress = true;
 
@@ -436,7 +438,6 @@ void lv_deinit(void)
 #if LV_USE_LOG
     lv_log_register_print_cb(NULL);
 #endif
-
 }
 
 /**********************

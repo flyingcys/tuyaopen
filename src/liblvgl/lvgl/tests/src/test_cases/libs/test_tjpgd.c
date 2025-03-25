@@ -19,8 +19,8 @@ static void create_images(void)
 {
     lv_obj_clean(lv_screen_active());
 
-    lv_obj_t * img;
-    lv_obj_t * label;
+    lv_obj_t *img;
+    lv_obj_t *label;
 
     LV_IMAGE_DECLARE(test_img_lvgl_logo_jpg);
     img = lv_image_create(lv_screen_active());
@@ -50,7 +50,7 @@ void test_tjpgd_1(void)
     TEST_ASSERT_EQUAL_SCREENSHOT("libs/jpg_1.png");
 
     size_t mem_before = lv_test_get_free_mem();
-    for(uint32_t i = 0; i < 20; i++) {
+    for (uint32_t i = 0; i < 20; i++) {
         create_images();
 
         lv_obj_invalidate(lv_screen_active());
@@ -68,7 +68,7 @@ void test_tjpgd_1(void)
 static void create_image_2(void)
 {
     LV_IMG_DECLARE(test_img_lvgl_logo_jpg);
-    lv_obj_t * img = lv_image_create(lv_screen_active());
+    lv_obj_t *img = lv_image_create(lv_screen_active());
     lv_image_set_src(img, &test_img_lvgl_logo_jpg);
     lv_obj_center(img);
     lv_obj_set_size(img, 300, 200);
@@ -85,7 +85,7 @@ void test_jdpgd_align_tile(void)
     lv_obj_clean(lv_screen_active());
 
     size_t mem_before = lv_test_get_free_mem();
-    for(uint32_t i = 0; i < 20; i++) {
+    for (uint32_t i = 0; i < 20; i++) {
         lv_obj_clean(lv_screen_active());
         create_image_2();
 

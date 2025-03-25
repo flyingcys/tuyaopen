@@ -33,10 +33,9 @@ struct lv_animimg_t {
     lv_image_t img;
     lv_anim_t anim;
     /* picture sequence */
-    const void ** dsc;
-    int8_t  pic_count;
+    const void **dsc;
+    int8_t pic_count;
 };
-
 
 /**********************
  * GLOBAL PROTOTYPES

@@ -1,50 +1,50 @@
 #include "lv_draw_dave2d.h"
 #if LV_USE_DRAW_DAVE2D
 
-static void dave2d_draw_border_complex(lv_draw_dave2d_unit_t * draw_unit, const lv_area_t * outer_area,
-                                       const lv_area_t * inner_area,
-                                       int32_t rout, int32_t rin, lv_color_t color, lv_opa_t opa);
+static void dave2d_draw_border_complex(lv_draw_dave2d_unit_t *draw_unit, const lv_area_t *outer_area,
+                                       const lv_area_t *inner_area, int32_t rout, int32_t rin, lv_color_t color,
+                                       lv_opa_t opa);
 
-static void dave2d_draw_border_simple(lv_draw_dave2d_unit_t * draw_unit, const lv_area_t * outer_area,
-                                      const lv_area_t * inner_area,
-                                      lv_color_t color, lv_opa_t opa);
+static void dave2d_draw_border_simple(lv_draw_dave2d_unit_t *draw_unit, const lv_area_t *outer_area,
+                                      const lv_area_t *inner_area, lv_color_t color, lv_opa_t opa);
 
-void lv_draw_dave2d_border(lv_draw_dave2d_unit_t * draw_unit, const lv_draw_border_dsc_t * dsc,
-                           const lv_area_t * coords)
+void lv_draw_dave2d_border(lv_draw_dave2d_unit_t *draw_unit, const lv_draw_border_dsc_t *dsc, const lv_area_t *coords)
 {
-    if(dsc->opa <= LV_OPA_MIN) return;
-    if(dsc->width == 0) return;
-    if(dsc->side == LV_BORDER_SIDE_NONE) return;
+    if (dsc->opa <= LV_OPA_MIN)
+        return;
+    if (dsc->width == 0)
+        return;
+    if (dsc->side == LV_BORDER_SIDE_NONE)
+        return;
 
     int32_t coords_w = lv_area_get_width(coords);
     int32_t coords_h = lv_area_get_height(coords);
     int32_t rout = dsc->radius;
     int32_t short_side = LV_MIN(coords_w, coords_h);
-    if(rout > short_side >> 1) rout = short_side >> 1;
+    if (rout > short_side >> 1)
+        rout = short_side >> 1;
 
     /*Get the inner area*/
     lv_area_t area_inner;
     lv_area_copy(&area_inner, coords);
-    area_inner.x1 += ((dsc->side & LV_BORDER_SIDE_LEFT) ? dsc->width : - (dsc->width + rout));
-    area_inner.x2 -= ((dsc->side & LV_BORDER_SIDE_RIGHT) ? dsc->width : - (dsc->width + rout));
-    area_inner.y1 += ((dsc->side & LV_BORDER_SIDE_TOP) ? dsc->width : - (dsc->width + rout));
-    area_inner.y2 -= ((dsc->side & LV_BORDER_SIDE_BOTTOM) ? dsc->width : - (dsc->width + rout));
+    area_inner.x1 += ((dsc->side & LV_BORDER_SIDE_LEFT) ? dsc->width : -(dsc->width + rout));
+    area_inner.x2 -= ((dsc->side & LV_BORDER_SIDE_RIGHT) ? dsc->width : -(dsc->width + rout));
+    area_inner.y1 += ((dsc->side & LV_BORDER_SIDE_TOP) ? dsc->width : -(dsc->width + rout));
+    area_inner.y2 -= ((dsc->side & LV_BORDER_SIDE_BOTTOM) ? dsc->width : -(dsc->width + rout));
 
     int32_t rin = rout - dsc->width;
-    if(rin < 0) rin = 0;
+    if (rin < 0)
+        rin = 0;
 
-    if(rout == 0 && rin == 0) {
+    if (rout == 0 && rin == 0) {
         dave2d_draw_border_simple(draw_unit, coords, &area_inner, dsc->color, dsc->opa);
-    }
-    else {
+    } else {
         dave2d_draw_border_complex(draw_unit, coords, &area_inner, rout, rin, dsc->color, dsc->opa);
     }
-
 }
 
-static void dave2d_draw_border_simple(lv_draw_dave2d_unit_t * u, const lv_area_t * outer_area,
-                                      const lv_area_t * inner_area,
-                                      lv_color_t color, lv_opa_t opa)
+static void dave2d_draw_border_simple(lv_draw_dave2d_unit_t *u, const lv_area_t *outer_area,
+                                      const lv_area_t *inner_area, lv_color_t color, lv_opa_t opa)
 
 {
 
@@ -56,10 +56,11 @@ static void dave2d_draw_border_simple(lv_draw_dave2d_unit_t * u, const lv_area_t
     bool is_common;
 
     is_common = lv_area_intersect(&clip_area, outer_area, u->base_unit.clip_area);
-    if(!is_common) return;
+    if (!is_common)
+        return;
 
 #if LV_USE_OS
-    lv_result_t  status;
+    lv_result_t status;
     status = lv_mutex_lock(u->pd2Mutex);
     LV_ASSERT(LV_RESULT_OK == status);
 #endif
@@ -100,21 +101,17 @@ static void dave2d_draw_border_simple(lv_draw_dave2d_unit_t * u, const lv_area_t
     a.x2 = local_outer_area.x2;
     a.y1 = local_outer_area.y1;
     a.y2 = local_inner_area.y1 - 1;
-    if(top_side) {
-        d2_renderbox(u->d2_handle, (d2_point)D2_FIX4(a.x1),
-                     (d2_point)D2_FIX4(a.y1),
-                     (d2_point)D2_FIX4(lv_area_get_width(&a)),
-                     (d2_point)D2_FIX4(lv_area_get_height(&a)));
+    if (top_side) {
+        d2_renderbox(u->d2_handle, (d2_point)D2_FIX4(a.x1), (d2_point)D2_FIX4(a.y1),
+                     (d2_point)D2_FIX4(lv_area_get_width(&a)), (d2_point)D2_FIX4(lv_area_get_height(&a)));
     }
 
     /*Bottom*/
     a.y1 = local_inner_area.y2 + 1;
     a.y2 = local_outer_area.y2;
-    if(bottom_side) {
-        d2_renderbox(u->d2_handle, (d2_point)D2_FIX4(a.x1),
-                     (d2_point)D2_FIX4(a.y1),
-                     (d2_point)D2_FIX4(lv_area_get_width(&a)),
-                     (d2_point)D2_FIX4(lv_area_get_height(&a)));
+    if (bottom_side) {
+        d2_renderbox(u->d2_handle, (d2_point)D2_FIX4(a.x1), (d2_point)D2_FIX4(a.y1),
+                     (d2_point)D2_FIX4(lv_area_get_width(&a)), (d2_point)D2_FIX4(lv_area_get_height(&a)));
     }
 
     /*Left*/
@@ -122,21 +119,17 @@ static void dave2d_draw_border_simple(lv_draw_dave2d_unit_t * u, const lv_area_t
     a.x2 = local_inner_area.x1 - 1;
     a.y1 = (top_side) ? local_inner_area.y1 : local_outer_area.y1;
     a.y2 = (bottom_side) ? local_inner_area.y2 : local_outer_area.y2;
-    if(left_side) {
-        d2_renderbox(u->d2_handle, (d2_point)D2_FIX4(a.x1),
-                     (d2_point)D2_FIX4(a.y1),
-                     (d2_point)D2_FIX4(lv_area_get_width(&a)),
-                     (d2_point)D2_FIX4(lv_area_get_height(&a)));
+    if (left_side) {
+        d2_renderbox(u->d2_handle, (d2_point)D2_FIX4(a.x1), (d2_point)D2_FIX4(a.y1),
+                     (d2_point)D2_FIX4(lv_area_get_width(&a)), (d2_point)D2_FIX4(lv_area_get_height(&a)));
     }
 
     /*Right*/
     a.x1 = local_inner_area.x2 + 1;
     a.x2 = local_outer_area.x2;
-    if(right_side) {
-        d2_renderbox(u->d2_handle, (d2_point)D2_FIX4(a.x1),
-                     (d2_point)D2_FIX4(a.y1),
-                     (d2_point)D2_FIX4(lv_area_get_width(&a)),
-                     (d2_point)D2_FIX4(lv_area_get_height(&a)));
+    if (right_side) {
+        d2_renderbox(u->d2_handle, (d2_point)D2_FIX4(a.x1), (d2_point)D2_FIX4(a.y1),
+                     (d2_point)D2_FIX4(lv_area_get_width(&a)), (d2_point)D2_FIX4(lv_area_get_height(&a)));
     }
 
     //
@@ -153,9 +146,9 @@ static void dave2d_draw_border_simple(lv_draw_dave2d_unit_t * u, const lv_area_t
 #endif
 }
 
-static void dave2d_draw_border_complex(lv_draw_dave2d_unit_t * u, const lv_area_t * orig_outer_area,
-                                       const lv_area_t * orig_inner_area,
-                                       int32_t rout, int32_t rin, lv_color_t color, lv_opa_t opa)
+static void dave2d_draw_border_complex(lv_draw_dave2d_unit_t *u, const lv_area_t *orig_outer_area,
+                                       const lv_area_t *orig_inner_area, int32_t rout, int32_t rin, lv_color_t color,
+                                       lv_opa_t opa)
 {
     /*Get clipped draw area which is the real draw area.
      *It is always the same or inside `coords`*/
@@ -170,10 +163,11 @@ static void dave2d_draw_border_complex(lv_draw_dave2d_unit_t * u, const lv_area_
     outer_area = *orig_outer_area;
     inner_area = *orig_inner_area;
 
-    if(!lv_area_intersect(&draw_area, &outer_area, u->base_unit.clip_area)) return;
+    if (!lv_area_intersect(&draw_area, &outer_area, u->base_unit.clip_area))
+        return;
 
 #if LV_USE_OS
-    lv_result_t  status;
+    lv_result_t status;
     status = lv_mutex_lock(u->pd2Mutex);
     LV_ASSERT(LV_RESULT_OK == status);
 #endif
@@ -215,50 +209,42 @@ static void dave2d_draw_border_complex(lv_draw_dave2d_unit_t * u, const lv_area_
     bool right_side = outer_area.x2 >= inner_area.x2;
 
     /*Draw the straight lines first */
-    if(top_side) {
+    if (top_side) {
         blend_area.x1 = core_area.x1;
         blend_area.x2 = core_area.x2;
         blend_area.y1 = outer_area.y1;
         blend_area.y2 = inner_area.y1 - 1;
-        d2_renderbox(u->d2_handle,
-                     (d2_point)D2_FIX4(blend_area.x1),
-                     (d2_point)D2_FIX4(blend_area.y1),
+        d2_renderbox(u->d2_handle, (d2_point)D2_FIX4(blend_area.x1), (d2_point)D2_FIX4(blend_area.y1),
                      (d2_point)D2_FIX4(lv_area_get_width(&blend_area)),
                      (d2_point)D2_FIX4(lv_area_get_height(&blend_area)));
     }
 
-    if(bottom_side) {
+    if (bottom_side) {
         blend_area.x1 = core_area.x1;
         blend_area.x2 = core_area.x2;
         blend_area.y1 = inner_area.y2 + 1;
         blend_area.y2 = outer_area.y2;
-        d2_renderbox(u->d2_handle,
-                     (d2_point)D2_FIX4(blend_area.x1),
-                     (d2_point)D2_FIX4(blend_area.y1),
+        d2_renderbox(u->d2_handle, (d2_point)D2_FIX4(blend_area.x1), (d2_point)D2_FIX4(blend_area.y1),
                      (d2_point)D2_FIX4(lv_area_get_width(&blend_area)),
                      (d2_point)D2_FIX4(lv_area_get_height(&blend_area)));
     }
 
-    if(left_side) {
+    if (left_side) {
         blend_area.x1 = outer_area.x1;
         blend_area.x2 = inner_area.x1 - 1;
         blend_area.y1 = core_area.y1;
         blend_area.y2 = core_area.y2;
-        d2_renderbox(u->d2_handle,
-                     (d2_point)D2_FIX4(blend_area.x1),
-                     (d2_point)D2_FIX4(blend_area.y1),
+        d2_renderbox(u->d2_handle, (d2_point)D2_FIX4(blend_area.x1), (d2_point)D2_FIX4(blend_area.y1),
                      (d2_point)D2_FIX4(lv_area_get_width(&blend_area)),
                      (d2_point)D2_FIX4(lv_area_get_height(&blend_area)));
     }
 
-    if(right_side) {
+    if (right_side) {
         blend_area.x1 = inner_area.x2 + 1;
         blend_area.x2 = outer_area.x2;
         blend_area.y1 = core_area.y1;
         blend_area.y2 = core_area.y2;
-        d2_renderbox(u->d2_handle,
-                     (d2_point)D2_FIX4(blend_area.x1),
-                     (d2_point)D2_FIX4(blend_area.y1),
+        d2_renderbox(u->d2_handle, (d2_point)D2_FIX4(blend_area.x1), (d2_point)D2_FIX4(blend_area.y1),
                      (d2_point)D2_FIX4(lv_area_get_width(&blend_area)),
                      (d2_point)D2_FIX4(lv_area_get_height(&blend_area)));
     }
@@ -271,12 +257,12 @@ static void dave2d_draw_border_complex(lv_draw_dave2d_unit_t * u, const lv_area_
 
     blend_w = lv_area_get_width(&blend_area);
 
-    if(blend_w > 0) {
+    if (blend_w > 0) {
         d2_s32 aa;
         aa = d2_getantialiasing(u->d2_handle);
-        d2_setantialiasing(u->d2_handle, 0); //Don't blend with the background according to coverage value
+        d2_setantialiasing(u->d2_handle, 0); // Don't blend with the background according to coverage value
 
-        if(left_side || top_side) {
+        if (left_side || top_side) {
             lv_area_t arc_area;
             lv_area_t clip_arc;
 
@@ -285,25 +271,20 @@ static void dave2d_draw_border_complex(lv_draw_dave2d_unit_t * u, const lv_area_
             arc_area.x2 = core_area.x1;
             arc_area.y2 = core_area.y1;
 
-            if(lv_area_intersect(&clip_arc, &arc_area, &draw_area)) {
+            if (lv_area_intersect(&clip_arc, &arc_area, &draw_area)) {
                 d2_cliprect(u->d2_handle, (d2_border)clip_arc.x1, (d2_border)clip_arc.y1, (d2_border)clip_arc.x2,
                             (d2_border)clip_arc.y2);
-                result = d2_renderwedge(u->d2_handle,
-                                        (d2_point)D2_FIX4(core_area.x1),
-                                        (d2_point) D2_FIX4(core_area.y1),
-                                        (d2_width) D2_FIX4(rout),
-                                        (d2_width) D2_FIX4((rout - rin)),
-                                        (d2_s32) D2_FIX16(0), // 180 Degrees
-                                        (d2_s32)  D2_FIX16((int16_t) -1),
-                                        (d2_s32)  D2_FIX16((int16_t) -1),//( 270 Degrees
-                                        (d2_s32) D2_FIX16(0),
-                                        flags);
+                result = d2_renderwedge(u->d2_handle, (d2_point)D2_FIX4(core_area.x1), (d2_point)D2_FIX4(core_area.y1),
+                                        (d2_width)D2_FIX4(rout), (d2_width)D2_FIX4((rout - rin)),
+                                        (d2_s32)D2_FIX16(0), // 180 Degrees
+                                        (d2_s32)D2_FIX16((int16_t)-1),
+                                        (d2_s32)D2_FIX16((int16_t)-1), //( 270 Degrees
+                                        (d2_s32)D2_FIX16(0), flags);
                 LV_ASSERT(D2_OK == result);
             }
-
         }
 
-        if(left_side || bottom_side) {
+        if (left_side || bottom_side) {
             lv_area_t arc_area;
             lv_area_t clip_arc;
 
@@ -312,33 +293,29 @@ static void dave2d_draw_border_complex(lv_draw_dave2d_unit_t * u, const lv_area_
             arc_area.x2 = core_area.x1;
             arc_area.y2 = core_area.y2 + rout;
 
-            if(lv_area_intersect(&clip_arc, &arc_area, &draw_area)) {
+            if (lv_area_intersect(&clip_arc, &arc_area, &draw_area)) {
 
                 d2_cliprect(u->d2_handle, (d2_border)clip_arc.x1, (d2_border)clip_arc.y1, (d2_border)clip_arc.x2,
                             (d2_border)clip_arc.y2);
-                result = d2_renderwedge(u->d2_handle,
-                                        (d2_point)D2_FIX4(core_area.x1),
-                                        (d2_point) D2_FIX4(core_area.y2),
-                                        (d2_width) D2_FIX4(rout),
-                                        (d2_width) D2_FIX4((rout - rin)),
-                                        (d2_s32) D2_FIX16((int16_t) -1), //90 degrees
-                                        (d2_s32)  D2_FIX16(0),
-                                        (d2_s32)  D2_FIX16(0), //180 degrees
-                                        (d2_s32) D2_FIX16(1),
-                                        flags);
+                result = d2_renderwedge(u->d2_handle, (d2_point)D2_FIX4(core_area.x1), (d2_point)D2_FIX4(core_area.y2),
+                                        (d2_width)D2_FIX4(rout), (d2_width)D2_FIX4((rout - rin)),
+                                        (d2_s32)D2_FIX16((int16_t)-1), // 90 degrees
+                                        (d2_s32)D2_FIX16(0),
+                                        (d2_s32)D2_FIX16(0), // 180 degrees
+                                        (d2_s32)D2_FIX16(1), flags);
                 LV_ASSERT(D2_OK == result);
             }
         }
 
         /*Right corners*/
-        blend_area.x1 = LV_MAX(draw_area.x1, blend_area.x2 + 1);    /*To not overlap with the left side*/
+        blend_area.x1 = LV_MAX(draw_area.x1, blend_area.x2 + 1); /*To not overlap with the left side*/
         blend_area.x1 = LV_MAX(draw_area.x1, core_area.x2 + 1);
 
         blend_area.x2 = draw_area.x2;
         blend_w = lv_area_get_width(&blend_area);
 
-        if(blend_w > 0) {
-            if(right_side || top_side) {
+        if (blend_w > 0) {
+            if (right_side || top_side) {
 
                 lv_area_t arc_area;
                 lv_area_t clip_arc;
@@ -348,26 +325,22 @@ static void dave2d_draw_border_complex(lv_draw_dave2d_unit_t * u, const lv_area_
                 arc_area.x2 = core_area.x2 + rout;
                 arc_area.y2 = core_area.y1;
 
-                if(lv_area_intersect(&clip_arc, &arc_area, &draw_area)) {
+                if (lv_area_intersect(&clip_arc, &arc_area, &draw_area)) {
 
                     d2_cliprect(u->d2_handle, (d2_border)clip_arc.x1, (d2_border)clip_arc.y1, (d2_border)clip_arc.x2,
                                 (d2_border)clip_arc.y2);
-                    result = d2_renderwedge(u->d2_handle,
-                                            (d2_point)D2_FIX4(core_area.x2),
-                                            (d2_point) D2_FIX4(core_area.y1),
-                                            (d2_width) D2_FIX4(rout),
-                                            (d2_width) D2_FIX4((rout - rin)),
-                                            (d2_s32) D2_FIX16((int16_t)1), // 270 Degrees
-                                            (d2_s32)  D2_FIX16(0),
-                                            (d2_s32)  D2_FIX16(0),// 0 degrees
-                                            (d2_s32) D2_FIX16(-1),
-                                            flags);
+                    result =
+                        d2_renderwedge(u->d2_handle, (d2_point)D2_FIX4(core_area.x2), (d2_point)D2_FIX4(core_area.y1),
+                                       (d2_width)D2_FIX4(rout), (d2_width)D2_FIX4((rout - rin)),
+                                       (d2_s32)D2_FIX16((int16_t)1), // 270 Degrees
+                                       (d2_s32)D2_FIX16(0),
+                                       (d2_s32)D2_FIX16(0), // 0 degrees
+                                       (d2_s32)D2_FIX16(-1), flags);
                     LV_ASSERT(D2_OK == result);
                 }
-
             }
 
-            if(right_side || bottom_side) {
+            if (right_side || bottom_side) {
                 lv_area_t arc_area;
                 lv_area_t clip_arc;
 
@@ -376,25 +349,22 @@ static void dave2d_draw_border_complex(lv_draw_dave2d_unit_t * u, const lv_area_
                 arc_area.x2 = core_area.x2 + rout;
                 arc_area.y2 = core_area.y2 + rout;
 
-                if(lv_area_intersect(&clip_arc, &arc_area, &draw_area)) {
+                if (lv_area_intersect(&clip_arc, &arc_area, &draw_area)) {
 
                     d2_cliprect(u->d2_handle, (d2_border)clip_arc.x1, (d2_border)clip_arc.y1, (d2_border)clip_arc.x2,
                                 (d2_border)clip_arc.y2);
-                    result = d2_renderwedge(u->d2_handle,
-                                            (d2_point)D2_FIX4(core_area.x2),
-                                            (d2_point) D2_FIX4(core_area.y2),
-                                            (d2_width) D2_FIX4(rout),
-                                            (d2_width) D2_FIX4((rout - rin)),
-                                            (d2_s32) D2_FIX16(0),// 0 degrees
-                                            (d2_s32)  D2_FIX16(1),
-                                            (d2_s32)  D2_FIX16(1),// 90 degrees
-                                            (d2_s32) D2_FIX16(0),
-                                            flags);
+                    result =
+                        d2_renderwedge(u->d2_handle, (d2_point)D2_FIX4(core_area.x2), (d2_point)D2_FIX4(core_area.y2),
+                                       (d2_width)D2_FIX4(rout), (d2_width)D2_FIX4((rout - rin)),
+                                       (d2_s32)D2_FIX16(0), // 0 degrees
+                                       (d2_s32)D2_FIX16(1),
+                                       (d2_s32)D2_FIX16(1), // 90 degrees
+                                       (d2_s32)D2_FIX16(0), flags);
                     LV_ASSERT(D2_OK == result);
                 }
             }
         }
-        d2_setantialiasing(u->d2_handle, aa); //restore original setting
+        d2_setantialiasing(u->d2_handle, aa); // restore original setting
     }
 
     //
@@ -409,7 +379,6 @@ static void dave2d_draw_border_complex(lv_draw_dave2d_unit_t * u, const lv_area_
     status = lv_mutex_unlock(u->pd2Mutex);
     LV_ASSERT(LV_RESULT_OK == status);
 #endif
-
 }
 
 #endif /*LV_USE_DRAW_DAVE2D*/

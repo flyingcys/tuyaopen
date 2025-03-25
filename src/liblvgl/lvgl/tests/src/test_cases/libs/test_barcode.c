@@ -6,7 +6,7 @@
 
 #if LV_USE_BARCODE
 
-static lv_obj_t * active_screen = NULL;
+static lv_obj_t *active_screen = NULL;
 
 void setUp(void)
 {
@@ -20,7 +20,7 @@ void tearDown(void)
 
 void test_barcode_normal(void)
 {
-    lv_obj_t * barcode = lv_barcode_create(active_screen);
+    lv_obj_t *barcode = lv_barcode_create(active_screen);
     TEST_ASSERT_NOT_NULL(barcode);
 
     lv_obj_center(barcode);
@@ -71,17 +71,11 @@ void test_barcode_normal(void)
 
 #else
 
-void setUp(void)
-{
-}
+void setUp(void) {}
 
-void tearDown(void)
-{
-}
+void tearDown(void) {}
 
-void test_barcode_normal(void)
-{
-}
+void test_barcode_normal(void) {}
 
 #endif
 

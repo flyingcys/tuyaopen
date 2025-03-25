@@ -24,10 +24,10 @@ extern "C" {
  *      DEFINES
  *********************/
 
-#define LV_PROFILER_BUILTIN_BEGIN_TAG(tag)  lv_profiler_builtin_write((tag), 'B')
-#define LV_PROFILER_BUILTIN_END_TAG(tag)    lv_profiler_builtin_write((tag), 'E')
-#define LV_PROFILER_BUILTIN_BEGIN           LV_PROFILER_BUILTIN_BEGIN_TAG(__func__)
-#define LV_PROFILER_BUILTIN_END             LV_PROFILER_BUILTIN_END_TAG(__func__)
+#define LV_PROFILER_BUILTIN_BEGIN_TAG(tag) lv_profiler_builtin_write((tag), 'B')
+#define LV_PROFILER_BUILTIN_END_TAG(tag)   lv_profiler_builtin_write((tag), 'E')
+#define LV_PROFILER_BUILTIN_BEGIN          LV_PROFILER_BUILTIN_BEGIN_TAG(__func__)
+#define LV_PROFILER_BUILTIN_END            LV_PROFILER_BUILTIN_END_TAG(__func__)
 
 /**********************
  *      TYPEDEFS
@@ -41,13 +41,13 @@ extern "C" {
  * @brief Initialize the configuration of the built-in profiler
  * @param config Pointer to the configuration structure of the built-in profiler
  */
-void lv_profiler_builtin_config_init(lv_profiler_builtin_config_t * config);
+void lv_profiler_builtin_config_init(lv_profiler_builtin_config_t *config);
 
 /**
  * @brief Initialize the built-in profiler with the given configuration
  * @param config Pointer to the configuration structure of the built-in profiler
  */
-void lv_profiler_builtin_init(const lv_profiler_builtin_config_t * config);
+void lv_profiler_builtin_init(const lv_profiler_builtin_config_t *config);
 
 /**
  * @brief Uninitialize the built-in profiler
@@ -70,7 +70,7 @@ void lv_profiler_builtin_flush(void);
  * @param func Name of the function being profiled
  * @param tag Tag to associate with the profiling data for the function
  */
-void lv_profiler_builtin_write(const char * func, char tag);
+void lv_profiler_builtin_write(const char *func, char tag);
 
 /**********************
  *      MACROS

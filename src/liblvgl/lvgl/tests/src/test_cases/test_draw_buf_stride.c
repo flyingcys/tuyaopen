@@ -18,19 +18,19 @@ void tearDown(void)
 void test_draw_buf_stride_adjust(void)
 {
 #if LV_BIN_DECODER_RAM_LOAD == 1
-    const char * color_formats[] = {
+    const char *color_formats[] = {
         "I1",
         "I2",
         "I4",
         "I8",
-#if 0   /* Decoder will convert them to A8 anyway.*/
+#if 0 /* Decoder will convert them to A8 anyway.*/
         "A1",
         "A2",
         "A4",
 #endif
         "A8",
         "RGB565",
-#if 0   /* RGB565 with alpha is not supported*/
+#if 0 /* RGB565 with alpha is not supported*/
         "RGB565A8",
         "ARGB8565",
 #endif
@@ -39,7 +39,7 @@ void test_draw_buf_stride_adjust(void)
         "XRGB8888",
     };
 
-    lv_obj_t * img = lv_image_create(lv_screen_active());
+    lv_obj_t *img = lv_image_create(lv_screen_active());
     lv_obj_center(img);
 
     const lv_image_decoder_args_t args = {
@@ -49,11 +49,12 @@ void test_draw_buf_stride_adjust(void)
         .use_indexed = true,
     };
 
-    for(unsigned long i = 0; i < sizeof(color_formats) / sizeof(color_formats[0]); i++) {
+    for (unsigned long i = 0; i < sizeof(color_formats) / sizeof(color_formats[0]); i++) {
         char img_src[256];
         char ref_image[256];
         snprintf(img_src, sizeof(img_src), "A:test_images/stride_align1/UNCOMPRESSED/test_%s.bin", color_formats[i]);
-        snprintf(ref_image, sizeof(ref_image), "draw/temp_%s.o", color_formats[i]); /*Use .o file name so git ignores it.*/
+        snprintf(ref_image, sizeof(ref_image), "draw/temp_%s.o",
+                 color_formats[i]); /*Use .o file name so git ignores it.*/
 
         lv_image_set_src(img, img_src);
         TEST_ASSERT_EQUAL_SCREENSHOT(ref_image); /*Generate the reference image, use .o so git ignore it*/
@@ -63,7 +64,7 @@ void test_draw_buf_stride_adjust(void)
         lv_image_decoder_dsc_t decoder_dsc;
         lv_result_t res = lv_image_decoder_open(&decoder_dsc, img_src, &args);
         TEST_ASSERT_EQUAL(LV_RESULT_OK, res);
-        lv_draw_buf_t * decoded = lv_draw_buf_dup(decoder_dsc.decoded);
+        lv_draw_buf_t *decoded = lv_draw_buf_dup(decoder_dsc.decoded);
         TEST_ASSERT_NOT_NULL(decoded);
 
         const lv_image_header_t header = decoder_dsc.decoded->header;
@@ -84,7 +85,7 @@ void test_draw_buf_stride_adjust(void)
         TEST_ASSERT_EQUAL(LV_RESULT_INVALID, res);
 
         /*Create a larger draw buffer*/
-        lv_draw_buf_t * larger = lv_draw_buf_create(image_width, image_height, header.cf, min_stride + 100);
+        lv_draw_buf_t *larger = lv_draw_buf_create(image_width, image_height, header.cf, min_stride + 100);
 
         /*Copy draw buffer, it should look same.*/
         lv_draw_buf_copy(larger, NULL, decoded, NULL);

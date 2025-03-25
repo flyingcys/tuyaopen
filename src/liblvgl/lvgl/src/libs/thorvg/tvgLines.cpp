@@ -32,30 +32,30 @@
 /* Internal Class Implementation                                        */
 /************************************************************************/
 
-static float _lineLengthApprox(const Point& pt1, const Point& pt2)
+static float _lineLengthApprox(const Point &pt1, const Point &pt2)
 {
     /* approximate sqrt(x*x + y*y) using alpha max plus beta min algorithm.
        With alpha = 1, beta = 3/8, giving results with the largest error less
        than 7% compared to the exact value. */
     Point diff = {pt2.x - pt1.x, pt2.y - pt1.y};
-    if (diff.x < 0) diff.x = -diff.x;
-    if (diff.y < 0) diff.y = -diff.y;
+    if (diff.x < 0)
+        diff.x = -diff.x;
+    if (diff.y < 0)
+        diff.y = -diff.y;
     return (diff.x > diff.y) ? (diff.x + diff.y * 0.375f) : (diff.y + diff.x * 0.375f);
 }
 
-
-static float _lineLength(const Point& pt1, const Point& pt2)
+static float _lineLength(const Point &pt1, const Point &pt2)
 {
     Point diff = {pt2.x - pt1.x, pt2.y - pt1.y};
     return sqrtf(diff.x * diff.x + diff.y * diff.y);
 }
 
-
-template<typename LengthFunc>
-float _bezLength(const Bezier& cur, LengthFunc lineLengthFunc)
+template <typename LengthFunc> float _bezLength(const Bezier &cur, LengthFunc lineLengthFunc)
 {
     Bezier left, right;
-    auto len = lineLengthFunc(cur.start, cur.ctrl1) + lineLengthFunc(cur.ctrl1, cur.ctrl2) + lineLengthFunc(cur.ctrl2, cur.end);
+    auto len = lineLengthFunc(cur.start, cur.ctrl1) + lineLengthFunc(cur.ctrl1, cur.ctrl2) +
+               lineLengthFunc(cur.ctrl2, cur.end);
     auto chord = lineLengthFunc(cur.start, cur.end);
 
     if (fabsf(len - chord) > BEZIER_EPSILON) {
@@ -65,17 +65,17 @@ float _bezLength(const Bezier& cur, LengthFunc lineLengthFunc)
     return len;
 }
 
-
-template<typename LengthFunc>
-float _bezAt(const Bezier& bz, float at, float length, LengthFunc lineLengthFunc)
+template <typename LengthFunc> float _bezAt(const Bezier &bz, float at, float length, LengthFunc lineLengthFunc)
 {
     auto biggest = 1.0f;
     auto smallest = 0.0f;
     auto t = 0.5f;
 
-    //just in case to prevent an infinite loop
-    if (at <= 0) return 0.0f;
-    if (at >= length) return 1.0f;
+    // just in case to prevent an infinite loop
+    if (at <= 0)
+        return 0.0f;
+    if (at >= length)
+        return 1.0f;
 
     while (true) {
         auto right = bz;
@@ -96,7 +96,6 @@ float _bezAt(const Bezier& bz, float at, float length, LengthFunc lineLengthFunc
     return t;
 }
 
-
 /************************************************************************/
 /* External Class Implementation                                        */
 /************************************************************************/
@@ -104,13 +103,12 @@ float _bezAt(const Bezier& bz, float at, float length, LengthFunc lineLengthFunc
 namespace tvg
 {
 
-float lineLength(const Point& pt1, const Point& pt2)
+float lineLength(const Point &pt1, const Point &pt2)
 {
     return _lineLength(pt1, pt2);
 }
 
-
-void lineSplitAt(const Line& cur, float at, Line& left, Line& right)
+void lineSplitAt(const Line &cur, float at, Line &left, Line &right)
 {
     auto len = lineLength(cur.pt1, cur.pt2);
     auto dx = ((cur.pt2.x - cur.pt1.x) / len) * at;
@@ -122,8 +120,7 @@ void lineSplitAt(const Line& cur, float at, Line& left, Line& right)
     right.pt2 = cur.pt2;
 }
 
-
-void bezSplit(const Bezier& cur, Bezier& left, Bezier& right)
+void bezSplit(const Bezier &cur, Bezier &left, Bezier &right)
 {
     auto c = (cur.ctrl1.x + cur.ctrl2.x) * 0.5f;
     left.ctrl1.x = (cur.start.x + cur.ctrl1.x) * 0.5f;
@@ -144,28 +141,25 @@ void bezSplit(const Bezier& cur, Bezier& left, Bezier& right)
     left.end.y = right.start.y = (left.ctrl2.y + right.ctrl1.y) * 0.5f;
 }
 
-
-float bezLength(const Bezier& cur)
+float bezLength(const Bezier &cur)
 {
     return _bezLength(cur, _lineLength);
 }
 
-
-float bezLengthApprox(const Bezier& cur)
+float bezLengthApprox(const Bezier &cur)
 {
     return _bezLength(cur, _lineLengthApprox);
 }
 
-
-void bezSplitLeft(Bezier& cur, float at, Bezier& left)
+void bezSplitLeft(Bezier &cur, float at, Bezier &left)
 {
     left.start = cur.start;
 
     left.ctrl1.x = cur.start.x + at * (cur.ctrl1.x - cur.start.x);
     left.ctrl1.y = cur.start.y + at * (cur.ctrl1.y - cur.start.y);
 
-    left.ctrl2.x = cur.ctrl1.x + at * (cur.ctrl2.x - cur.ctrl1.x); //temporary holding spot
-    left.ctrl2.y = cur.ctrl1.y + at * (cur.ctrl2.y - cur.ctrl1.y); //temporary holding spot
+    left.ctrl2.x = cur.ctrl1.x + at * (cur.ctrl2.x - cur.ctrl1.x); // temporary holding spot
+    left.ctrl2.y = cur.ctrl1.y + at * (cur.ctrl2.y - cur.ctrl1.y); // temporary holding spot
 
     cur.ctrl2.x = cur.ctrl2.x + at * (cur.end.x - cur.ctrl2.x);
     cur.ctrl2.y = cur.ctrl2.y + at * (cur.end.y - cur.ctrl2.y);
@@ -180,28 +174,24 @@ void bezSplitLeft(Bezier& cur, float at, Bezier& left)
     left.end.y = cur.start.y = left.ctrl2.y + at * (cur.ctrl1.y - left.ctrl2.y);
 }
 
-
-float bezAt(const Bezier& bz, float at, float length)
+float bezAt(const Bezier &bz, float at, float length)
 {
     return _bezAt(bz, at, length, _lineLength);
 }
 
-
-float bezAtApprox(const Bezier& bz, float at, float length)
+float bezAtApprox(const Bezier &bz, float at, float length)
 {
     return _bezAt(bz, at, length, _lineLengthApprox);
 }
 
-
-void bezSplitAt(const Bezier& cur, float at, Bezier& left, Bezier& right)
+void bezSplitAt(const Bezier &cur, float at, Bezier &left, Bezier &right)
 {
     right = cur;
     auto t = bezAt(right, at, bezLength(right));
     bezSplitLeft(right, t, left);
 }
 
-
-Point bezPointAt(const Bezier& bz, float t)
+Point bezPointAt(const Bezier &bz, float t)
 {
     Point cur;
     auto it = 1.0f - t;
@@ -223,27 +213,28 @@ Point bezPointAt(const Bezier& bz, float t)
     return cur;
 }
 
-
-float bezAngleAt(const Bezier& bz, float t)
+float bezAngleAt(const Bezier &bz, float t)
 {
-    if (t < 0 || t > 1) return 0;
+    if (t < 0 || t > 1)
+        return 0;
 
-    //derivate
-    // p'(t) = 3 * (-(1-2t+t^2) * p0 + (1 - 4 * t + 3 * t^2) * p1 + (2 * t - 3 *
-    // t^2) * p2 + t^2 * p3)
+    // derivate
+    //  p'(t) = 3 * (-(1-2t+t^2) * p0 + (1 - 4 * t + 3 * t^2) * p1 + (2 * t - 3 *
+    //  t^2) * p2 + t^2 * p3)
     float mt = 1.0f - t;
     float d = t * t;
     float a = -mt * mt;
     float b = 1 - 4 * t + 3 * d;
     float c = 2 * t - 3 * d;
 
-    Point pt ={a * bz.start.x + b * bz.ctrl1.x + c * bz.ctrl2.x + d * bz.end.x, a * bz.start.y + b * bz.ctrl1.y + c * bz.ctrl2.y + d * bz.end.y};
+    Point pt = {a * bz.start.x + b * bz.ctrl1.x + c * bz.ctrl2.x + d * bz.end.x,
+                a * bz.start.y + b * bz.ctrl1.y + c * bz.ctrl2.y + d * bz.end.y};
     pt.x *= 3;
     pt.y *= 3;
 
     return mathRad2Deg(atan2(pt.x, pt.y));
 }
 
-}
+} // namespace tvg
 
 #endif /* LV_USE_THORVG_INTERNAL */

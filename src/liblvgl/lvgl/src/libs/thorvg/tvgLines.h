@@ -31,35 +31,32 @@
 namespace tvg
 {
 
-struct Line
-{
+struct Line {
     Point pt1;
     Point pt2;
 };
 
-float lineLength(const Point& pt1, const Point& pt2);
-void lineSplitAt(const Line& cur, float at, Line& left, Line& right);
+float lineLength(const Point &pt1, const Point &pt2);
+void lineSplitAt(const Line &cur, float at, Line &left, Line &right);
 
-
-struct Bezier
-{
+struct Bezier {
     Point start;
     Point ctrl1;
     Point ctrl2;
     Point end;
 };
 
-void bezSplit(const Bezier&cur, Bezier& left, Bezier& right);
-float bezLength(const Bezier& cur);
-void bezSplitLeft(Bezier& cur, float at, Bezier& left);
-float bezAt(const Bezier& bz, float at, float length);
-void bezSplitAt(const Bezier& cur, float at, Bezier& left, Bezier& right);
-Point bezPointAt(const Bezier& bz, float t);
-float bezAngleAt(const Bezier& bz, float t);
+void bezSplit(const Bezier &cur, Bezier &left, Bezier &right);
+float bezLength(const Bezier &cur);
+void bezSplitLeft(Bezier &cur, float at, Bezier &left);
+float bezAt(const Bezier &bz, float at, float length);
+void bezSplitAt(const Bezier &cur, float at, Bezier &left, Bezier &right);
+Point bezPointAt(const Bezier &bz, float t);
+float bezAngleAt(const Bezier &bz, float t);
 
-float bezLengthApprox(const Bezier& cur);
-float bezAtApprox(const Bezier& bz, float at, float length);
-}
+float bezLengthApprox(const Bezier &cur);
+float bezAtApprox(const Bezier &bz, float at, float length);
+} // namespace tvg
 
 #endif //_TVG_LINES_H_
 

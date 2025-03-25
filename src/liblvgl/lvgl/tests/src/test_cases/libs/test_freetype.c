@@ -7,9 +7,9 @@
 #if LV_USE_FREETYPE
 
 #ifndef NON_AMD64_BUILD
-    #define TEST_FREETYPE_ASSERT_EQUAL_SCREENSHOT(NAME) TEST_ASSERT_EQUAL_SCREENSHOT("libs/freetype_" NAME ".lp64.png")
+#define TEST_FREETYPE_ASSERT_EQUAL_SCREENSHOT(NAME) TEST_ASSERT_EQUAL_SCREENSHOT("libs/freetype_" NAME ".lp64.png")
 #else
-    #define TEST_FREETYPE_ASSERT_EQUAL_SCREENSHOT(NAME) TEST_ASSERT_EQUAL_SCREENSHOT("libs/freetype_" NAME ".lp32.png")
+#define TEST_FREETYPE_ASSERT_EQUAL_SCREENSHOT(NAME) TEST_ASSERT_EQUAL_SCREENSHOT("libs/freetype_" NAME ".lp32.png")
 #endif
 
 #define OPTION_GENERATE_OUTLINE_DATA 0
@@ -20,11 +20,12 @@
  **/
 #define OPTION_GENERATE_VECTOR_OPS_STRING 0
 
-static const char * UNIVERSAL_DECLARATION_OF_HUMAN_RIGHTS_CN =
+static const char *UNIVERSAL_DECLARATION_OF_HUMAN_RIGHTS_CN =
     "鉴于对人类家庭所有成员的固有尊严及其平等的和不移的权利的承认，乃是世界自由、正义与和平的基础...";
-static const char * UNIVERSAL_DECLARATION_OF_HUMAN_RIGHTS_EN =
-    "Whereas recognition of the inherent dignity and of the equal and inalienable rights of all members of the human family is the foundation of freedom, justice and peace in the world...";
-static const char * UNIVERSAL_DECLARATION_OF_HUMAN_RIGHTS_JP =
+static const char *UNIVERSAL_DECLARATION_OF_HUMAN_RIGHTS_EN =
+    "Whereas recognition of the inherent dignity and of the equal and inalienable rights of all members of the human "
+    "family is the foundation of freedom, justice and peace in the world...";
+static const char *UNIVERSAL_DECLARATION_OF_HUMAN_RIGHTS_JP =
     "人間の家族のすべての構成員の固有の尊厳と平等で譲渡不能な権利とを承認することは、自由と正義と平和の基礎である...";
 
 // Outline data for unicode '龘' (U+9F98)
@@ -384,11 +385,10 @@ static const lv_freetype_outline_event_param_t outline_data_U9F98[] = {
     {NULL, 0, {0, 0}, {0, 0}, {0, 0}},
 };
 
-static void freetype_outline_event_cb(lv_event_t * e);
+static void freetype_outline_event_cb(lv_event_t *e);
 
 #if OPTION_GENERATE_VECTOR_OPS_STRING
-static void vegravis_generate_vector_ops_string(lv_freetype_outline_event_param_t * param, char * buf,
-                                                uint32_t buf_len);
+static void vegravis_generate_vector_ops_string(lv_freetype_outline_event_param_t *param, char *buf, uint32_t buf_len);
 #endif
 
 void setUp(void)
@@ -404,20 +404,17 @@ void tearDown(void)
 void test_freetype_bitmap_rendering_test(void)
 {
     /*Create a font*/
-    lv_font_t * font_italic = lv_freetype_font_create("./src/test_files/fonts/noto/NotoSansSC-Regular.ttf",
-                                                      LV_FREETYPE_FONT_RENDER_MODE_BITMAP,
-                                                      24,
-                                                      LV_FREETYPE_FONT_STYLE_ITALIC);
-    lv_font_t * font_normal = lv_freetype_font_create("./src/test_files/fonts/noto/NotoSansSC-Regular.ttf",
-                                                      LV_FREETYPE_FONT_RENDER_MODE_BITMAP,
-                                                      24,
-                                                      LV_FREETYPE_FONT_STYLE_NORMAL);
-    lv_font_t * font_normal_small = lv_freetype_font_create("./src/test_files/fonts/noto/NotoSansSC-Regular.ttf",
-                                                            LV_FREETYPE_FONT_RENDER_MODE_BITMAP,
-                                                            12,
-                                                            LV_FREETYPE_FONT_STYLE_NORMAL);
+    lv_font_t *font_italic =
+        lv_freetype_font_create("./src/test_files/fonts/noto/NotoSansSC-Regular.ttf",
+                                LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 24, LV_FREETYPE_FONT_STYLE_ITALIC);
+    lv_font_t *font_normal =
+        lv_freetype_font_create("./src/test_files/fonts/noto/NotoSansSC-Regular.ttf",
+                                LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 24, LV_FREETYPE_FONT_STYLE_NORMAL);
+    lv_font_t *font_normal_small =
+        lv_freetype_font_create("./src/test_files/fonts/noto/NotoSansSC-Regular.ttf",
+                                LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 12, LV_FREETYPE_FONT_STYLE_NORMAL);
 
-    if(!font_italic || !font_normal || !font_normal_small) {
+    if (!font_italic || !font_normal || !font_normal_small) {
         LV_LOG_ERROR("freetype font create failed.");
         TEST_FAIL();
     }
@@ -438,19 +435,19 @@ void test_freetype_bitmap_rendering_test(void)
     lv_style_set_text_font(&style_normal_small, font_normal_small);
 
     /*Create a label with the new style*/
-    lv_obj_t * label0 = lv_label_create(lv_screen_active());
+    lv_obj_t *label0 = lv_label_create(lv_screen_active());
     lv_obj_add_style(label0, &style_italic, 0);
     lv_obj_set_width(label0, lv_obj_get_width(lv_screen_active()) - 20);
     lv_label_set_text(label0, UNIVERSAL_DECLARATION_OF_HUMAN_RIGHTS_CN);
-    lv_obj_align(label0,  LV_ALIGN_TOP_MID, 0, 10);
+    lv_obj_align(label0, LV_ALIGN_TOP_MID, 0, 10);
 
-    lv_obj_t * label1 = lv_label_create(lv_screen_active());
+    lv_obj_t *label1 = lv_label_create(lv_screen_active());
     lv_obj_add_style(label1, &style_normal, 0);
     lv_obj_set_width(label1, lv_obj_get_width(lv_screen_active()) - 20);
     lv_label_set_text(label1, UNIVERSAL_DECLARATION_OF_HUMAN_RIGHTS_EN);
     lv_obj_align_to(label1, label0, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
 
-    lv_obj_t * label2 = lv_label_create(lv_screen_active());
+    lv_obj_t *label2 = lv_label_create(lv_screen_active());
     lv_obj_add_style(label2, &style_normal_small, 0);
     lv_obj_set_width(label2, lv_obj_get_width(lv_screen_active()) - 20);
     lv_label_set_text(label2, UNIVERSAL_DECLARATION_OF_HUMAN_RIGHTS_JP);
@@ -462,12 +459,11 @@ void test_freetype_bitmap_rendering_test(void)
 void test_freetype_outline_rendering_test(void)
 {
     /*Create a font*/
-    lv_font_t * font_italic = lv_freetype_font_create("./src/test_files/fonts/noto/NotoSansSC-Regular.ttf",
-                                                      LV_FREETYPE_FONT_RENDER_MODE_OUTLINE,
-                                                      24,
-                                                      LV_FREETYPE_FONT_STYLE_ITALIC);
+    lv_font_t *font_italic =
+        lv_freetype_font_create("./src/test_files/fonts/noto/NotoSansSC-Regular.ttf",
+                                LV_FREETYPE_FONT_RENDER_MODE_OUTLINE, 24, LV_FREETYPE_FONT_STYLE_ITALIC);
 
-    if(!font_italic) {
+    if (!font_italic) {
         LV_LOG_ERROR("freetype font create failed.");
         TEST_FAIL();
     }
@@ -479,12 +475,13 @@ void test_freetype_outline_rendering_test(void)
 
     lv_font_get_glyph_dsc(font_italic, &g, 0x9F98, '\0');
 
-    const lv_ll_t * outline_data;
-    outline_data = (lv_ll_t *) lv_font_get_glyph_bitmap(&g, NULL);
+    const lv_ll_t *outline_data;
+    outline_data = (lv_ll_t *)lv_font_get_glyph_bitmap(&g, NULL);
 
     uint32_t i = 0;
-    lv_freetype_outline_event_param_t * param;
-    LV_LL_READ(outline_data, param) {
+    lv_freetype_outline_event_param_t *param;
+    LV_LL_READ(outline_data, param)
+    {
 #if OPTION_GENERATE_OUTLINE_DATA
         /*FOR Generate outline data*/
 #if OPTION_GENERATE_VECTOR_OPS_STRING
@@ -492,8 +489,8 @@ void test_freetype_outline_rendering_test(void)
         vegravis_generate_vector_ops_string(param, buf, sizeof(buf));
         TEST_PRINTF("%s", buf);
 #else
-        TEST_PRINTF("{NULL, %d, {%d, %d}, {%d, %d}, {%d, %d}}, ", param->type, param->to.x, param->to.y, param->control1.x,
-                    param->control1.y, param->control2.x, param->control2.y);
+        TEST_PRINTF("{NULL, %d, {%d, %d}, {%d, %d}, {%d, %d}}, ", param->type, param->to.x, param->to.y,
+                    param->control1.x, param->control1.y, param->control2.x, param->control2.y);
 #endif
 #endif
         TEST_ASSERT_EQUAL(param->type, outline_data_U9F98[i].type);
@@ -511,32 +508,32 @@ void test_freetype_outline_rendering_test(void)
     lv_freetype_font_delete(font_italic);
 }
 
-static void freetype_outline_event_cb(lv_event_t * e)
+static void freetype_outline_event_cb(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_freetype_outline_event_param_t * param = lv_event_get_param(e);
-    switch(code) {
-        case LV_EVENT_CREATE:
-            param->outline = lv_malloc_zeroed(sizeof(lv_ll_t));
-            lv_ll_init(param->outline, sizeof(lv_freetype_outline_event_param_t));
-            break;
-        case LV_EVENT_DELETE:
-            lv_ll_clear(param->outline);
-            lv_free(param->outline);
-            break;
-        case LV_EVENT_INSERT: {
-                void * entry = lv_ll_ins_tail(param->outline);
-                lv_memcpy(entry, param, sizeof(lv_freetype_outline_event_param_t));
-                break;
-            }
-        default:
-            LV_LOG_WARN("unknown event code: %d", code);
-            break;
+    lv_freetype_outline_event_param_t *param = lv_event_get_param(e);
+    switch (code) {
+    case LV_EVENT_CREATE:
+        param->outline = lv_malloc_zeroed(sizeof(lv_ll_t));
+        lv_ll_init(param->outline, sizeof(lv_freetype_outline_event_param_t));
+        break;
+    case LV_EVENT_DELETE:
+        lv_ll_clear(param->outline);
+        lv_free(param->outline);
+        break;
+    case LV_EVENT_INSERT: {
+        void *entry = lv_ll_ins_tail(param->outline);
+        lv_memcpy(entry, param, sizeof(lv_freetype_outline_event_param_t));
+        break;
+    }
+    default:
+        LV_LOG_WARN("unknown event code: %d", code);
+        break;
     }
 }
 
 #if OPTION_GENERATE_VECTOR_OPS_STRING
-static void vegravis_generate_vector_ops_string(lv_freetype_outline_event_param_t * param, char * buf, uint32_t buf_len)
+static void vegravis_generate_vector_ops_string(lv_freetype_outline_event_param_t *param, char *buf, uint32_t buf_len)
 {
     float x, y, p1x, p1y, p2x, p2y;
 
@@ -547,45 +544,37 @@ static void vegravis_generate_vector_ops_string(lv_freetype_outline_event_param_
     p2x = LV_FREETYPE_F26DOT6_TO_FLOAT(param->control2.x);
     p2y = LV_FREETYPE_F26DOT6_TO_FLOAT(param->control2.y);
 
-    switch(param->type) {
-        case LV_FREETYPE_OUTLINE_MOVE_TO:
-            lv_snprintf(buf, buf_len, "MOVE, %f, %f, ", x, x);
-            break;
-        case LV_FREETYPE_OUTLINE_LINE_TO:
-            lv_snprintf(buf, buf_len, "LINE, %f, %f, ", x, y);
-            break;
-        case LV_FREETYPE_OUTLINE_CONIC_TO:
-            lv_snprintf(buf, buf_len, "QUAD, %f, %f, %f, %f, ", p1x, p1y, x, y);
-            break;
-        case LV_FREETYPE_OUTLINE_CUBIC_TO:
-            lv_snprintf(buf, buf_len, "CUBI, %f, %f, %f, %f, %f, %f, ", p1x, p1y, p2x, p2y, x, y);
-            break;
-        case LV_FREETYPE_OUTLINE_END:
-            lv_snprintf(buf, buf_len, "END, ");
-            break;
-        default:
-            break;
+    switch (param->type) {
+    case LV_FREETYPE_OUTLINE_MOVE_TO:
+        lv_snprintf(buf, buf_len, "MOVE, %f, %f, ", x, x);
+        break;
+    case LV_FREETYPE_OUTLINE_LINE_TO:
+        lv_snprintf(buf, buf_len, "LINE, %f, %f, ", x, y);
+        break;
+    case LV_FREETYPE_OUTLINE_CONIC_TO:
+        lv_snprintf(buf, buf_len, "QUAD, %f, %f, %f, %f, ", p1x, p1y, x, y);
+        break;
+    case LV_FREETYPE_OUTLINE_CUBIC_TO:
+        lv_snprintf(buf, buf_len, "CUBI, %f, %f, %f, %f, %f, %f, ", p1x, p1y, p2x, p2y, x, y);
+        break;
+    case LV_FREETYPE_OUTLINE_END:
+        lv_snprintf(buf, buf_len, "END, ");
+        break;
+    default:
+        break;
     }
 }
 #endif
 
 #else
 
-void setUp(void)
-{
-}
+void setUp(void) {}
 
-void tearDown(void)
-{
-}
+void tearDown(void) {}
 
-void test_freetype_bitmap_rendering_test(void)
-{
-}
+void test_freetype_bitmap_rendering_test(void) {}
 
-void test_freetype_outline_rendering_test(void)
-{
-}
+void test_freetype_outline_rendering_test(void) {}
 
 #endif /*LV_USE_FREETYPE*/
 

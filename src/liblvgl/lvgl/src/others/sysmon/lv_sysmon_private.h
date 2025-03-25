@@ -28,7 +28,7 @@ extern "C" {
 
 struct lv_sysmon_backend_data_t {
     lv_subject_t subject;
-    lv_timer_t * timer;
+    lv_timer_t *timer;
 };
 
 #if LV_USE_PERF_MONITOR
@@ -54,13 +54,12 @@ struct lv_sysmon_perf_info_t {
         uint32_t fps;
         uint32_t cpu;
         uint32_t refr_avg_time;
-        uint32_t render_avg_time;       /**< Pure rendering time without flush time*/
-        uint32_t flush_avg_time;        /**< Pure flushing time without rendering time*/
+        uint32_t render_avg_time; /**< Pure rendering time without flush time*/
+        uint32_t flush_avg_time;  /**< Pure flushing time without rendering time*/
         uint32_t cpu_avg_total;
         uint32_t fps_avg_total;
         uint32_t run_cnt;
     } calculated;
-
 };
 #endif
 

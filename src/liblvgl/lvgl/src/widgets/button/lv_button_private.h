@@ -35,7 +35,6 @@ struct lv_button_t {
     lv_obj_t obj;
 };
 
-
 /**********************
  * GLOBAL PROTOTYPES
  **********************/

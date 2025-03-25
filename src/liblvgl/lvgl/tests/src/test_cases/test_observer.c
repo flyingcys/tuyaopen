@@ -19,7 +19,7 @@ void tearDown(void)
 static int32_t prev_v;
 static int32_t current_v;
 
-static void observer_int(lv_observer_t * observer, lv_subject_t * subject)
+static void observer_int(lv_observer_t *observer, lv_subject_t *subject)
 {
     LV_UNUSED(observer);
     prev_v = lv_subject_get_previous_int(subject);
@@ -31,7 +31,7 @@ void test_observer_add_remove(void)
     static lv_subject_t subject;
     lv_subject_init_int(&subject, 5);
 
-    lv_observer_t * observer = lv_subject_add_observer(&subject, observer_int, NULL);
+    lv_observer_t *observer = lv_subject_add_observer(&subject, observer_int, NULL);
 
     current_v = 0;
     lv_subject_set_int(&subject, 10);
@@ -41,11 +41,11 @@ void test_observer_add_remove(void)
     lv_observer_remove(observer);
     lv_subject_set_int(&subject, 15);
     TEST_ASSERT_EQUAL(15, lv_subject_get_int(&subject));
-    TEST_ASSERT_EQUAL(10, current_v);   /*The observer cb is not called*/
+    TEST_ASSERT_EQUAL(10, current_v); /*The observer cb is not called*/
 
     static lv_subject_t uninitialized_subject;
     observer = lv_subject_add_observer(&uninitialized_subject, observer_int, NULL);
-    TEST_ASSERT_EQUAL_PTR(NULL, observer);   /*The observer must be NULL*/
+    TEST_ASSERT_EQUAL_PTR(NULL, observer); /*The observer must be NULL*/
 }
 
 void test_observer_int(void)
@@ -181,7 +181,7 @@ void test_observer_color(void)
 
 static int32_t group_observer_called;
 
-static void group_observer_cb(lv_observer_t * observer, lv_subject_t * subject)
+static void group_observer_cb(lv_observer_t *observer, lv_subject_t *subject)
 {
     LV_UNUSED(observer);
     LV_UNUSED(subject);
@@ -193,7 +193,7 @@ void test_observer_group(void)
     static lv_subject_t subject_main;
     static lv_subject_t subject_sub1;
     static lv_subject_t subject_sub2;
-    static lv_subject_t * subject_list[2] = {&subject_sub1, &subject_sub2};
+    static lv_subject_t *subject_list[2] = {&subject_sub1, &subject_sub2};
 
     lv_subject_init_int(&subject_sub1, 1);
     lv_subject_init_int(&subject_sub2, 2);
@@ -217,12 +217,12 @@ void test_observer_group(void)
 
 void test_observer_obj_flag(void)
 {
-    lv_obj_t * obj = lv_obj_create(lv_screen_active());
+    lv_obj_t *obj = lv_obj_create(lv_screen_active());
 
     /*Can bind only to int*/
     static lv_subject_t subject_wrong;
     lv_subject_init_pointer(&subject_wrong, NULL);
-    lv_observer_t * observer = lv_obj_bind_state_if_eq(obj, &subject_wrong, LV_STATE_CHECKED, 5);
+    lv_observer_t *observer = lv_obj_bind_state_if_eq(obj, &subject_wrong, LV_STATE_CHECKED, 5);
     TEST_ASSERT_EQUAL_PTR(NULL, observer);
 
     static lv_subject_t subject;
@@ -248,12 +248,12 @@ void test_observer_obj_flag(void)
 
 void test_observer_obj_state(void)
 {
-    lv_obj_t * obj = lv_obj_create(lv_screen_active());
+    lv_obj_t *obj = lv_obj_create(lv_screen_active());
 
     /*Can bind only to int*/
     static lv_subject_t subject_wrong;
     lv_subject_init_pointer(&subject_wrong, NULL);
-    lv_observer_t * observer = lv_obj_bind_state_if_eq(obj, &subject_wrong, LV_STATE_CHECKED, 5);
+    lv_observer_t *observer = lv_obj_bind_state_if_eq(obj, &subject_wrong, LV_STATE_CHECKED, 5);
     TEST_ASSERT_EQUAL_PTR(NULL, observer);
 
     static lv_subject_t subject;
@@ -279,7 +279,7 @@ void test_observer_obj_state(void)
 
 void test_observer_button_checked(void)
 {
-    lv_obj_t * obj = lv_button_create(lv_screen_active());
+    lv_obj_t *obj = lv_button_create(lv_screen_active());
     lv_obj_set_size(obj, 100, 100);
     lv_obj_add_flag(obj, LV_OBJ_FLAG_CHECKABLE);
     lv_obj_update_layout(obj);
@@ -287,7 +287,7 @@ void test_observer_button_checked(void)
     /*Can bind only to int*/
     static lv_subject_t subject_wrong;
     lv_subject_init_pointer(&subject_wrong, NULL);
-    lv_observer_t * observer = lv_obj_bind_checked(obj, &subject_wrong);
+    lv_observer_t *observer = lv_obj_bind_checked(obj, &subject_wrong);
     TEST_ASSERT_EQUAL_PTR(NULL, observer);
 
     static lv_subject_t subject;
@@ -306,9 +306,9 @@ void test_observer_button_checked(void)
 
 void test_observer_label_text_normal(void)
 {
-    lv_obj_t * obj = lv_label_create(lv_screen_active());
+    lv_obj_t *obj = lv_label_create(lv_screen_active());
 
-    lv_observer_t * observer;
+    lv_observer_t *observer;
 
     /*Cannot bind color*/
     static lv_subject_t subject_color;
@@ -354,9 +354,9 @@ void test_observer_label_text_normal(void)
 
 void test_observer_label_text_formatted(void)
 {
-    lv_obj_t * obj = lv_label_create(lv_screen_active());
+    lv_obj_t *obj = lv_label_create(lv_screen_active());
 
-    lv_observer_t * observer;
+    lv_observer_t *observer;
 
     /*Cannot bind color*/
     static lv_subject_t subject_color;
@@ -410,7 +410,7 @@ void test_observer_label_text_formatted(void)
 
 void test_observer_arc_value(void)
 {
-    lv_obj_t * obj = lv_arc_create(lv_screen_active());
+    lv_obj_t *obj = lv_arc_create(lv_screen_active());
 
     static lv_subject_t subject;
     lv_subject_init_int(&subject, 30);
@@ -436,7 +436,7 @@ void test_observer_arc_value(void)
 
 void test_observer_slider_value(void)
 {
-    lv_obj_t * obj = lv_slider_create(lv_screen_active());
+    lv_obj_t *obj = lv_slider_create(lv_screen_active());
 
     static lv_subject_t subject;
     lv_subject_init_int(&subject, 30);
@@ -466,7 +466,7 @@ void test_observer_slider_value(void)
 
 void test_observer_roller_value(void)
 {
-    lv_obj_t * obj = lv_roller_create(lv_screen_active());
+    lv_obj_t *obj = lv_roller_create(lv_screen_active());
 
     static lv_subject_t subject;
     lv_subject_init_int(&subject, 1);
@@ -486,7 +486,7 @@ void test_observer_roller_value(void)
 
 void test_observer_dropdown_value(void)
 {
-    lv_obj_t * obj = lv_dropdown_create(lv_screen_active());
+    lv_obj_t *obj = lv_dropdown_create(lv_screen_active());
 
     static lv_subject_t subject;
     lv_subject_init_int(&subject, 1);
@@ -511,9 +511,9 @@ void test_observer_deinit(void)
 
     uint32_t mem = lv_test_get_free_mem();
     uint32_t i;
-    for(i = 0; i < 64; i++) {
-        lv_obj_t * obj1 = lv_slider_create(lv_screen_active());
-        lv_obj_t * obj2 = lv_slider_create(lv_screen_active());
+    for (i = 0; i < 64; i++) {
+        lv_obj_t *obj1 = lv_slider_create(lv_screen_active());
+        lv_obj_t *obj2 = lv_slider_create(lv_screen_active());
 
         lv_subject_init_int(&subject, 30);
         lv_slider_bind_value(obj1, &subject);

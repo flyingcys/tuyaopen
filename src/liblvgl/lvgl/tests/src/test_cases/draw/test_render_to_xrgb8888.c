@@ -22,15 +22,14 @@ void test_render_to_xrgb8888(void)
 
     lv_opa_t opa_values[2] = {0xff, 0x80};
     uint32_t opa;
-    for(opa = 0; opa < 2; opa++) {
+    for (opa = 0; opa < 2; opa++) {
         uint32_t i;
-        for(i = 0; i < LV_DEMO_RENDER_SCENE_NUM; i++) {
+        for (i = 0; i < LV_DEMO_RENDER_SCENE_NUM; i++) {
 
             /*Skip test with transformed indexed images if they are not loaded to RAM*/
-            if(LV_BIN_DECODER_RAM_LOAD == 0 &&
-               (i == LV_DEMO_RENDER_SCENE_IMAGE_NORMAL_2 ||
-                i == LV_DEMO_RENDER_SCENE_IMAGE_RECOLOR_2)) continue;
-
+            if (LV_BIN_DECODER_RAM_LOAD == 0 &&
+                (i == LV_DEMO_RENDER_SCENE_IMAGE_NORMAL_2 || i == LV_DEMO_RENDER_SCENE_IMAGE_RECOLOR_2))
+                continue;
 
             lv_demo_render(i, opa_values[opa]);
 

@@ -15,15 +15,15 @@ void tearDown(void)
     /* Function run after every test */
 }
 
-static void exec_cb(void * var, int32_t v)
+static void exec_cb(void *var, int32_t v)
 {
-    int32_t * var_i32 = var;
+    int32_t *var_i32 = var;
     *var_i32 = v;
 }
 
-static void custom_exec_cb(lv_anim_t * a, int32_t v)
+static void custom_exec_cb(lv_anim_t *a, int32_t v)
 {
-    int32_t * var_i32 = a->var;
+    int32_t *var_i32 = a->var;
     *var_i32 = v;
 }
 

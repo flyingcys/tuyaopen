@@ -62,7 +62,7 @@ typedef enum {
  */
 void lv_demo_render(lv_demo_render_scene_t id, lv_opa_t opa);
 
-const char * lv_demo_render_get_scene_name(lv_demo_render_scene_t id);
+const char *lv_demo_render_get_scene_name(lv_demo_render_scene_t id);
 
 /**********************
  *      MACROS

@@ -29,7 +29,7 @@ extern "C" {
 typedef struct {
     pthread_t thread;
     void (*callback)(void *);
-    void * user_data;
+    void *user_data;
 } lv_thread_t;
 
 typedef pthread_mutex_t lv_mutex_t;

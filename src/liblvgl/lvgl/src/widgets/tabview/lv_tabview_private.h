@@ -37,7 +37,6 @@ struct lv_tabview_t {
     lv_dir_t tab_pos;
 };
 
-
 /**********************
  * GLOBAL PROTOTYPES
  **********************/

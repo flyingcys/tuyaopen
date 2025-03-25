@@ -25,23 +25,20 @@
 
 #include "tvgSwCommon.h"
 
-
 /************************************************************************/
 /* Internal Class Implementation                                        */
 /************************************************************************/
-
 
 /************************************************************************/
 /* External Class Implementation                                        */
 /************************************************************************/
 
-SwOutline* mpoolReqOutline(SwMpool* mpool, unsigned idx)
+SwOutline *mpoolReqOutline(SwMpool *mpool, unsigned idx)
 {
     return &mpool->outline[idx];
 }
 
-
-void mpoolRetOutline(SwMpool* mpool, unsigned idx)
+void mpoolRetOutline(SwMpool *mpool, unsigned idx)
 {
     mpool->outline[idx].pts.clear();
     mpool->outline[idx].cntrs.clear();
@@ -49,14 +46,12 @@ void mpoolRetOutline(SwMpool* mpool, unsigned idx)
     mpool->outline[idx].closed.clear();
 }
 
-
-SwOutline* mpoolReqStrokeOutline(SwMpool* mpool, unsigned idx)
+SwOutline *mpoolReqStrokeOutline(SwMpool *mpool, unsigned idx)
 {
     return &mpool->strokeOutline[idx];
 }
 
-
-void mpoolRetStrokeOutline(SwMpool* mpool, unsigned idx)
+void mpoolRetStrokeOutline(SwMpool *mpool, unsigned idx)
 {
     mpool->strokeOutline[idx].pts.clear();
     mpool->strokeOutline[idx].cntrs.clear();
@@ -64,14 +59,12 @@ void mpoolRetStrokeOutline(SwMpool* mpool, unsigned idx)
     mpool->strokeOutline[idx].closed.clear();
 }
 
-
-SwOutline* mpoolReqDashOutline(SwMpool* mpool, unsigned idx)
+SwOutline *mpoolReqDashOutline(SwMpool *mpool, unsigned idx)
 {
     return &mpool->dashOutline[idx];
 }
 
-
-void mpoolRetDashOutline(SwMpool* mpool, unsigned idx)
+void mpoolRetDashOutline(SwMpool *mpool, unsigned idx)
 {
     mpool->dashOutline[idx].pts.clear();
     mpool->dashOutline[idx].cntrs.clear();
@@ -79,22 +72,20 @@ void mpoolRetDashOutline(SwMpool* mpool, unsigned idx)
     mpool->dashOutline[idx].closed.clear();
 }
 
-
-SwMpool* mpoolInit(uint32_t threads)
+SwMpool *mpoolInit(uint32_t threads)
 {
     auto allocSize = threads + 1;
 
-    auto mpool = static_cast<SwMpool*>(calloc(sizeof(SwMpool), 1));
-    mpool->outline = static_cast<SwOutline*>(calloc(1, sizeof(SwOutline) * allocSize));
-    mpool->strokeOutline = static_cast<SwOutline*>(calloc(1, sizeof(SwOutline) * allocSize));
-    mpool->dashOutline = static_cast<SwOutline*>(calloc(1, sizeof(SwOutline) * allocSize));
+    auto mpool = static_cast<SwMpool *>(calloc(sizeof(SwMpool), 1));
+    mpool->outline = static_cast<SwOutline *>(calloc(1, sizeof(SwOutline) * allocSize));
+    mpool->strokeOutline = static_cast<SwOutline *>(calloc(1, sizeof(SwOutline) * allocSize));
+    mpool->dashOutline = static_cast<SwOutline *>(calloc(1, sizeof(SwOutline) * allocSize));
     mpool->allocSize = allocSize;
 
     return mpool;
 }
 
-
-bool mpoolClear(SwMpool* mpool)
+bool mpoolClear(SwMpool *mpool)
 {
     for (unsigned i = 0; i < mpool->allocSize; ++i) {
         mpool->outline[i].pts.reset();
@@ -116,10 +107,10 @@ bool mpoolClear(SwMpool* mpool)
     return true;
 }
 
-
-bool mpoolTerm(SwMpool* mpool)
+bool mpoolTerm(SwMpool *mpool)
 {
-    if (!mpool) return false;
+    if (!mpool)
+        return false;
 
     mpoolClear(mpool);
 
@@ -132,4 +123,3 @@ bool mpoolTerm(SwMpool* mpool)
 }
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

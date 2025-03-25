@@ -4,7 +4,7 @@
 
 #include "unity/unity.h"
 
-static lv_obj_t * active_screen = NULL;
+static lv_obj_t *active_screen = NULL;
 
 void setUp(void)
 {
@@ -18,7 +18,7 @@ void tearDown(void)
 
 void test_keyboard_mode(void)
 {
-    lv_obj_t * keyboard  = lv_keyboard_create(active_screen);
+    lv_obj_t *keyboard = lv_keyboard_create(active_screen);
     lv_obj_set_size(keyboard, LV_PCT(100), LV_PCT(50));
     lv_obj_align(keyboard, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_obj_set_style_text_font(keyboard, &lv_font_dejavu_16_persian_hebrew, LV_PART_MAIN);
@@ -42,10 +42,10 @@ void test_keyboard_mode(void)
 void test_keyboard_properties(void)
 {
 #if LV_USE_OBJ_PROPERTY
-    lv_obj_t * obj = lv_keyboard_create(lv_screen_active());
-    lv_property_t prop = { };
+    lv_obj_t *obj = lv_keyboard_create(lv_screen_active());
+    lv_property_t prop = {};
 
-    lv_obj_t * test_area = lv_textarea_create(lv_screen_active());
+    lv_obj_t *test_area = lv_textarea_create(lv_screen_active());
 
     prop.id = LV_PROPERTY_KEYBOARD_TEXTAREA;
     prop.ptr = test_area;

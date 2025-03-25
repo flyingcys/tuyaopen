@@ -8,7 +8,8 @@ void setUp(void)
 {
     /* Function run before every test */
     lv_obj_set_flex_flow(lv_screen_active(), LV_FLEX_FLOW_ROW_WRAP);
-    lv_obj_set_flex_align(lv_screen_active(), LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_SPACE_EVENLY);
+    lv_obj_set_flex_align(lv_screen_active(), LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER,
+                          LV_FLEX_ALIGN_SPACE_EVENLY);
 }
 
 void tearDown(void)
@@ -17,18 +18,19 @@ void tearDown(void)
     lv_obj_clean(lv_screen_active());
 }
 
-static lv_obj_t * label_create(const lv_font_t * font, lv_style_t * style, const char * text_base)
+static lv_obj_t *label_create(const lv_font_t *font, lv_style_t *style, const char *text_base)
 {
-    lv_obj_t * label = lv_label_create(lv_screen_active());
+    lv_obj_t *label = lv_label_create(lv_screen_active());
     lv_label_set_text_fmt(label, "%s: the quick brown fox jumps over the lazy dog", text_base);
     //    lv_label_set_text_fmt(label, "l");
     lv_obj_set_style_text_font(label, font, 0);
-    if(style) lv_obj_add_style(label, style, 0);
+    if (style)
+        lv_obj_add_style(label, style, 0);
 
     return label;
 }
 
-static void all_labels_create(const char * name, lv_style_t * style)
+static void all_labels_create(const char *name, lv_style_t *style)
 {
     LV_FONT_DECLARE(test_font_montserrat_ascii_1bpp);
     LV_FONT_DECLARE(test_font_montserrat_ascii_2bpp);
@@ -58,7 +60,6 @@ void test_draw_label_color(void)
     lv_style_init(&style);
     lv_style_set_text_color(&style, lv_palette_main(LV_PALETTE_RED));
     all_labels_create("color", &style);
-
 }
 
 void test_draw_label_opa(void)
@@ -78,13 +79,13 @@ void test_draw_label_color_and_opa(void)
     all_labels_create("color_and_opa", &style);
 }
 
-static lv_obj_t * decor_label_create(lv_text_decor_t decor, lv_text_align_t align, lv_opa_t opa)
+static lv_obj_t *decor_label_create(lv_text_decor_t decor, lv_text_align_t align, lv_opa_t opa)
 {
     lv_color_t color = lv_palette_main(LV_PALETTE_BLUE);
     lv_color_t sel_bg_color = lv_palette_lighten(LV_PALETTE_RED, 4);
     lv_color_t sel_color = lv_palette_darken(LV_PALETTE_RED, 4);
 
-    lv_obj_t * label = lv_label_create(lv_screen_active());
+    lv_obj_t *label = lv_label_create(lv_screen_active());
     lv_label_set_text(label, "Hi,\nTesting the\nlabels.");
     lv_obj_set_style_text_decor(label, decor, 0);
     lv_obj_set_style_text_color(label, color, 0);
@@ -101,7 +102,7 @@ static lv_obj_t * decor_label_create(lv_text_decor_t decor, lv_text_align_t alig
 static void all_decor_labels_create(lv_text_decor_t decor)
 {
 
-    lv_obj_t * label;
+    lv_obj_t *label;
     label = decor_label_create(decor, LV_TEXT_ALIGN_LEFT, LV_OPA_COVER);
     lv_obj_add_flag(label, LV_OBJ_FLAG_FLEX_IN_NEW_TRACK);
 

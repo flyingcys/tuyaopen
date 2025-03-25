@@ -37,8 +37,8 @@ extern "C" {
  * @brief Get the window handle from specific LVGL input device object.
  * @param indev The specific LVGL input device object.
  * @return The window handle from specific LVGL input device object.
-*/
-HWND lv_windows_get_indev_window_handle(lv_indev_t * indev);
+ */
+HWND lv_windows_get_indev_window_handle(lv_indev_t *indev);
 
 /**
  * @brief Open a LVGL pointer input device object for the specific LVGL
@@ -47,8 +47,8 @@ HWND lv_windows_get_indev_window_handle(lv_indev_t * indev);
  * @param display The specific LVGL display object.
  * @return The LVGL pointer input device object for the specific LVGL
  *         display object.
-*/
-lv_indev_t * lv_windows_acquire_pointer_indev(lv_display_t * display);
+ */
+lv_indev_t *lv_windows_acquire_pointer_indev(lv_display_t *display);
 
 /**
  * @brief Open a LVGL keypad input device object for the specific LVGL
@@ -57,8 +57,8 @@ lv_indev_t * lv_windows_acquire_pointer_indev(lv_display_t * display);
  * @param display The specific LVGL display object.
  * @return The LVGL keypad input device object for the specific LVGL
  *         display object.
-*/
-lv_indev_t * lv_windows_acquire_keypad_indev(lv_display_t * display);
+ */
+lv_indev_t *lv_windows_acquire_keypad_indev(lv_display_t *display);
 
 /**
  * @brief Open a LVGL encoder input device object for the specific LVGL
@@ -67,8 +67,8 @@ lv_indev_t * lv_windows_acquire_keypad_indev(lv_display_t * display);
  * @param display The specific LVGL display object.
  * @return The LVGL encoder input device object for the specific LVGL
  *         display object.
-*/
-lv_indev_t * lv_windows_acquire_encoder_indev(lv_display_t * display);
+ */
+lv_indev_t *lv_windows_acquire_encoder_indev(lv_display_t *display);
 
 /**********************
  *      MACROS

@@ -37,7 +37,6 @@ struct lv_barcode_t {
     bool tiled;
 };
 
-
 /**********************
  * GLOBAL PROTOTYPES
  **********************/

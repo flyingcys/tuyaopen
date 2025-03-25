@@ -88,7 +88,7 @@ void test_pct(void)
     /**
      * Out of bounds behavior.
      * The pct value will be clamped to the max/min value if it's out of bounds.
-    */
+     */
 
     pct_val = PCT_MAX_VALUE + 1;
     pct_coord = lv_pct(pct_val);

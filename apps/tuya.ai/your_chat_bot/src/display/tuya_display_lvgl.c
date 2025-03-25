@@ -15,6 +15,7 @@
 #include "lv_port_disp.h"
 #include "font_awesome_symbols.h"
 #include "tuya_display.h"
+#if 0
 #include "tuya_lcd_device.h"
 /***********************************************************
 ************************macro define************************
@@ -29,12 +30,17 @@
 ***********************************************************/
 extern const lv_img_dsc_t TuyaOpen_img;
 extern const lv_img_dsc_t LISTEN_icon;
+
+extern lv_obj_t *chat_message_label_;
+extern lv_obj_t *status_label_;
+#endif
 /***********************************************************
 ***********************variable define**********************
 ***********************************************************/
 static MUTEX_HANDLE sg_lvgl_mutex_hdl = NULL;
 static THREAD_HANDLE sg_lvgl_thrd_hdl = NULL;
 
+#if 0
 static TKL_DISP_DEVICE_S sg_display_device = {
     .device_id = 0,
     .device_port = TKL_DISP_LCD,
@@ -144,30 +150,33 @@ static void __add_wifi_state(bool is_connected)
 
 static void __add_listen_icon(is_listen)
 {
-    static lv_obj_t *listen_icon = NULL;
+    // static lv_obj_t *listen_icon = NULL;
 
-    if (NULL == sg_title_bar) {
-        PR_ERR("sg_title_bar is null");
-        return;
-    }
+    // if (NULL == sg_title_bar) {
+    //     PR_ERR("sg_title_bar is null");
+    //     return;
+    // }
 
-    if (listen_icon == NULL) {
-        listen_icon = lv_image_create(sg_title_bar);
-        lv_image_set_src(listen_icon, &LISTEN_icon);
-        lv_obj_align(listen_icon, LV_ALIGN_LEFT_MID, 60, 0);
-    }
+    // if (listen_icon == NULL) {
+    //     listen_icon = lv_image_create(sg_title_bar);
+    //     lv_image_set_src(listen_icon, &LISTEN_icon);
+    //     lv_obj_align(listen_icon, LV_ALIGN_LEFT_MID, 60, 0);
+    // }
 
     if (is_listen) {
-        lv_label_set_text(sg_title_text, "聆听中......");
-        lv_obj_clear_flag(listen_icon, LV_OBJ_FLAG_HIDDEN);
+        // lv_label_set_text(sg_title_text, "聆听中......");
+        lv_label_set_text(status_label_, "聆听中......");
+        // lv_obj_clear_flag(listen_icon, LV_OBJ_FLAG_HIDDEN);
     } else {
-        lv_label_set_text(sg_title_text, "AI聊天伙伴");
-        lv_obj_add_flag(listen_icon, LV_OBJ_FLAG_HIDDEN);
+        // lv_label_set_text(sg_title_text, "AI聊天伙伴");
+        lv_label_set_text(status_label_, "待命");
+        // lv_obj_add_flag(listen_icon, LV_OBJ_FLAG_HIDDEN);
     }
 };
 
 static void __create_message(const char *text, bool is_ai)
 {
+#if 0
     if (sg_msg_container == NULL) {
         PR_ERR("msg container is NULL");
         return;
@@ -208,6 +217,8 @@ static void __create_message(const char *text, bool is_ai)
 
     lv_obj_scroll_to_view(msg_cont, LV_ANIM_ON);
     lv_obj_update_layout(sg_msg_container);
+#endif
+    lv_label_set_text(chat_message_label_, text);
 }
 
 static void __create_homepage(void)
@@ -218,6 +229,7 @@ static void __create_homepage(void)
     lv_obj_center(img);
 }
 
+#endif
 static void __lvgl_task(void *args)
 {
     uint32_t sleep_time = 0;
@@ -229,32 +241,61 @@ static void __lvgl_task(void *args)
 
         tal_mutex_unlock(sg_lvgl_mutex_hdl);
 
-        if (sleep_time > 500) {
-            sleep_time = 500;
-        } else if (sleep_time < 4) {
-            sleep_time = 4;
-        }
+        // if (sleep_time > 500) {
+        //     sleep_time = 500;
+        // } else if (sleep_time < 4) {
+        //     sleep_time = 4;
+        // }
 
-        tal_system_sleep(sleep_time);
+        tal_system_sleep(5);
     }
 }
+lv_obj_t *text_label = NULL;
+LV_FONT_DECLARE(FONT_SY_20);
 
+static void ui2_init(void)
+{
+    lv_obj_t *screen = lv_screen_active();
+    lv_obj_set_style_text_font(screen, &FONT_SY_20, 0);
+    lv_obj_set_style_text_color(screen, lv_color_black(), 0);
+
+    text_label = lv_label_create(screen);
+
+    lv_label_set_text(text_label, "hello 待命");
+    lv_obj_align(text_label, LV_ALIGN_CENTER, 0, 0);
+
+    // lv_timer_create(update_clock, 1000, NULL);
+}
+
+void my_printf(lv_log_level_t level, const char *file, uint32_t line, const char *dsc)
+{
+    PR_DEBUG_RAW("level:%d,file:%s,line:%d,dsc:%s\n", level, file, line, dsc);
+}
+static uint32_t lv_tick_get_cb(void)
+{
+    return (uint32_t)tkl_system_get_millisecond();
+}
 OPERATE_RET tuya_display_lvgl_init(void)
 {
     OPERATE_RET rt = OPRT_OK;
 
     // register lcd device
-    TUYA_CALL_ERR_RETURN(tuya_lcd_device_register(sg_display_device.device_id));
+    // TUYA_CALL_ERR_RETURN(tuya_lcd_device_register(sg_display_device.device_id));
 
     /*lvgl init*/
     lv_init();
     lv_tick_set_cb(lv_tick_get_cb);
-    lv_port_disp_init(&sg_display_device);
+    // lv_port_disp_init(&sg_display_device);
+    lv_port_disp_init();
 #ifdef LVGL_ENABLE_TOUCH
     lv_port_indev_init();
 #endif
 
     TUYA_CALL_ERR_RETURN(tal_mutex_create_init(&sg_lvgl_mutex_hdl));
+
+    // lv_log_register_print_cb(my_printf);
+    // ui_init();
+    ui_init();
 
     THREAD_CFG_T cfg = {
         .thrdname = "lvgl",
@@ -267,6 +308,7 @@ OPERATE_RET tuya_display_lvgl_init(void)
     return OPRT_OK;
 }
 
+#if 0
 void tuya_display_lv_homepage(void)
 {
     tal_mutex_lock(sg_lvgl_mutex_hdl);
@@ -313,3 +355,4 @@ void tuya_display_lv_listen_state(bool is_listen)
 
     tal_mutex_unlock(sg_lvgl_mutex_hdl);
 }
+#endif

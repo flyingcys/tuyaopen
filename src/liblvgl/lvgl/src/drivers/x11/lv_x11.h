@@ -25,14 +25,14 @@ extern "C" {
 
 /** Header of private display driver user data - for internal use only */
 typedef struct {
-    struct _XDisplay   *  display;  /**< X11 display object     */
-    struct _x11_inp_data * inp_data; /**< input user data object */
+    struct _XDisplay *display;      /**< X11 display object     */
+    struct _x11_inp_data *inp_data; /**< input user data object */
 } _x11_user_hdr_t;
 
 /** optional window close callback function type
  *  @see lv_x11_window_set_close_cb
-*/
-typedef void(*lv_x11_close_cb)(void * user_data);
+ */
+typedef void (*lv_x11_close_cb)(void *user_data);
 
 /**********************
  * GLOBAL PROTOTYPES
@@ -48,7 +48,7 @@ typedef void(*lv_x11_close_cb)(void * user_data);
  * @param[in] disp      the created X11 display object from @ref lv_x11_window_create
  * @param[in] mouse_img optional image description for the mouse cursor (NULL for no/invisible mouse cursor)
  */
-void lv_x11_inputs_create(lv_display_t * disp, lv_image_dsc_t const * mouse_img);
+void lv_x11_inputs_create(lv_display_t *disp, lv_image_dsc_t const *mouse_img);
 
 /**
  * create the X11 display
@@ -70,7 +70,7 @@ void lv_x11_inputs_create(lv_display_t * disp, lv_image_dsc_t const * mouse_img)
  * @param[in] ver_res  vertical resolution (=height) of the X11 window
  * @return             pointer to the display object
  */
-lv_display_t * lv_x11_window_create(char const * title, int32_t hor_res, int32_t ver_res);
+lv_display_t *lv_x11_window_create(char const *title, int32_t hor_res, int32_t ver_res);
 
 #endif /* LV_USE_X11 */
 

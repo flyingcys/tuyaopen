@@ -4,7 +4,7 @@
 
 #include "unity/unity.h"
 
-static lv_obj_t * active_screen = NULL;
+static lv_obj_t *active_screen = NULL;
 
 void setUp(void)
 {
@@ -18,16 +18,16 @@ void tearDown(void)
 
 void test_led_render_1(void)
 {
-    lv_obj_t * led  = lv_led_create(active_screen);
+    lv_obj_t *led = lv_led_create(active_screen);
     lv_obj_align(led, LV_ALIGN_CENTER, -80, 0);
     lv_led_off(led);
 
-    led  = lv_led_create(active_screen);
+    led = lv_led_create(active_screen);
     lv_obj_align(led, LV_ALIGN_CENTER, 0, 0);
     lv_led_set_brightness(led, 150);
     lv_led_set_color(led, lv_palette_main(LV_PALETTE_RED));
 
-    led  = lv_led_create(active_screen);
+    led = lv_led_create(active_screen);
     lv_obj_align(led, LV_ALIGN_CENTER, 80, 0);
     lv_led_on(led);
 
@@ -36,8 +36,8 @@ void test_led_render_1(void)
 
 void test_led_set_color_works(void)
 {
-    lv_obj_t * led  = lv_led_create(active_screen);
-    lv_led_t * ledObj = (lv_led_t *)led;
+    lv_obj_t *led = lv_led_create(active_screen);
+    lv_led_t *ledObj = (lv_led_t *)led;
 
     /* Test by changing colors randomly. */
     lv_led_set_color(led, lv_palette_main(LV_PALETTE_AMBER));
@@ -52,7 +52,7 @@ void test_led_set_color_works(void)
 
 void test_led_set_brightness_works(void)
 {
-    lv_obj_t * led  = lv_led_create(active_screen);
+    lv_obj_t *led = lv_led_create(active_screen);
 
     /* Test by changing brightness randomly. */
     lv_led_set_brightness(led, 150);
@@ -67,7 +67,7 @@ void test_led_set_brightness_works(void)
 
 void test_led_on_off_works(void)
 {
-    lv_obj_t * led  = lv_led_create(active_screen);
+    lv_obj_t *led = lv_led_create(active_screen);
 
     lv_led_on(led);
     TEST_ASSERT_EQUAL(LV_LED_BRIGHT_MAX, lv_led_get_brightness(led));
@@ -81,7 +81,7 @@ void test_led_on_off_works(void)
 
 void test_led_toggle_works(void)
 {
-    lv_obj_t * led  = lv_led_create(active_screen);
+    lv_obj_t *led = lv_led_create(active_screen);
 
     lv_led_on(led);
     lv_led_toggle(led);
@@ -94,7 +94,7 @@ void test_led_toggle_works(void)
 
 void test_led_get_brightness_works(void)
 {
-    lv_obj_t * led  = lv_led_create(active_screen);
+    lv_obj_t *led = lv_led_create(active_screen);
 
     lv_led_on(led);
     TEST_ASSERT_EQUAL(LV_LED_BRIGHT_MAX, lv_led_get_brightness(led));

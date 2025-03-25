@@ -12,7 +12,7 @@
 
 /*Testing of dependencies*/
 #if LV_USE_IMAGE == 0
-    #error "lv_animimg: lv_img is required. Enable it in lv_conf.h (LV_USE_IMAGE  1) "
+#error "lv_animimg: lv_img is required. Enable it in lv_conf.h (LV_USE_IMAGE  1) "
 #endif
 
 #include "../../draw/lv_image_decoder.h"
@@ -37,8 +37,8 @@
 /**********************
  *  STATIC PROTOTYPES
  **********************/
-static void index_change(lv_obj_t * obj, int32_t idx);
-static void lv_animimg_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj);
+static void index_change(lv_obj_t *obj, int32_t idx);
+static void lv_animimg_constructor(const lv_obj_class_t *class_p, lv_obj_t *obj);
 
 /**********************
  *  STATIC VARIABLES
@@ -59,27 +59,27 @@ const lv_obj_class_t lv_animimg_class = {
  *   GLOBAL FUNCTIONS
  **********************/
 
-lv_obj_t * lv_animimg_create(lv_obj_t * parent)
+lv_obj_t *lv_animimg_create(lv_obj_t *parent)
 {
     LV_LOG_INFO("begin");
-    lv_obj_t * obj = lv_obj_class_create_obj(&lv_animimg_class, parent);
+    lv_obj_t *obj = lv_obj_class_create_obj(&lv_animimg_class, parent);
     lv_obj_class_init_obj(obj);
     return obj;
 }
 
-void lv_animimg_set_src(lv_obj_t * obj, const void * dsc[], size_t num)
+void lv_animimg_set_src(lv_obj_t *obj, const void *dsc[], size_t num)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
-    lv_animimg_t * animimg = (lv_animimg_t *)obj;
+    lv_animimg_t *animimg = (lv_animimg_t *)obj;
     animimg->dsc = dsc;
     animimg->pic_count = num;
     lv_anim_set_values(&animimg->anim, 0, (int32_t)num);
 }
 
-void lv_animimg_start(lv_obj_t * obj)
+void lv_animimg_start(lv_obj_t *obj)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
-    lv_animimg_t * animimg = (lv_animimg_t *)obj;
+    lv_animimg_t *animimg = (lv_animimg_t *)obj;
     lv_anim_start(&animimg->anim);
 }
 
@@ -87,18 +87,18 @@ void lv_animimg_start(lv_obj_t * obj)
  * Setter functions
  *====================*/
 
-void lv_animimg_set_duration(lv_obj_t * obj, uint32_t duration)
+void lv_animimg_set_duration(lv_obj_t *obj, uint32_t duration)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
-    lv_animimg_t * animimg = (lv_animimg_t *)obj;
+    lv_animimg_t *animimg = (lv_animimg_t *)obj;
     lv_anim_set_duration(&animimg->anim, duration);
     lv_anim_set_playback_delay(&animimg->anim, duration);
 }
 
-void lv_animimg_set_repeat_count(lv_obj_t * obj, uint32_t count)
+void lv_animimg_set_repeat_count(lv_obj_t *obj, uint32_t count)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
-    lv_animimg_t * animimg = (lv_animimg_t *)obj;
+    lv_animimg_t *animimg = (lv_animimg_t *)obj;
     lv_anim_set_repeat_count(&animimg->anim, count);
 }
 
@@ -106,38 +106,38 @@ void lv_animimg_set_repeat_count(lv_obj_t * obj, uint32_t count)
  * Getter functions
  *====================*/
 
-const void ** lv_animimg_get_src(lv_obj_t * obj)
+const void **lv_animimg_get_src(lv_obj_t *obj)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
-    lv_animimg_t * animimg = (lv_animimg_t *)obj;
+    lv_animimg_t *animimg = (lv_animimg_t *)obj;
     return animimg->dsc;
 }
 
-uint8_t lv_animimg_get_src_count(lv_obj_t * obj)
+uint8_t lv_animimg_get_src_count(lv_obj_t *obj)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
-    lv_animimg_t * animimg = (lv_animimg_t *)obj;
+    lv_animimg_t *animimg = (lv_animimg_t *)obj;
     return animimg->pic_count;
 }
 
-uint32_t lv_animimg_get_duration(lv_obj_t * obj)
+uint32_t lv_animimg_get_duration(lv_obj_t *obj)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
-    lv_animimg_t * animimg = (lv_animimg_t *)obj;
+    lv_animimg_t *animimg = (lv_animimg_t *)obj;
     return lv_anim_get_time(&animimg->anim);
 }
 
-uint32_t lv_animimg_get_repeat_count(lv_obj_t * obj)
+uint32_t lv_animimg_get_repeat_count(lv_obj_t *obj)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
-    lv_animimg_t * animimg = (lv_animimg_t *)obj;
+    lv_animimg_t *animimg = (lv_animimg_t *)obj;
     return lv_anim_get_repeat_count(&animimg->anim);
 }
 
-lv_anim_t * lv_animimg_get_anim(lv_obj_t * obj)
+lv_anim_t *lv_animimg_get_anim(lv_obj_t *obj)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
-    lv_animimg_t * animimg = (lv_animimg_t *)obj;
+    lv_animimg_t *animimg = (lv_animimg_t *)obj;
     return &animimg->anim;
 }
 
@@ -145,12 +145,12 @@ lv_anim_t * lv_animimg_get_anim(lv_obj_t * obj)
  *   STATIC FUNCTIONS
  **********************/
 
-static void lv_animimg_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
+static void lv_animimg_constructor(const lv_obj_class_t *class_p, lv_obj_t *obj)
 {
     LV_TRACE_OBJ_CREATE("begin");
 
     LV_UNUSED(class_p);
-    lv_animimg_t * animimg = (lv_animimg_t *)obj;
+    lv_animimg_t *animimg = (lv_animimg_t *)obj;
 
     animimg->dsc = NULL;
     animimg->pic_count = -1;
@@ -164,16 +164,17 @@ static void lv_animimg_constructor(const lv_obj_class_t * class_p, lv_obj_t * ob
     lv_anim_set_repeat_count(&animimg->anim, LV_ANIM_REPEAT_INFINITE);
 }
 
-static void index_change(lv_obj_t * obj, int32_t idx)
+static void index_change(lv_obj_t *obj, int32_t idx)
 {
-    lv_animimg_t * animimg = (lv_animimg_t *)obj;
+    lv_animimg_t *animimg = (lv_animimg_t *)obj;
 
-    if(animimg->dsc == NULL) {
+    if (animimg->dsc == NULL) {
         LV_LOG_WARN("dsc is null");
         return;
     }
 
-    if(idx >= animimg->pic_count) idx =  animimg->pic_count - 1;
+    if (idx >= animimg->pic_count)
+        idx = animimg->pic_count - 1;
 
     lv_image_set_src(obj, animimg->dsc[idx]);
 }

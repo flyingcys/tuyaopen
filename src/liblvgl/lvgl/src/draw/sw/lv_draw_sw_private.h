@@ -33,7 +33,7 @@ extern "C" {
 
 struct lv_draw_sw_unit_t {
     lv_draw_unit_t base_unit;
-    lv_draw_task_t * task_act;
+    lv_draw_task_t *task_act;
 #if LV_USE_OS
     lv_thread_sync_t sync;
     lv_thread_t thread;

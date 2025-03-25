@@ -47,18 +47,15 @@
 
 #include "tvgLottieParserHandler.h"
 
-
 /************************************************************************/
 /* Internal Class Implementation                                        */
 /************************************************************************/
 
 static const int PARSE_FLAGS = kParseDefaultFlags | kParseInsituFlag;
 
-
 /************************************************************************/
 /* External Class Implementation                                        */
 /************************************************************************/
-
 
 bool LookaheadParserHandler::enterArray()
 {
@@ -70,22 +67,21 @@ bool LookaheadParserHandler::enterArray()
     return true;
 }
 
-
 bool LookaheadParserHandler::nextArrayValue()
 {
     if (state == kExitingArray) {
         parseNext();
         return false;
     }
-    //SPECIAL CASE: same as nextObjectKey()
-    if (state == kExitingObject) return false;
+    // SPECIAL CASE: same as nextObjectKey()
+    if (state == kExitingObject)
+        return false;
     if (state == kError || state == kHasKey) {
         Error();
         return false;
     }
     return true;
 }
-
 
 int LookaheadParserHandler::getInt()
 {
@@ -98,7 +94,6 @@ int LookaheadParserHandler::getInt()
     return result;
 }
 
-
 float LookaheadParserHandler::getFloat()
 {
     if (state != kHasNumber) {
@@ -110,8 +105,7 @@ float LookaheadParserHandler::getFloat()
     return result;
 }
 
-
-const char* LookaheadParserHandler::getString()
+const char *LookaheadParserHandler::getString()
 {
     if (state != kHasString) {
         Error();
@@ -122,14 +116,13 @@ const char* LookaheadParserHandler::getString()
     return result;
 }
 
-
-char* LookaheadParserHandler::getStringCopy()
+char *LookaheadParserHandler::getStringCopy()
 {
     auto str = getString();
-    if (str) return strdup(str);
+    if (str)
+        return strdup(str);
     return nullptr;
 }
-
 
 bool LookaheadParserHandler::getBool()
 {
@@ -142,7 +135,6 @@ bool LookaheadParserHandler::getBool()
     return result;
 }
 
-
 void LookaheadParserHandler::getNull()
 {
     if (state != kHasNull) {
@@ -151,7 +143,6 @@ void LookaheadParserHandler::getNull()
     }
     parseNext();
 }
-
 
 bool LookaheadParserHandler::parseNext()
 {
@@ -166,7 +157,6 @@ bool LookaheadParserHandler::parseNext()
     return true;
 }
 
-
 bool LookaheadParserHandler::enterObject()
 {
     if (state != kEnteringObject) {
@@ -177,28 +167,31 @@ bool LookaheadParserHandler::enterObject()
     return true;
 }
 
-
 int LookaheadParserHandler::peekType()
 {
-    if (state >= kHasNull && state <= kHasKey) return val.GetType();
-    if (state == kEnteringArray) return kArrayType;
-    if (state == kEnteringObject) return kObjectType;
+    if (state >= kHasNull && state <= kHasKey)
+        return val.GetType();
+    if (state == kEnteringArray)
+        return kArrayType;
+    if (state == kEnteringObject)
+        return kObjectType;
     return -1;
 }
-
 
 void LookaheadParserHandler::skipOut(int depth)
 {
     do {
-        if (state == kEnteringArray || state == kEnteringObject) ++depth;
-        else if (state == kExitingArray || state == kExitingObject) --depth;
-        else if (state == kError) return;
+        if (state == kEnteringArray || state == kEnteringObject)
+            ++depth;
+        else if (state == kExitingArray || state == kExitingObject)
+            --depth;
+        else if (state == kError)
+            return;
         parseNext();
     } while (depth > 0);
 }
 
-
-const char* LookaheadParserHandler::nextObjectKey()
+const char *LookaheadParserHandler::nextObjectKey()
 {
     if (state == kHasKey) {
         auto result = val.GetString();
@@ -210,7 +203,8 @@ const char* LookaheadParserHandler::nextObjectKey()
        while (nextObjectKey()) for each object but in case of our nested group
        object we can call multiple time nextObjectKey() while exiting the object
        so ignore those and don't put parser in the error state. */
-    if (state == kExitingArray || state == kEnteringObject) return nullptr;
+    if (state == kExitingArray || state == kEnteringObject)
+        return nullptr;
 
     if (state != kExitingObject) {
         Error();
@@ -221,10 +215,9 @@ const char* LookaheadParserHandler::nextObjectKey()
     return nullptr;
 }
 
-
-void LookaheadParserHandler::skip(const char* key)
+void LookaheadParserHandler::skip(const char *key)
 {
-    //if (key) TVGLOG("LOTTIE", "Skipped parsing value = %s", key);
+    // if (key) TVGLOG("LOTTIE", "Skipped parsing value = %s", key);
 
     if (peekType() == kArrayType) {
         enterArray();
@@ -238,4 +231,3 @@ void LookaheadParserHandler::skip(const char* key)
 }
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

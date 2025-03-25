@@ -4,8 +4,8 @@
 
 #include "unity/unity.h"
 
-static lv_obj_t * scr = NULL;
-static lv_obj_t * table = NULL;
+static lv_obj_t *scr = NULL;
+static lv_obj_t *table = NULL;
 
 void setUp(void)
 {
@@ -29,7 +29,7 @@ void test_table_should_return_assigned_cell_value(void)
 {
     uint16_t row = 0;
     uint16_t column = 0;
-    const char * value = "LVGL";
+    const char *value = "LVGL";
 
     lv_table_set_cell_value(table, row, column, value);
 
@@ -98,9 +98,9 @@ void test_table_cell_value_should_return_empty_string_when_cell_is_empty(void)
 
 void test_table_row_height_should_increase_with_multiline_cell_value(void)
 {
-    lv_table_t * table_ptr = (lv_table_t *) table;
-    const char * singleline_value = "LVGL";
-    const char * multiline_value = "LVGL\nRocks";
+    lv_table_t *table_ptr = (lv_table_t *)table;
+    const char *singleline_value = "LVGL";
+    const char *multiline_value = "LVGL\nRocks";
 
     lv_table_set_cell_value(table, 0, 0, singleline_value);
     int32_t singleline_row_height = table_ptr->row_h[0];
@@ -113,9 +113,9 @@ void test_table_row_height_should_increase_with_multiline_cell_value(void)
 
 void test_table_should_wrap_long_texts(void)
 {
-    lv_table_t * table_ptr = (lv_table_t *) table;
-    const char * long_text = "Testing automatic text wrap with a very long text";
-    const char * small_text = "Hi";
+    lv_table_t *table_ptr = (lv_table_t *)table;
+    const char *long_text = "Testing automatic text wrap with a very long text";
+    const char *small_text = "Hi";
 
     lv_table_set_column_width(table, 0, 50);
 
@@ -129,39 +129,39 @@ void test_table_should_wrap_long_texts(void)
     TEST_ASSERT_GREATER_THAN(row_height, wrapped_row_height);
 }
 
-static void draw_part_event_cb(lv_event_t * e)
+static void draw_part_event_cb(lv_event_t *e)
 {
-    lv_draw_task_t * draw_task = lv_event_get_draw_task(e);
-    lv_draw_dsc_base_t * base_dsc = draw_task->draw_dsc;
+    lv_draw_task_t *draw_task = lv_event_get_draw_task(e);
+    lv_draw_dsc_base_t *base_dsc = draw_task->draw_dsc;
     /*If the cells are drawn...*/
-    if(base_dsc->part == LV_PART_ITEMS) {
+    if (base_dsc->part == LV_PART_ITEMS) {
         uint32_t row = base_dsc->id1;
         uint32_t col = base_dsc->id2;
 
         /*Make the texts in the first cell center aligned*/
-        if(row == 0) {
-            lv_draw_label_dsc_t * label_draw_dsc = lv_draw_task_get_label_dsc(draw_task);
-            if(label_draw_dsc) {
+        if (row == 0) {
+            lv_draw_label_dsc_t *label_draw_dsc = lv_draw_task_get_label_dsc(draw_task);
+            if (label_draw_dsc) {
                 label_draw_dsc->align = LV_TEXT_ALIGN_CENTER;
             }
-            lv_draw_fill_dsc_t * fill_draw_dsc = lv_draw_task_get_fill_dsc(draw_task);
-            if(fill_draw_dsc) {
+            lv_draw_fill_dsc_t *fill_draw_dsc = lv_draw_task_get_fill_dsc(draw_task);
+            if (fill_draw_dsc) {
                 fill_draw_dsc->color = lv_color_mix(lv_palette_main(LV_PALETTE_BLUE), fill_draw_dsc->color, LV_OPA_20);
                 fill_draw_dsc->opa = LV_OPA_COVER;
             }
         }
         /*In the first column align the texts to the right*/
-        else if(col == 0) {
-            lv_draw_label_dsc_t * label_draw_dsc = lv_draw_task_get_label_dsc(draw_task);
-            if(label_draw_dsc) {
+        else if (col == 0) {
+            lv_draw_label_dsc_t *label_draw_dsc = lv_draw_task_get_label_dsc(draw_task);
+            if (label_draw_dsc) {
                 label_draw_dsc->align = LV_TEXT_ALIGN_RIGHT;
             }
         }
 
         /*Make every 2nd row grayish*/
-        if((row != 0 && row % 2) == 0) {
-            lv_draw_fill_dsc_t * fill_draw_dsc = lv_draw_task_get_fill_dsc(draw_task);
-            if(fill_draw_dsc) {
+        if ((row != 0 && row % 2) == 0) {
+            lv_draw_fill_dsc_t *fill_draw_dsc = lv_draw_task_get_fill_dsc(draw_task);
+            if (fill_draw_dsc) {
                 fill_draw_dsc->color = lv_color_mix(lv_palette_main(LV_PALETTE_GREY), fill_draw_dsc->color, LV_OPA_10);
                 fill_draw_dsc->opa = LV_OPA_COVER;
             }
@@ -192,7 +192,7 @@ void test_table_rendering(void)
     lv_table_set_cell_value(table, 1, 0, "5 cells are merged");
 
     uint32_t i;
-    for(i = 0; i < 5; i++) {
+    for (i = 0; i < 5; i++) {
         lv_table_set_cell_value_fmt(table, 3, i, "%d", i);
     }
 
@@ -219,8 +219,8 @@ void test_table_should_reduce_cells(void)
     lv_table_set_row_count(table, initial_row_num);
 
     uint32_t row_idx, col_idx;
-    for(row_idx = 0; row_idx < initial_row_num; row_idx++) {
-        for(col_idx = 0; col_idx < initial_col_num; col_idx++) {
+    for (row_idx = 0; row_idx < initial_row_num; row_idx++) {
+        for (col_idx = 0; col_idx < initial_col_num; col_idx++) {
             lv_table_set_cell_value(table, row_idx, col_idx, "00");
         }
     }
@@ -228,8 +228,8 @@ void test_table_should_reduce_cells(void)
     lv_table_set_column_count(table, final_col_num);
     lv_table_set_row_count(table, final_row_num);
 
-    for(row_idx = 0; row_idx < final_row_num; row_idx++) {
-        for(col_idx = 0; col_idx < final_col_num; col_idx++) {
+    for (row_idx = 0; row_idx < final_row_num; row_idx++) {
+        for (col_idx = 0; col_idx < final_col_num; col_idx++) {
             lv_table_set_cell_value(table, row_idx, col_idx, "00");
         }
     }
@@ -249,8 +249,8 @@ void test_table_should_reduce_cells_with_more_than_one_row(void)
     lv_table_set_row_count(table, initial_row_num);
 
     uint32_t row_idx, col_idx;
-    for(row_idx = 0; row_idx < initial_row_num; row_idx++) {
-        for(col_idx = 0; col_idx < initial_col_num; col_idx++) {
+    for (row_idx = 0; row_idx < initial_row_num; row_idx++) {
+        for (col_idx = 0; col_idx < initial_col_num; col_idx++) {
             lv_table_set_cell_value(table, row_idx, col_idx, "00");
         }
     }
@@ -258,8 +258,8 @@ void test_table_should_reduce_cells_with_more_than_one_row(void)
     lv_table_set_column_count(table, final_col_num);
     lv_table_set_row_count(table, final_row_num);
 
-    for(row_idx = 0; row_idx < final_row_num; row_idx++) {
-        for(col_idx = 0; col_idx < final_col_num; col_idx++) {
+    for (row_idx = 0; row_idx < final_row_num; row_idx++) {
+        for (col_idx = 0; col_idx < final_col_num; col_idx++) {
             lv_table_set_cell_value(table, row_idx, col_idx, "00");
         }
     }

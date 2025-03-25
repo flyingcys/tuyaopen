@@ -4,18 +4,14 @@
 
 #include "unity/unity.h"
 
-void setUp(void)
-{
-}
+void setUp(void) {}
 
-void tearDown(void)
-{
-}
+void tearDown(void) {}
 
 void test_group_count(void)
 {
-    lv_group_t * group_1 = lv_group_create();
-    lv_group_t * group_2 = lv_group_create();
+    lv_group_t *group_1 = lv_group_create();
+    lv_group_t *group_2 = lv_group_create();
 
     TEST_ASSERT_EQUAL_UINT32(lv_group_get_count(), 2U);
 
@@ -28,8 +24,8 @@ void test_group_count(void)
 
 void test_group_by_index(void)
 {
-    lv_group_t * group_1 = lv_group_create();
-    lv_group_t * group_2 = lv_group_create();
+    lv_group_t *group_1 = lv_group_create();
+    lv_group_t *group_2 = lv_group_create();
 
     TEST_ASSERT_EQUAL_PTR(lv_group_by_index(2), NULL);
     TEST_ASSERT_EQUAL_PTR(lv_group_by_index(0), group_1);
@@ -41,12 +37,12 @@ void test_group_by_index(void)
 
 void test_group_obj_by_index(void)
 {
-    lv_group_t * group = lv_group_create();
+    lv_group_t *group = lv_group_create();
 
     TEST_ASSERT_EQUAL_PTR(lv_group_get_obj_by_index(group, 0), NULL);
 
-    lv_obj_t * obj_0 = lv_obj_create(NULL);
-    lv_obj_t * obj_1 = lv_obj_create(NULL);
+    lv_obj_t *obj_0 = lv_obj_create(NULL);
+    lv_obj_t *obj_1 = lv_obj_create(NULL);
     lv_group_add_obj(group, obj_0);
     lv_group_add_obj(group, obj_1);
 

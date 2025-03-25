@@ -17,7 +17,7 @@ void tearDown(void)
 
 static void create_image(void)
 {
-    lv_obj_t * img = lv_image_create(lv_screen_active());
+    lv_obj_t *img = lv_image_create(lv_screen_active());
     lv_image_set_src(img, "A:src/test_assets/test_img_lvgl_logo.bmp");
     lv_obj_center(img);
 }
@@ -29,7 +29,7 @@ void test_bmp(void)
     lv_obj_clean(lv_screen_active());
 
     size_t mem_before = lv_test_get_free_mem();
-    for(uint32_t i = 0; i < 20; i++) {
+    for (uint32_t i = 0; i < 20; i++) {
         lv_obj_clean(lv_screen_active());
         create_image();
 
@@ -43,7 +43,7 @@ void test_bmp(void)
 
 static void create_image_tile(void)
 {
-    lv_obj_t * img = lv_image_create(lv_screen_active());
+    lv_obj_t *img = lv_image_create(lv_screen_active());
     lv_image_set_src(img, "A:src/test_assets/test_img_lvgl_logo.bmp");
     lv_obj_center(img);
     lv_obj_set_size(img, 300, 200);
@@ -57,7 +57,7 @@ void test_bmp_align_tile(void)
     lv_obj_clean(lv_screen_active());
 
     size_t mem_before = lv_test_get_free_mem();
-    for(uint32_t i = 0; i < 20; i++) {
+    for (uint32_t i = 0; i < 20; i++) {
         lv_obj_clean(lv_screen_active());
         create_image_tile();
 

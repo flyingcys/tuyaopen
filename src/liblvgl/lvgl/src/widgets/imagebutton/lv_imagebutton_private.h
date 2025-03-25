@@ -28,7 +28,7 @@ extern "C" {
  **********************/
 
 struct lv_imagebutton_src_info_t {
-    const void * img_src;
+    const void *img_src;
     lv_image_header_t header;
 };
 
@@ -39,7 +39,6 @@ struct lv_imagebutton_t {
     lv_imagebutton_src_info_t src_left[LV_IMAGEBUTTON_STATE_NUM];  /**< Store left side images to each state */
     lv_imagebutton_src_info_t src_right[LV_IMAGEBUTTON_STATE_NUM]; /**< Store right side images to each state */
 };
-
 
 /**********************
  * GLOBAL PROTOTYPES

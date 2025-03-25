@@ -34,20 +34,21 @@ extern "C" {
 #define BEZIER_OPTIM_CIRCLE 0.551915024494f
 
 /* Draw lines for control points of Bezier curves */
-#define BEZIER_DBG_CONTROL_POINTS   0
+#define BEZIER_DBG_CONTROL_POINTS 0
 
 /* Path data sizes for different elements */
 #define CUBIC_PATH_DATA_SIZE 7 /* 1 opcode, 6 arguments */
-#define LINE_PATH_DATA_SIZE 3  /* 1 opcode, 2 arguments */
-#define MOVE_PATH_DATA_SIZE 3  /* 1 opcode, 2 arguments */
-#define END_PATH_DATA_SIZE 1   /* 1 opcode, 0 arguments */
+#define LINE_PATH_DATA_SIZE  3 /* 1 opcode, 2 arguments */
+#define MOVE_PATH_DATA_SIZE  3 /* 1 opcode, 2 arguments */
+#define END_PATH_DATA_SIZE   1 /* 1 opcode, 0 arguments */
 /* Maximum possible rectangle path size
  * is in the rounded rectangle case:
  * - 1 move for the path start
  * - 4 cubics for the corners
  * - 4 lines for the sides
  * - 1 end for the path end */
-#define RECT_PATH_DATA_MAX_SIZE (1 * MOVE_PATH_DATA_SIZE + 4 * CUBIC_PATH_DATA_SIZE + 4 * LINE_PATH_DATA_SIZE + 1 * END_PATH_DATA_SIZE)
+#define RECT_PATH_DATA_MAX_SIZE                                                                                        \
+    (1 * MOVE_PATH_DATA_SIZE + 4 * CUBIC_PATH_DATA_SIZE + 4 * LINE_PATH_DATA_SIZE + 1 * END_PATH_DATA_SIZE)
 
 /* Maximum possible arc path size
  * is in the rounded arc case:
@@ -76,9 +77,8 @@ extern "C" {
  * @param[in] coords The coordinates of the rectangle to be drawn
  *
  */
-void vglite_create_rect_path_data(int32_t * path_data, uint32_t * path_data_size,
-                                  int32_t radius,
-                                  const lv_area_t * coords);
+void vglite_create_rect_path_data(int32_t *path_data, uint32_t *path_data_size, int32_t radius,
+                                  const lv_area_t *coords);
 
 /**********************
  *      MACROS

@@ -30,14 +30,14 @@
 /* Internal Class Implementation                                        */
 /************************************************************************/
 
-static inline bool _onlyShifted(const Matrix* m)
+static inline bool _onlyShifted(const Matrix *m)
 {
-    if (mathEqual(m->e11, 1.0f) && mathEqual(m->e22, 1.0f) && mathZero(m->e12) && mathZero(m->e21)) return true;
+    if (mathEqual(m->e11, 1.0f) && mathEqual(m->e22, 1.0f) && mathZero(m->e12) && mathZero(m->e21))
+        return true;
     return false;
 }
 
-
-static bool _genOutline(SwImage* image, const RenderMesh* mesh, const Matrix* transform, SwMpool* mpool, unsigned tid)
+static bool _genOutline(SwImage *image, const RenderMesh *mesh, const Matrix *transform, SwMpool *mpool, unsigned tid)
 {
     image->outline = mpoolReqOutline(mpool, tid);
     auto outline = image->outline;
@@ -63,20 +63,32 @@ static bool _genOutline(SwImage* image, const RenderMesh* mesh, const Matrix* tr
         auto max = triangles[0].vertex[0].pt;
 
         for (uint32_t i = 0; i < mesh->triangleCnt; ++i) {
-            if (triangles[i].vertex[0].pt.x < min.x) min.x = triangles[i].vertex[0].pt.x;
-            else if (triangles[i].vertex[0].pt.x > max.x) max.x = triangles[i].vertex[0].pt.x;
-            if (triangles[i].vertex[0].pt.y < min.y) min.y = triangles[i].vertex[0].pt.y;
-            else if (triangles[i].vertex[0].pt.y > max.y) max.y = triangles[i].vertex[0].pt.y;
+            if (triangles[i].vertex[0].pt.x < min.x)
+                min.x = triangles[i].vertex[0].pt.x;
+            else if (triangles[i].vertex[0].pt.x > max.x)
+                max.x = triangles[i].vertex[0].pt.x;
+            if (triangles[i].vertex[0].pt.y < min.y)
+                min.y = triangles[i].vertex[0].pt.y;
+            else if (triangles[i].vertex[0].pt.y > max.y)
+                max.y = triangles[i].vertex[0].pt.y;
 
-            if (triangles[i].vertex[1].pt.x < min.x) min.x = triangles[i].vertex[1].pt.x;
-            else if (triangles[i].vertex[1].pt.x > max.x) max.x = triangles[i].vertex[1].pt.x;
-            if (triangles[i].vertex[1].pt.y < min.y) min.y = triangles[i].vertex[1].pt.y;
-            else if (triangles[i].vertex[1].pt.y > max.y) max.y = triangles[i].vertex[1].pt.y;
+            if (triangles[i].vertex[1].pt.x < min.x)
+                min.x = triangles[i].vertex[1].pt.x;
+            else if (triangles[i].vertex[1].pt.x > max.x)
+                max.x = triangles[i].vertex[1].pt.x;
+            if (triangles[i].vertex[1].pt.y < min.y)
+                min.y = triangles[i].vertex[1].pt.y;
+            else if (triangles[i].vertex[1].pt.y > max.y)
+                max.y = triangles[i].vertex[1].pt.y;
 
-            if (triangles[i].vertex[2].pt.x < min.x) min.x = triangles[i].vertex[2].pt.x;
-            else if (triangles[i].vertex[2].pt.x > max.x) max.x = triangles[i].vertex[2].pt.x;
-            if (triangles[i].vertex[2].pt.y < min.y) min.y = triangles[i].vertex[2].pt.y;
-            else if (triangles[i].vertex[2].pt.y > max.y) max.y = triangles[i].vertex[2].pt.y;
+            if (triangles[i].vertex[2].pt.x < min.x)
+                min.x = triangles[i].vertex[2].pt.x;
+            else if (triangles[i].vertex[2].pt.x > max.x)
+                max.x = triangles[i].vertex[2].pt.x;
+            if (triangles[i].vertex[2].pt.y < min.y)
+                min.y = triangles[i].vertex[2].pt.y;
+            else if (triangles[i].vertex[2].pt.y > max.y)
+                max.y = triangles[i].vertex[2].pt.y;
         }
         to[0] = {min.x, min.y};
         to[1] = {max.x, min.y};
@@ -106,59 +118,58 @@ static bool _genOutline(SwImage* image, const RenderMesh* mesh, const Matrix* tr
     return true;
 }
 
-
 /************************************************************************/
 /* External Class Implementation                                        */
 /************************************************************************/
 
-bool imagePrepare(SwImage* image, const RenderMesh* mesh, const Matrix* transform, const SwBBox& clipRegion, SwBBox& renderRegion, SwMpool* mpool, unsigned tid)
+bool imagePrepare(SwImage *image, const RenderMesh *mesh, const Matrix *transform, const SwBBox &clipRegion,
+                  SwBBox &renderRegion, SwMpool *mpool, unsigned tid)
 {
     image->direct = _onlyShifted(transform);
 
-    //Fast track: Non-transformed image but just shifted.
+    // Fast track: Non-transformed image but just shifted.
     if (image->direct) {
         image->ox = -static_cast<int32_t>(round(transform->e13));
         image->oy = -static_cast<int32_t>(round(transform->e23));
-    //Figure out the scale factor by transform matrix
+        // Figure out the scale factor by transform matrix
     } else {
         auto scaleX = sqrtf((transform->e11 * transform->e11) + (transform->e21 * transform->e21));
         auto scaleY = sqrtf((transform->e22 * transform->e22) + (transform->e12 * transform->e12));
         image->scale = (fabsf(scaleX - scaleY) > 0.01f) ? 1.0f : scaleX;
 
-        if (mathZero(transform->e12) && mathZero(transform->e21)) image->scaled = true;
-        else image->scaled = false;
+        if (mathZero(transform->e12) && mathZero(transform->e21))
+            image->scaled = true;
+        else
+            image->scaled = false;
     }
 
-    if (!_genOutline(image, mesh, transform, mpool, tid)) return false;
+    if (!_genOutline(image, mesh, transform, mpool, tid))
+        return false;
     return mathUpdateOutlineBBox(image->outline, clipRegion, renderRegion, image->direct);
 }
 
-
-bool imageGenRle(SwImage* image, const SwBBox& renderRegion, bool antiAlias)
+bool imageGenRle(SwImage *image, const SwBBox &renderRegion, bool antiAlias)
 {
-    if ((image->rle = rleRender(image->rle, image->outline, renderRegion, antiAlias))) return true;
+    if ((image->rle = rleRender(image->rle, image->outline, renderRegion, antiAlias)))
+        return true;
 
     return false;
 }
 
-
-void imageDelOutline(SwImage* image, SwMpool* mpool, uint32_t tid)
+void imageDelOutline(SwImage *image, SwMpool *mpool, uint32_t tid)
 {
     mpoolRetOutline(mpool, tid);
     image->outline = nullptr;
 }
 
-
-void imageReset(SwImage* image)
+void imageReset(SwImage *image)
 {
     rleReset(image->rle);
 }
 
-
-void imageFree(SwImage* image)
+void imageFree(SwImage *image)
 {
     rleFree(image->rle);
 }
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

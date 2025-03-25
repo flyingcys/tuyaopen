@@ -32,17 +32,17 @@
 #include "tvgCommon.h"
 #include "tvgInlist.h"
 
-namespace tvg {
+namespace tvg
+{
 
 #ifdef THORVG_THREAD_SUPPORT
 
-struct Task
-{
+struct Task {
 private:
-    mutex                   mtx;
-    condition_variable      cv;
-    bool                    ready = true;
-    bool                    pending = false;
+    mutex mtx;
+    condition_variable cv;
+    bool ready = true;
+    bool pending = false;
 
 public:
     INLIST_ITEM(Task);
@@ -51,10 +51,12 @@ public:
 
     void done()
     {
-        if (!pending) return;
+        if (!pending)
+            return;
 
         unique_lock<mutex> lock(mtx);
-        while (!ready) cv.wait(lock);
+        while (!ready)
+            cv.wait(lock);
         pending = false;
     }
 
@@ -80,10 +82,9 @@ private:
     friend struct TaskSchedulerImpl;
 };
 
-#else  //THORVG_THREAD_SUPPORT
+#else // THORVG_THREAD_SUPPORT
 
-struct Task
-{
+struct Task {
 public:
     INLIST_ITEM(Task);
 
@@ -97,21 +98,18 @@ private:
     friend struct TaskSchedulerImpl;
 };
 
-#endif  //THORVG_THREAD_SUPPORT
+#endif // THORVG_THREAD_SUPPORT
 
-
-struct TaskScheduler
-{
+struct TaskScheduler {
     static uint32_t threads();
     static void init(uint32_t threads);
     static void term();
-    static void request(Task* task);
+    static void request(Task *task);
     static void async(bool on);
 };
 
-}  //namespace
+} // namespace tvg
 
 #endif //_TVG_TASK_SCHEDULER_H_
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

@@ -16,14 +16,14 @@ void test_arc_should_update_angles_when_changing_to_symmetrical_mode(void);
 void test_arc_should_update_angles_when_changing_to_symmetrical_mode_value_more_than_middle_range(void);
 void test_arc_angles_when_reversed(void);
 
-static lv_obj_t * active_screen = NULL;
-static lv_obj_t * arc = NULL;
-static lv_obj_t * arc2 = NULL;
+static lv_obj_t *active_screen = NULL;
+static lv_obj_t *arc = NULL;
+static lv_obj_t *arc2 = NULL;
 static uint32_t event_cnt;
 static uint32_t event_cnt2;
 
-static void dummy_event_cb(lv_event_t * e);
-static void dummy_event_cb2(lv_event_t * e);
+static void dummy_event_cb(lv_event_t *e);
+static void dummy_event_cb2(lv_event_t *e);
 
 void setUp(void)
 {
@@ -147,7 +147,7 @@ void test_arc_angles_when_reversed(void)
     uint16_t expected_end_angle = 90;
     int16_t expected_value = 40;
 
-    lv_obj_t * arcBlack;
+    lv_obj_t *arcBlack;
     arcBlack = lv_arc_create(lv_screen_active());
 
     lv_arc_set_mode(arcBlack, LV_ARC_MODE_REVERSE);
@@ -297,14 +297,13 @@ void test_two_overlapping_arcs_can_be_interacted_independently(void)
     TEST_ASSERT_EQUAL_SCREENSHOT("widgets/overlapping_arcs_test.png");
 }
 
-
-static void dummy_event_cb(lv_event_t * e)
+static void dummy_event_cb(lv_event_t *e)
 {
     LV_UNUSED(e);
     event_cnt++;
 }
 
-static void dummy_event_cb2(lv_event_t * e)
+static void dummy_event_cb2(lv_event_t *e)
 {
     LV_UNUSED(e);
     event_cnt2++;

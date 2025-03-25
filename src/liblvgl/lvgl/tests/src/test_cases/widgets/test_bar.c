@@ -6,8 +6,8 @@
 
 #include "lv_test_indev.h"
 
-static lv_obj_t * g_active_screen = NULL;
-static lv_obj_t * g_bar = NULL;
+static lv_obj_t *g_active_screen = NULL;
+static lv_obj_t *g_bar = NULL;
 
 void setUp(void)
 {
@@ -45,7 +45,7 @@ void test_bar_should_have_valid_default_attributes(void)
  */
 void test_bar_should_update_indicator_right_coordinate_based_on_bar_value(void)
 {
-    lv_bar_t * bar_ptr = (lv_bar_t *) g_bar;
+    lv_bar_t *bar_ptr = (lv_bar_t *)g_bar;
 
     static lv_style_t bar_style;
 
@@ -98,7 +98,7 @@ void test_bar_should_update_indicator_right_coordinate_based_on_bar_value(void)
  */
 void test_bar_rtl_should_update_indicator_left_coordinate_based_on_bar_value(void)
 {
-    lv_bar_t * bar_ptr = (lv_bar_t *) g_bar;
+    lv_bar_t *bar_ptr = (lv_bar_t *)g_bar;
 
     static lv_style_t bar_style;
 
@@ -147,7 +147,7 @@ void test_bar_normal(void)
     lv_color_t bg_color = lv_color_black();
     lv_color_t indic_color = lv_color_hex(0x0000FF);
 
-    lv_obj_t * screen = lv_obj_create(lv_screen_active());
+    lv_obj_t *screen = lv_obj_create(lv_screen_active());
     lv_obj_remove_style_all(screen);
     lv_obj_set_size(screen, 800, 480);
     lv_obj_center(screen);
@@ -155,7 +155,7 @@ void test_bar_normal(void)
     lv_obj_set_style_bg_opa(screen, LV_OPA_100, 0);
     lv_obj_set_style_pad_all(screen, 0, 0);
 
-    lv_obj_t * test_bar = lv_bar_create(screen);
+    lv_obj_t *test_bar = lv_bar_create(screen);
     lv_obj_set_style_radius(test_bar, 100, 0);
     lv_obj_set_style_radius(test_bar, 100, LV_PART_MAIN);
     lv_obj_set_style_bg_opa(test_bar, LV_OPA_30, LV_PART_MAIN);
@@ -208,7 +208,7 @@ void test_bar_normal(void)
 
 void test_bar_indicator_area_should_get_smaller_when_padding_is_increased(void)
 {
-    lv_bar_t * bar_ptr = (lv_bar_t *) g_bar;
+    lv_bar_t *bar_ptr = (lv_bar_t *)g_bar;
 
     const int32_t style_padding = 10u;
     static lv_style_t bar_style;
@@ -298,7 +298,7 @@ void test_bar_current_value_should_be_truncated_to_min_value_when_it_is_below_it
  */
 void test_bar_indicator_should_be_drawn_towards_the_min_range_side_after_setting_a_more_negative_value(void)
 {
-    lv_bar_t * bar_ptr = (lv_bar_t *) g_bar;
+    lv_bar_t *bar_ptr = (lv_bar_t *)g_bar;
 
     /* Setup bar properties */
     lv_obj_set_size(g_bar, 100, 50);
@@ -320,12 +320,14 @@ void test_bar_indicator_should_be_drawn_towards_the_min_range_side_after_setting
     TEST_ASSERT_LESS_THAN(original_pos, final_pos);
 }
 
-static lv_obj_t * styled_bar_create(bool ver, int32_t start_value, int32_t end_value, lv_grad_dir_t grad_dir,
-                                    int32_t bg_radius, int32_t indic_radius, int32_t bg_pad)
+static lv_obj_t *styled_bar_create(bool ver, int32_t start_value, int32_t end_value, lv_grad_dir_t grad_dir,
+                                   int32_t bg_radius, int32_t indic_radius, int32_t bg_pad)
 {
-    lv_obj_t * bar = lv_bar_create(lv_screen_active());
-    if(ver) lv_obj_set_size(bar, 20, 100);
-    else lv_obj_set_size(bar, 100, 20);
+    lv_obj_t *bar = lv_bar_create(lv_screen_active());
+    if (ver)
+        lv_obj_set_size(bar, 20, 100);
+    else
+        lv_obj_set_size(bar, 100, 20);
     lv_bar_set_range(bar, 0, 100);
     lv_bar_set_mode(bar, LV_BAR_MODE_RANGE);
     lv_bar_set_value(bar, end_value, LV_ANIM_OFF);
@@ -357,9 +359,9 @@ static lv_obj_t * styled_bar_create(bool ver, int32_t start_value, int32_t end_v
     return bar;
 }
 
-static void render_test_screen_create(bool ver, lv_grad_dir_t grad_dir, const char * ref_img_path)
+static void render_test_screen_create(bool ver, lv_grad_dir_t grad_dir, const char *ref_img_path)
 {
-    lv_obj_t * active_screen = lv_screen_active();
+    lv_obj_t *active_screen = lv_screen_active();
     lv_obj_clean(active_screen);
 
     lv_obj_set_flex_flow(active_screen, ver ? LV_FLEX_FLOW_ROW_WRAP : LV_FLEX_FLOW_COLUMN_WRAP);
@@ -374,15 +376,15 @@ static void render_test_screen_create(bool ver, lv_grad_dir_t grad_dir, const ch
     int32_t bg_pad[3] = {-5, 0, 5};
 
     uint32_t pad;
-    for(pad = 0; pad < 3; pad++) {
+    for (pad = 0; pad < 3; pad++) {
         uint32_t indic_r;
-        for(indic_r = 0; indic_r < 2; indic_r++) {
+        for (indic_r = 0; indic_r < 2; indic_r++) {
             uint32_t bg_r;
-            for(bg_r = 0; bg_r < 2; bg_r++) {
+            for (bg_r = 0; bg_r < 2; bg_r++) {
                 uint32_t v;
-                for(v = 0; v < 6; v++) {
-                    styled_bar_create(ver, bar_values[v][0], bar_values[v][1], grad_dir, bg_radius[bg_r], indic_radius[indic_r],
-                                      bg_pad[pad]);
+                for (v = 0; v < 6; v++) {
+                    styled_bar_create(ver, bar_values[v][0], bar_values[v][1], grad_dir, bg_radius[bg_r],
+                                      indic_radius[indic_r], bg_pad[pad]);
                 }
             }
         }
@@ -401,16 +403,14 @@ void test_bar_render_corner(void)
     render_test_screen_create(true, LV_GRAD_DIR_VER, "widgets/bar_corner_6.png");
 }
 
-
-static lv_obj_t * bar_create_orientation(lv_bar_orientation_t orientation, int32_t w, int32_t h)
+static lv_obj_t *bar_create_orientation(lv_bar_orientation_t orientation, int32_t w, int32_t h)
 {
-    lv_obj_t * bar = lv_bar_create(g_active_screen);
+    lv_obj_t *bar = lv_bar_create(g_active_screen);
     lv_bar_set_orientation(bar, orientation);
     lv_obj_set_size(bar, w, h);
     lv_bar_set_value(bar, 30, LV_ANIM_OFF);
 
     return bar;
-
 }
 
 void test_bar_orientation(void)
@@ -419,7 +419,7 @@ void test_bar_orientation(void)
 
     lv_obj_set_flex_flow(g_active_screen, LV_FLEX_FLOW_ROW_WRAP);
 
-    lv_obj_t * label;
+    lv_obj_t *label;
 
     label = lv_label_create(g_active_screen);
     lv_label_set_text(label, "Auto");

@@ -29,7 +29,7 @@ extern "C" {
  **********************/
 
 struct lv_draw_task_t {
-    lv_draw_task_t * next;
+    lv_draw_task_t *next;
 
     lv_draw_task_type_t type;
 
@@ -49,7 +49,8 @@ struct lv_draw_task_t {
     /**
      * The clip area of the layer is saved here when the draw task is created.
      * As the clip area of the layer can be changed as new draw tasks are added its current value needs to be saved.
-     * Therefore during drawing the layer's clip area shouldn't be used as it might be already changed for other draw tasks.
+     * Therefore during drawing the layer's clip area shouldn't be used as it might be already changed for other draw
+     * tasks.
      */
     lv_area_t clip_area;
 
@@ -58,9 +59,9 @@ struct lv_draw_task_t {
     lv_matrix_t matrix;
 #endif
 
-    volatile int state;              /** int instead of lv_draw_task_state_t to be sure its atomic */
+    volatile int state; /** int instead of lv_draw_task_state_t to be sure its atomic */
 
-    void * draw_dsc;
+    void *draw_dsc;
 
     /**
      * The ID of the draw_unit which should take this task
@@ -74,22 +75,21 @@ struct lv_draw_task_t {
      * 110: means 10% worse (slower) than software rendering
      */
     uint8_t preference_score;
-
 };
 
 struct lv_draw_mask_t {
-    void * user_data;
+    void *user_data;
 };
 
 struct lv_draw_unit_t {
-    lv_draw_unit_t * next;
+    lv_draw_unit_t *next;
 
     /**
      * The target_layer on which drawing should happen
      */
-    lv_layer_t * target_layer;
+    lv_layer_t *target_layer;
 
-    const lv_area_t * clip_area;
+    const lv_area_t *clip_area;
 
     /**
      * Called to try to assign a draw task to itself.
@@ -105,7 +105,7 @@ struct lv_draw_unit_t {
      *                              It signals that LVGL should call the dispatcher later again
      *                              to let draw unit try to start the rendering again.
      */
-    int32_t (*dispatch_cb)(lv_draw_unit_t * draw_unit, lv_layer_t * layer);
+    int32_t (*dispatch_cb)(lv_draw_unit_t *draw_unit, lv_layer_t *layer);
 
     /**
      *
@@ -113,7 +113,7 @@ struct lv_draw_unit_t {
      * @param task
      * @return
      */
-    int32_t (*evaluate_cb)(lv_draw_unit_t * draw_unit, lv_draw_task_t * task);
+    int32_t (*evaluate_cb)(lv_draw_unit_t *draw_unit, lv_draw_task_t *task);
 
     /**
      * Called to signal the unit to complete all tasks in order to return their ready status.
@@ -158,18 +158,18 @@ struct lv_draw_unit_t {
      * @param draw_unit
      * @return
      */
-    int32_t (*wait_for_finish_cb)(lv_draw_unit_t * draw_unit);
+    int32_t (*wait_for_finish_cb)(lv_draw_unit_t *draw_unit);
 
     /**
      * Called to delete draw unit.
      * @param draw_unit
      * @return
      */
-    int32_t (*delete_cb)(lv_draw_unit_t * draw_unit);
+    int32_t (*delete_cb)(lv_draw_unit_t *draw_unit);
 };
 
 typedef struct {
-    lv_draw_unit_t * unit_head;
+    lv_draw_unit_t *unit_head;
     uint32_t unit_cnt;
     uint32_t used_memory_for_layers_kb;
 #if LV_USE_OS

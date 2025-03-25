@@ -34,7 +34,6 @@ struct lv_win_t {
     lv_obj_t obj;
 };
 
-
 /**********************
  * GLOBAL PROTOTYPES
  **********************/

@@ -22,9 +22,9 @@ extern "C" {
  *      DEFINES
  *********************/
 
-#define LV_FLEX_COLUMN        (1 << 0)
-#define LV_FLEX_WRAP       (1 << 2)
-#define LV_FLEX_REVERSE    (1 << 3)
+#define LV_FLEX_COLUMN  (1 << 0)
+#define LV_FLEX_WRAP    (1 << 2)
+#define LV_FLEX_REVERSE (1 << 3)
 
 /**********************
  *      TYPEDEFS
@@ -42,13 +42,13 @@ typedef enum {
 } lv_flex_align_t;
 
 typedef enum {
-    LV_FLEX_FLOW_ROW                 = 0x00,
-    LV_FLEX_FLOW_COLUMN              = LV_FLEX_COLUMN,
-    LV_FLEX_FLOW_ROW_WRAP            = LV_FLEX_FLOW_ROW | LV_FLEX_WRAP,
-    LV_FLEX_FLOW_ROW_REVERSE         = LV_FLEX_FLOW_ROW | LV_FLEX_REVERSE,
-    LV_FLEX_FLOW_ROW_WRAP_REVERSE    = LV_FLEX_FLOW_ROW | LV_FLEX_WRAP | LV_FLEX_REVERSE,
-    LV_FLEX_FLOW_COLUMN_WRAP         = LV_FLEX_FLOW_COLUMN | LV_FLEX_WRAP,
-    LV_FLEX_FLOW_COLUMN_REVERSE      = LV_FLEX_FLOW_COLUMN | LV_FLEX_REVERSE,
+    LV_FLEX_FLOW_ROW = 0x00,
+    LV_FLEX_FLOW_COLUMN = LV_FLEX_COLUMN,
+    LV_FLEX_FLOW_ROW_WRAP = LV_FLEX_FLOW_ROW | LV_FLEX_WRAP,
+    LV_FLEX_FLOW_ROW_REVERSE = LV_FLEX_FLOW_ROW | LV_FLEX_REVERSE,
+    LV_FLEX_FLOW_ROW_WRAP_REVERSE = LV_FLEX_FLOW_ROW | LV_FLEX_WRAP | LV_FLEX_REVERSE,
+    LV_FLEX_FLOW_COLUMN_WRAP = LV_FLEX_FLOW_COLUMN | LV_FLEX_WRAP,
+    LV_FLEX_FLOW_COLUMN_REVERSE = LV_FLEX_FLOW_COLUMN | LV_FLEX_REVERSE,
     LV_FLEX_FLOW_COLUMN_WRAP_REVERSE = LV_FLEX_FLOW_COLUMN | LV_FLEX_WRAP | LV_FLEX_REVERSE,
 } lv_flex_flow_t;
 
@@ -70,7 +70,7 @@ void lv_flex_init(void);
  * @param obj pointer to an object. The parent must have flex layout else nothing will happen.
  * @param flow an element of `lv_flex_flow_t`.
  */
-void lv_obj_set_flex_flow(lv_obj_t * obj, lv_flex_flow_t flow);
+void lv_obj_set_flex_flow(lv_obj_t *obj, lv_flex_flow_t flow);
 
 /**
  * Set how to place (where to align) the items and tracks
@@ -79,7 +79,7 @@ void lv_obj_set_flex_flow(lv_obj_t * obj, lv_flex_flow_t flow);
  * @param cross_place where to place the item in their track on the cross axis. `LV_FLEX_ALIGN_START/END/CENTER`
  * @param track_cross_place where to place the tracks in the cross direction. Any value of `lv_flex_align_t`.
  */
-void lv_obj_set_flex_align(lv_obj_t * obj, lv_flex_align_t main_place, lv_flex_align_t cross_place,
+void lv_obj_set_flex_align(lv_obj_t *obj, lv_flex_align_t main_place, lv_flex_align_t cross_place,
                            lv_flex_align_t track_cross_place);
 
 /**
@@ -87,13 +87,13 @@ void lv_obj_set_flex_align(lv_obj_t * obj, lv_flex_align_t main_place, lv_flex_a
  * @param obj pointer to an object. The parent must have flex layout else nothing will happen.
  * @param grow a value to set how much free space to take proportionally to other growing items.
  */
-void lv_obj_set_flex_grow(lv_obj_t * obj, uint8_t grow);
+void lv_obj_set_flex_grow(lv_obj_t *obj, uint8_t grow);
 
 /**********************
  *      MACROS
  **********************/
 
-#endif  /*LV_USE_FLEX*/
+#endif /*LV_USE_FLEX*/
 
 #ifdef __cplusplus
 } /*extern "C"*/

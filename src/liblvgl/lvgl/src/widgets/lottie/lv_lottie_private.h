@@ -36,10 +36,10 @@ extern "C" {
 
 typedef struct {
     lv_canvas_t canvas;
-    Tvg_Paint * tvg_paint;
-    Tvg_Canvas * tvg_canvas;
-    Tvg_Animation * tvg_anim;
-    lv_anim_t * anim;
+    Tvg_Paint *tvg_paint;
+    Tvg_Canvas *tvg_canvas;
+    Tvg_Animation *tvg_anim;
+    lv_anim_t *anim;
     int32_t last_rendered_time;
 } lv_lottie_t;
 

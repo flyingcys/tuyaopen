@@ -53,7 +53,7 @@ lv_result_t lv_lock_isr(void)
 {
 #if LV_USE_OS != LV_OS_NONE
     return lv_mutex_lock_isr(&lv_general_mutex);
-#else /*LV_USE_OS != LV_OS_NONE*/
+#else  /*LV_USE_OS != LV_OS_NONE*/
     return LV_RESULT_OK;
 #endif /*LV_USE_OS != LV_OS_NONE*/
 }
@@ -68,4 +68,3 @@ void lv_unlock(void)
 /**********************
  *   STATIC FUNCTIONS
  **********************/
-

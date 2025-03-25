@@ -35,12 +35,10 @@ public:
     ~RawLoader();
 
     using LoadModule::open;
-    bool open(const uint32_t* data, uint32_t w, uint32_t h, bool copy);
+    bool open(const uint32_t *data, uint32_t w, uint32_t h, bool copy);
     bool read() override;
 };
-
 
 #endif //_TVG_RAW_LOADER_H_
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

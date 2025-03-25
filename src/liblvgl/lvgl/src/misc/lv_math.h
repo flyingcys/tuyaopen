@@ -20,17 +20,18 @@ extern "C" {
  *      DEFINES
  *********************/
 #define LV_TRIGO_SIN_MAX 32768
-#define LV_TRIGO_SHIFT 15 /**<  >> LV_TRIGO_SHIFT to normalize*/
+#define LV_TRIGO_SHIFT   15 /**<  >> LV_TRIGO_SHIFT to normalize*/
 
 #define LV_BEZIER_VAL_SHIFT 10 /**< log2(LV_BEZIER_VAL_MAX): used to normalize up scaled values*/
-#define LV_BEZIER_VAL_MAX (1L << LV_BEZIER_VAL_SHIFT) /**< Max time in Bezier functions (not [0..1] to use integers)*/
-#define LV_BEZIER_VAL_FLOAT(f) ((int32_t)((f) * LV_BEZIER_VAL_MAX)) /**< Convert const float number cubic-bezier values to fix-point value*/
+#define LV_BEZIER_VAL_MAX   (1L << LV_BEZIER_VAL_SHIFT) /**< Max time in Bezier functions (not [0..1] to use integers)*/
+#define LV_BEZIER_VAL_FLOAT(f)                                                                                         \
+    ((int32_t)((f)*LV_BEZIER_VAL_MAX)) /**< Convert const float number cubic-bezier values to fix-point value*/
 
 /** Align up value x to align, align must be a power of two */
-#define LV_ALIGN_UP(x, align) (((x) + ((align) - 1)) & ~((align) - 1))
+#define LV_ALIGN_UP(x, align) (((x) + ((align)-1)) & ~((align)-1))
 
 /** Round up value x to round, round can be any integer number */
-#define LV_ROUND_UP(x, round) ((((x) + ((round) - 1)) / (round)) * (round))
+#define LV_ROUND_UP(x, round) ((((x) + ((round)-1)) / (round)) * (round))
 
 /**********************
  *      TYPEDEFS
@@ -79,7 +80,6 @@ int32_t lv_cubic_bezier(int32_t x, int32_t x1, int32_t y1, int32_t x2, int32_t y
  */
 int32_t lv_bezier3(int32_t t, int32_t u0, uint32_t u1, int32_t u2, int32_t u3);
 
-
 /**
  * Calculate the atan2 of a vector.
  * @param x
@@ -100,7 +100,7 @@ uint16_t lv_atan2(int x, int y);
  * If root < 256: mask = 0x800
  * Else: mask = 0x8000
  */
-void /* LV_ATTRIBUTE_FAST_MEM */ lv_sqrt(uint32_t x, lv_sqrt_res_t * q, uint32_t mask);
+void /* LV_ATTRIBUTE_FAST_MEM */ lv_sqrt(uint32_t x, lv_sqrt_res_t *q, uint32_t mask);
 
 //! @endcond
 
@@ -156,23 +156,23 @@ uint32_t lv_rand(uint32_t min, uint32_t max);
 /**********************
  *      MACROS
  **********************/
-#define LV_MIN(a, b) ((a) < (b) ? (a) : (b))
-#define LV_MIN3(a, b, c) (LV_MIN(LV_MIN(a,b), c))
-#define LV_MIN4(a, b, c, d) (LV_MIN(LV_MIN(a,b), LV_MIN(c,d)))
+#define LV_MIN(a, b)        ((a) < (b) ? (a) : (b))
+#define LV_MIN3(a, b, c)    (LV_MIN(LV_MIN(a, b), c))
+#define LV_MIN4(a, b, c, d) (LV_MIN(LV_MIN(a, b), LV_MIN(c, d)))
 
-#define LV_MAX(a, b) ((a) > (b) ? (a) : (b))
-#define LV_MAX3(a, b, c) (LV_MAX(LV_MAX(a,b), c))
-#define LV_MAX4(a, b, c, d) (LV_MAX(LV_MAX(a,b), LV_MAX(c,d)))
+#define LV_MAX(a, b)        ((a) > (b) ? (a) : (b))
+#define LV_MAX3(a, b, c)    (LV_MAX(LV_MAX(a, b), c))
+#define LV_MAX4(a, b, c, d) (LV_MAX(LV_MAX(a, b), LV_MAX(c, d)))
 
 #define LV_CLAMP(min, val, max) (LV_MAX(min, (LV_MIN(val, max))))
 
-#define LV_ABS(x) ((x) > 0 ? (x) : (-(x)))
-#define LV_UDIV255(x) (((x) * 0x8081U) >> 0x17)
+#define LV_ABS(x)     ((x) > 0 ? (x) : (-(x)))
+#define LV_UDIV255(x) (((x)*0x8081U) >> 0x17)
 
 #define LV_IS_SIGNED(t) (((t)(-1)) < ((t)0))
-#define LV_UMAX_OF(t) (((0x1ULL << ((sizeof(t) * 8ULL) - 1ULL)) - 1ULL) | (0xFULL << ((sizeof(t) * 8ULL) - 4ULL)))
-#define LV_SMAX_OF(t) (((0x1ULL << ((sizeof(t) * 8ULL) - 1ULL)) - 1ULL) | (0x7ULL << ((sizeof(t) * 8ULL) - 4ULL)))
-#define LV_MAX_OF(t) ((unsigned long)(LV_IS_SIGNED(t) ? LV_SMAX_OF(t) : LV_UMAX_OF(t)))
+#define LV_UMAX_OF(t)   (((0x1ULL << ((sizeof(t) * 8ULL) - 1ULL)) - 1ULL) | (0xFULL << ((sizeof(t) * 8ULL) - 4ULL)))
+#define LV_SMAX_OF(t)   (((0x1ULL << ((sizeof(t) * 8ULL) - 1ULL)) - 1ULL) | (0x7ULL << ((sizeof(t) * 8ULL) - 4ULL)))
+#define LV_MAX_OF(t)    ((unsigned long)(LV_IS_SIGNED(t) ? LV_SMAX_OF(t) : LV_UMAX_OF(t)))
 
 #ifdef __cplusplus
 } /*extern "C"*/

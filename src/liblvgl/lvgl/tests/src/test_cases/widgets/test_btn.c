@@ -4,7 +4,7 @@
 
 #include "unity/unity.h"
 
-static lv_obj_t * active_screen = NULL;
+static lv_obj_t *active_screen = NULL;
 
 void setUp(void)
 {
@@ -18,7 +18,7 @@ void tearDown(void)
 
 void test_button_creation(void)
 {
-    lv_obj_t * btn;
+    lv_obj_t *btn;
     btn = lv_button_create(active_screen);
     TEST_ASSERT_NOT_NULL(btn);
     /* These flags are set in the object's constructor. */

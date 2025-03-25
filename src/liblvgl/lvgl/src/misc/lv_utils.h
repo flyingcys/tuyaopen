@@ -46,8 +46,8 @@ extern "C" {
  *
  * @return a pointer to a matching item, or NULL if none exists.
  */
-void * lv_utils_bsearch(const void * key, const void * base, size_t n, size_t size,
-                        int (*cmp)(const void * pRef, const void * pElement));
+void *lv_utils_bsearch(const void *key, const void *base, size_t n, size_t size,
+                       int (*cmp)(const void *pRef, const void *pElement));
 
 /**
  * Save a draw buf to a file
@@ -55,7 +55,7 @@ void * lv_utils_bsearch(const void * key, const void * base, size_t n, size_t si
  * @param path      path to the file to save
  * @return          LV_RESULT_OK: success; LV_RESULT_INVALID: error
  */
-lv_result_t lv_draw_buf_save_to_file(const lv_draw_buf_t * draw_buf, const char * path);
+lv_result_t lv_draw_buf_save_to_file(const lv_draw_buf_t *draw_buf, const char *path);
 
 /**********************
  *      MACROS

@@ -49,8 +49,7 @@
  * @param[in] dsc Description of the rectangle border/outline
  *
  */
-static void _vglite_draw_border(const lv_area_t * coords, const lv_area_t * clip_area,
-                                const lv_draw_border_dsc_t * dsc);
+static void _vglite_draw_border(const lv_area_t *coords, const lv_area_t *clip_area, const lv_draw_border_dsc_t *dsc);
 
 /**********************
  *  STATIC VARIABLES
@@ -64,17 +63,16 @@ static void _vglite_draw_border(const lv_area_t * coords, const lv_area_t * clip
  *   GLOBAL FUNCTIONS
  **********************/
 
-void lv_draw_vglite_border(lv_draw_unit_t * draw_unit, const lv_draw_border_dsc_t * dsc,
-                           const lv_area_t * coords)
+void lv_draw_vglite_border(lv_draw_unit_t *draw_unit, const lv_draw_border_dsc_t *dsc, const lv_area_t *coords)
 {
-    if(dsc->opa <= (lv_opa_t)LV_OPA_MIN)
+    if (dsc->opa <= (lv_opa_t)LV_OPA_MIN)
         return;
-    if(dsc->width == 0)
+    if (dsc->width == 0)
         return;
-    if(dsc->side == (lv_border_side_t)LV_BORDER_SIDE_NONE)
+    if (dsc->side == (lv_border_side_t)LV_BORDER_SIDE_NONE)
         return;
 
-    lv_layer_t * layer = draw_unit->target_layer;
+    lv_layer_t *layer = draw_unit->target_layer;
     lv_area_t inward_coords;
     int32_t width = dsc->width;
 
@@ -91,7 +89,7 @@ void lv_draw_vglite_border(lv_draw_unit_t * draw_unit, const lv_draw_border_dsc_
     lv_area_move(&clip_area, -layer->buf_area.x1, -layer->buf_area.y1);
 
     lv_area_t clipped_coords;
-    if(!lv_area_intersect(&clipped_coords, &inward_coords, &clip_area))
+    if (!lv_area_intersect(&clipped_coords, &inward_coords, &clip_area))
         return; /*Fully clipped, nothing to do*/
 
     _vglite_draw_border(&inward_coords, &clip_area, dsc);
@@ -101,17 +99,16 @@ void lv_draw_vglite_border(lv_draw_unit_t * draw_unit, const lv_draw_border_dsc_
  *   STATIC FUNCTIONS
  **********************/
 
-static void _vglite_draw_border(const lv_area_t * coords, const lv_area_t * clip_area,
-                                const lv_draw_border_dsc_t * dsc)
+static void _vglite_draw_border(const lv_area_t *coords, const lv_area_t *clip_area, const lv_draw_border_dsc_t *dsc)
 {
     int32_t radius = dsc->radius;
-    vg_lite_buffer_t * vgbuf = vglite_get_dest_buf();
+    vg_lite_buffer_t *vgbuf = vglite_get_dest_buf();
 
-    if(radius < 0)
+    if (radius < 0)
         return;
 
     int32_t border_half = (int32_t)floor(dsc->width / 2.0f);
-    if(radius > border_half)
+    if (radius > border_half)
         radius = radius - border_half;
 
     vg_lite_cap_style_t cap_style = (radius) ? VG_LITE_CAP_ROUND : VG_LITE_CAP_BUTT;
@@ -126,7 +123,8 @@ static void _vglite_draw_border(const lv_area_t * coords, const lv_area_t * clip
     vg_lite_path_t path;
     VGLITE_CHECK_ERROR(vg_lite_init_path(&path, VG_LITE_S32, path_quality, path_data_size, path_data,
                                          (vg_lite_float_t)clip_area->x1, (vg_lite_float_t)clip_area->y1,
-                                         ((vg_lite_float_t)clip_area->x2) + 1.0f, ((vg_lite_float_t)clip_area->y2) + 1.0f));
+                                         ((vg_lite_float_t)clip_area->x2) + 1.0f,
+                                         ((vg_lite_float_t)clip_area->y2) + 1.0f));
 
     lv_color32_t col32 = lv_color_to_32(dsc->color, dsc->opa);
     vg_lite_color_t vgcol = vglite_get_color(col32, false);
@@ -137,7 +135,7 @@ static void _vglite_draw_border(const lv_area_t * coords, const lv_area_t * clip
     int32_t line_width = dsc->width;
     lv_border_side_t border_side = dsc->side;
 
-    if(border_side == LV_BORDER_SIDE_FULL)
+    if (border_side == LV_BORDER_SIDE_FULL)
         border_side = LV_BORDER_SIDE_TOP | LV_BORDER_SIDE_BOTTOM | LV_BORDER_SIDE_LEFT | LV_BORDER_SIDE_RIGHT;
 
     uint32_t num_rect = 0;
@@ -147,7 +145,7 @@ static void _vglite_draw_border(const lv_area_t * coords, const lv_area_t * clip
     int32_t shortest_side = LV_MIN(rect_width, rect_height);
     int32_t final_radius = LV_MIN(radius, shortest_side / 2);
 
-    if(border_side & LV_BORDER_SIDE_TOP) {
+    if (border_side & LV_BORDER_SIDE_TOP) {
         rect[num_rect].x = coords->x1 - ceil(line_width / 2.0f);
         rect[num_rect].y = coords->y1 - ceil(line_width / 2.0f);
         rect[num_rect].width = coords->x2 - coords->x1 + line_width;
@@ -155,7 +153,7 @@ static void _vglite_draw_border(const lv_area_t * coords, const lv_area_t * clip
         num_rect++;
     }
 
-    if(border_side & LV_BORDER_SIDE_LEFT) {
+    if (border_side & LV_BORDER_SIDE_LEFT) {
         rect[num_rect].x = coords->x1 - ceil(line_width / 2.0f);
         rect[num_rect].y = coords->y1 - ceil(line_width / 2.0f);
         rect[num_rect].width = final_radius + ceil(line_width / 2.0f);
@@ -163,7 +161,7 @@ static void _vglite_draw_border(const lv_area_t * coords, const lv_area_t * clip
         num_rect++;
     }
 
-    if(border_side & LV_BORDER_SIDE_RIGHT) {
+    if (border_side & LV_BORDER_SIDE_RIGHT) {
         rect[num_rect].x = coords->x2 - final_radius + 1;
         rect[num_rect].y = coords->y1 - ceil(line_width / 2.0f);
         rect[num_rect].width = final_radius + ceil(line_width / 2.0f);
@@ -171,7 +169,7 @@ static void _vglite_draw_border(const lv_area_t * coords, const lv_area_t * clip
         num_rect++;
     }
 
-    if(border_side & LV_BORDER_SIDE_BOTTOM) {
+    if (border_side & LV_BORDER_SIDE_BOTTOM) {
         rect[num_rect].x = coords->x1 - ceil(line_width / 2.0f);
         rect[num_rect].y = coords->y2 - final_radius + 1;
         rect[num_rect].width = coords->x2 - coords->x1 + line_width;

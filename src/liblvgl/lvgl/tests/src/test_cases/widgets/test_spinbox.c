@@ -5,11 +5,11 @@
 #include "unity/unity.h"
 #include "lv_test_indev.h"
 
-static lv_obj_t * active_screen = NULL;
-static lv_obj_t * spinbox_negative_min_range = NULL;
-static lv_obj_t * spinbox_zero_min_range = NULL;
-static lv_obj_t * spinbox_events = NULL;
-static lv_group_t * g = NULL;
+static lv_obj_t *active_screen = NULL;
+static lv_obj_t *spinbox_negative_min_range = NULL;
+static lv_obj_t *spinbox_zero_min_range = NULL;
+static lv_obj_t *spinbox_events = NULL;
+static lv_group_t *g = NULL;
 
 static const int32_t SPINBOX_NEGATIVE_MIN_RANGE_VALUE = -11;
 static const int32_t SPINBOX_ZERO_MIN_RANGE_VALUE = 0;
@@ -23,7 +23,8 @@ void setUp(void)
     spinbox_zero_min_range = lv_spinbox_create(active_screen);
     spinbox_events = lv_spinbox_create(active_screen);
 
-    lv_spinbox_set_range(spinbox_negative_min_range, SPINBOX_NEGATIVE_MIN_RANGE_VALUE, SPINBOX_NEGATIVE_MAX_RANGE_VALUE);
+    lv_spinbox_set_range(spinbox_negative_min_range, SPINBOX_NEGATIVE_MIN_RANGE_VALUE,
+                         SPINBOX_NEGATIVE_MAX_RANGE_VALUE);
     lv_spinbox_set_range(spinbox_zero_min_range, SPINBOX_ZERO_MIN_RANGE_VALUE, SPINBOX_NEGATIVE_MAX_RANGE_VALUE);
 
     g = lv_group_create();
@@ -87,7 +88,7 @@ void test_spinbox_position_selection(void)
     TEST_ASSERT_EQUAL(10, lv_spinbox_get_step(spinbox_zero_min_range));
 
     /* When not possible to select the indicated position */
-    lv_obj_t * tmp;
+    lv_obj_t *tmp;
     tmp = lv_spinbox_create(active_screen);
     lv_spinbox_set_range(tmp, 0, 10);
     lv_spinbox_set_cursor_pos(tmp, 2);
@@ -100,7 +101,7 @@ void test_spinbox_set_range(void)
     int32_t range_max = 40;
     int32_t range_min = 20;
 
-    lv_obj_t * tmp;
+    lv_obj_t *tmp;
     tmp = lv_spinbox_create(active_screen);
     lv_spinbox_set_range(tmp, 0, 100);
     lv_spinbox_set_value(tmp, 50);
@@ -121,7 +122,7 @@ void test_spinbox_set_range(void)
 
 void test_spinbox_step_prev(void)
 {
-    lv_obj_t * tmp = lv_spinbox_create(active_screen);
+    lv_obj_t *tmp = lv_spinbox_create(active_screen);
 
     /* When next step is bigger than biggest range */
     lv_spinbox_set_range(tmp, 0, 5);
@@ -145,7 +146,7 @@ void test_spinbox_step_prev(void)
 
 void test_spinbox_rollover(void)
 {
-    lv_obj_t * tmp = lv_spinbox_create(active_screen);
+    lv_obj_t *tmp = lv_spinbox_create(active_screen);
 
     lv_spinbox_set_rollover(tmp, true);
     TEST_ASSERT_TRUE(lv_spinbox_get_rollover(tmp));
@@ -161,27 +162,27 @@ void test_spinbox_event_key(void)
     /* Spinbox should increment it's value by one after receiving the LV_KEY_UP event */
     lv_spinbox_set_value(spinbox_events, 0);
     uint32_t key = LV_KEY_UP;
-    lv_obj_send_event(spinbox_events, LV_EVENT_KEY, (void *) &key);
+    lv_obj_send_event(spinbox_events, LV_EVENT_KEY, (void *)&key);
 
     TEST_ASSERT_EQUAL(1, lv_spinbox_get_value(spinbox_events));
 
     /* Spinbox should decrement it's value by one after receiving the LV_KEY_DOWN event */
     key = LV_KEY_DOWN;
-    lv_obj_send_event(spinbox_events, LV_EVENT_KEY, (void *) &key);
+    lv_obj_send_event(spinbox_events, LV_EVENT_KEY, (void *)&key);
 
     TEST_ASSERT_EQUAL(0, lv_spinbox_get_value(spinbox_events));
 
     /* Spinbox should multiply it's step vale by 10 after receiving the LV_KEY_LEFT event */
     int32_t step = lv_spinbox_get_step(spinbox_events);
     key = LV_KEY_LEFT;
-    lv_obj_send_event(spinbox_events, LV_EVENT_KEY, (void *) &key);
+    lv_obj_send_event(spinbox_events, LV_EVENT_KEY, (void *)&key);
 
     TEST_ASSERT_EQUAL(step * 10, lv_spinbox_get_step(spinbox_events));
 
     /* Spinbox should divide it's step vale by 10 after receiving the LV_KEY_RIGHT event */
     step = lv_spinbox_get_step(spinbox_events);
     key = LV_KEY_RIGHT;
-    lv_obj_send_event(spinbox_events, LV_EVENT_KEY, (void *) &key);
+    lv_obj_send_event(spinbox_events, LV_EVENT_KEY, (void *)&key);
 
     TEST_ASSERT_EQUAL(step / 10, lv_spinbox_get_step(spinbox_events));
 }

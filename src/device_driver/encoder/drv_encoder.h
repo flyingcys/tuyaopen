@@ -45,7 +45,6 @@ int32_t encoder_get_angle(void);
  */
 int32_t encoder_get_angle(void);
 
-
 /**
  * @brief Check if the encoder button is pressed.
  *

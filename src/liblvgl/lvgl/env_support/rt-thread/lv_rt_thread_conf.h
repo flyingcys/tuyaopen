@@ -21,13 +21,13 @@
  *=========================*/
 
 #ifdef RT_USING_HEAP
-    #define LV_USE_STDLIB_MALLOC    LV_STDLIB_RTTHREAD
+#define LV_USE_STDLIB_MALLOC LV_STDLIB_RTTHREAD
 #endif
 
-#define LV_USE_STDLIB_STRING    LV_STDLIB_RTTHREAD
+#define LV_USE_STDLIB_STRING LV_STDLIB_RTTHREAD
 
 #if LV_USE_FLOAT == 0
-    #define LV_USE_STDLIB_SPRINTF   LV_STDLIB_RTTHREAD
+#define LV_USE_STDLIB_SPRINTF LV_STDLIB_RTTHREAD
 #endif
 
 /*=========================
@@ -35,44 +35,44 @@
  *=========================*/
 
 #ifdef PKG_USING_CPU_USAGE
-    #define LV_SYSMON_GET_IDLE   lv_timer_os_get_idle
+#define LV_SYSMON_GET_IDLE lv_timer_os_get_idle
 #endif /* PKG_USING_CPU_USAGE */
 
 /*=================
  * OPERATING SYSTEM
  *=================*/
 
-#define LV_USE_OS   LV_OS_RTTHREAD
+#define LV_USE_OS LV_OS_RTTHREAD
 
 /*-------------
  * Asserts
  *-----------*/
 
 #define LV_ASSERT_HANDLER_INCLUDE LV_RTTHREAD_INCLUDE
-#define LV_ASSERT_HANDLER RT_ASSERT(0);
+#define LV_ASSERT_HANDLER         RT_ASSERT(0);
 
 /*=====================
  *  COMPILER SETTINGS
  *====================*/
 
 #ifdef ARCH_CPU_BIG_ENDIAN
-    #define LV_BIG_ENDIAN_SYSTEM 1
+#define LV_BIG_ENDIAN_SYSTEM 1
 #else
-    #define LV_BIG_ENDIAN_SYSTEM 0
+#define LV_BIG_ENDIAN_SYSTEM 0
 #endif
 
 #ifdef rt_align /* >= RT-Thread v5.0.0 */
-    #define LV_ATTRIBUTE_MEM_ALIGN rt_align(RT_ALIGN_SIZE)
+#define LV_ATTRIBUTE_MEM_ALIGN rt_align(RT_ALIGN_SIZE)
 #else
-    #define LV_ATTRIBUTE_MEM_ALIGN ALIGN(RT_ALIGN_SIZE)
+#define LV_ATTRIBUTE_MEM_ALIGN ALIGN(RT_ALIGN_SIZE)
 #endif
 
 /*==================
-* EXAMPLES
-*==================*/
+ * EXAMPLES
+ *==================*/
 
 #ifdef PKG_LVGL_USING_EXAMPLES
-    #define LV_BUILD_EXAMPLES 1
+#define LV_BUILD_EXAMPLES 1
 #endif
 
 /*--END OF LV_RT_THREAD_CONF_H--*/

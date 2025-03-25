@@ -29,10 +29,10 @@
 #define LV_SWITCH_ANIM_STATE_START 0
 
 /** Switch animation end value.  (Not the real value of the switch just indicates process animation)*/
-#define LV_SWITCH_ANIM_STATE_END   256
+#define LV_SWITCH_ANIM_STATE_END 256
 
 /** Mark no animation is in progress*/
-#define LV_SWITCH_ANIM_STATE_INV   -1
+#define LV_SWITCH_ANIM_STATE_INV -1
 
 /**********************
  *      TYPEDEFS
@@ -41,14 +41,14 @@
 /**********************
  *  STATIC PROTOTYPES
  **********************/
-static void lv_switch_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj);
-static void lv_switch_destructor(const lv_obj_class_t * class_p, lv_obj_t * obj);
-static void lv_switch_event(const lv_obj_class_t * class_p, lv_event_t * e);
-static void draw_main(lv_event_t * e);
+static void lv_switch_constructor(const lv_obj_class_t *class_p, lv_obj_t *obj);
+static void lv_switch_destructor(const lv_obj_class_t *class_p, lv_obj_t *obj);
+static void lv_switch_event(const lv_obj_class_t *class_p, lv_event_t *e);
+static void draw_main(lv_event_t *e);
 
-static void lv_switch_anim_exec_cb(void * sw, int32_t value);
-static void lv_switch_trigger_anim(lv_obj_t * obj);
-static void lv_switch_anim_completed(lv_anim_t * a);
+static void lv_switch_anim_exec_cb(void *sw, int32_t value);
+static void lv_switch_trigger_anim(lv_obj_t *obj);
+static void lv_switch_anim_completed(lv_anim_t *a);
 /**********************
  *  STATIC VARIABLES
  **********************/
@@ -72,10 +72,10 @@ const lv_obj_class_t lv_switch_class = {
  *   GLOBAL FUNCTIONS
  **********************/
 
-lv_obj_t * lv_switch_create(lv_obj_t * parent)
+lv_obj_t *lv_switch_create(lv_obj_t *parent)
 {
     LV_LOG_INFO("begin");
-    lv_obj_t * obj = lv_obj_class_create_obj(MY_CLASS, parent);
+    lv_obj_t *obj = lv_obj_class_create_obj(MY_CLASS, parent);
     lv_obj_class_init_obj(obj);
     return obj;
 }
@@ -84,12 +84,12 @@ lv_obj_t * lv_switch_create(lv_obj_t * parent)
  *   STATIC FUNCTIONS
  **********************/
 
-static void lv_switch_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
+static void lv_switch_constructor(const lv_obj_class_t *class_p, lv_obj_t *obj)
 {
     LV_UNUSED(class_p);
     LV_TRACE_OBJ_CREATE("begin");
 
-    lv_switch_t * sw = (lv_switch_t *)obj;
+    lv_switch_t *sw = (lv_switch_t *)obj;
 
     sw->anim_state = LV_SWITCH_ANIM_STATE_INV;
 
@@ -100,15 +100,15 @@ static void lv_switch_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj
     LV_TRACE_OBJ_CREATE("finished");
 }
 
-static void lv_switch_destructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
+static void lv_switch_destructor(const lv_obj_class_t *class_p, lv_obj_t *obj)
 {
     LV_UNUSED(class_p);
-    lv_switch_t * sw = (lv_switch_t *)obj;
+    lv_switch_t *sw = (lv_switch_t *)obj;
 
     lv_anim_delete(sw, NULL);
 }
 
-static void lv_switch_event(const lv_obj_class_t * class_p, lv_event_t * e)
+static void lv_switch_event(const lv_obj_class_t *class_p, lv_event_t *e)
 {
     LV_UNUSED(class_p);
 
@@ -116,15 +116,16 @@ static void lv_switch_event(const lv_obj_class_t * class_p, lv_event_t * e)
 
     /*Call the ancestor's event handler*/
     res = lv_obj_event_base(MY_CLASS, e);
-    if(res != LV_RESULT_OK) return;
+    if (res != LV_RESULT_OK)
+        return;
 
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_current_target(e);
+    lv_obj_t *obj = lv_event_get_current_target(e);
 
-    if(code == LV_EVENT_REFR_EXT_DRAW_SIZE) {
-        int32_t knob_left = lv_obj_get_style_pad_left(obj,   LV_PART_KNOB);
-        int32_t knob_right = lv_obj_get_style_pad_right(obj,  LV_PART_KNOB);
-        int32_t knob_top = lv_obj_get_style_pad_top(obj,    LV_PART_KNOB);
+    if (code == LV_EVENT_REFR_EXT_DRAW_SIZE) {
+        int32_t knob_left = lv_obj_get_style_pad_left(obj, LV_PART_KNOB);
+        int32_t knob_right = lv_obj_get_style_pad_right(obj, LV_PART_KNOB);
+        int32_t knob_top = lv_obj_get_style_pad_top(obj, LV_PART_KNOB);
         int32_t knob_bottom = lv_obj_get_style_pad_bottom(obj, LV_PART_KNOB);
 
         /*The smaller size is the knob diameter*/
@@ -132,25 +133,23 @@ static void lv_switch_event(const lv_obj_class_t * class_p, lv_event_t * e)
         knob_size += LV_SWITCH_KNOB_EXT_AREA_CORRECTION;
         knob_size += lv_obj_calculate_ext_draw_size(obj, LV_PART_KNOB);
 
-        int32_t * s = lv_event_get_param(e);
+        int32_t *s = lv_event_get_param(e);
         *s = LV_MAX(*s, knob_size);
         *s = LV_MAX(*s, lv_obj_calculate_ext_draw_size(obj, LV_PART_INDICATOR));
-    }
-    else if(code == LV_EVENT_VALUE_CHANGED) {
+    } else if (code == LV_EVENT_VALUE_CHANGED) {
         lv_switch_trigger_anim(obj);
         lv_obj_invalidate(obj);
-    }
-    else if(code == LV_EVENT_DRAW_MAIN) {
+    } else if (code == LV_EVENT_DRAW_MAIN) {
         draw_main(e);
     }
 }
 
-static void draw_main(lv_event_t * e)
+static void draw_main(lv_event_t *e)
 {
-    lv_obj_t * obj = lv_event_get_current_target(e);
-    lv_switch_t * sw = (lv_switch_t *)obj;
+    lv_obj_t *obj = lv_event_get_current_target(e);
+    lv_switch_t *sw = (lv_switch_t *)obj;
 
-    lv_layer_t * layer = lv_event_get_layer(e);
+    lv_layer_t *layer = lv_event_get_layer(e);
 
     /*Draw the indicator*/
     lv_area_t indic_area;
@@ -167,17 +166,16 @@ static void draw_main(lv_event_t * e)
     int32_t knob_size = lv_obj_get_height(obj);
     int32_t anim_length = lv_area_get_width(&obj->coords) - knob_size;
 
-    if(LV_SWITCH_IS_ANIMATING(sw)) {
+    if (LV_SWITCH_IS_ANIMATING(sw)) {
         /* Use the animation's coordinate */
         anim_value_x = (anim_length * sw->anim_state) / LV_SWITCH_ANIM_STATE_END;
-    }
-    else {
+    } else {
         /* Use LV_STATE_CHECKED to decide the coordinate */
         bool chk = lv_obj_get_state(obj) & LV_STATE_CHECKED;
         anim_value_x = chk ? anim_length : 0;
     }
 
-    if(LV_BASE_DIR_RTL == lv_obj_get_style_base_dir(obj, LV_PART_MAIN)) {
+    if (LV_BASE_DIR_RTL == lv_obj_get_style_base_dir(obj, LV_PART_MAIN)) {
         anim_value_x = anim_length - anim_value_x;
     }
 
@@ -204,9 +202,9 @@ static void draw_main(lv_event_t * e)
     lv_draw_rect(layer, &knob_rect_dsc, &knob_area);
 }
 
-static void lv_switch_anim_exec_cb(void * var, int32_t value)
+static void lv_switch_anim_exec_cb(void *var, int32_t value)
 {
-    lv_switch_t * sw = var;
+    lv_switch_t *sw = var;
     sw->anim_state = value;
     lv_obj_invalidate((lv_obj_t *)sw);
 }
@@ -214,9 +212,9 @@ static void lv_switch_anim_exec_cb(void * var, int32_t value)
 /**
  * Resets the switch's animation state to "no animation in progress".
  */
-static void lv_switch_anim_completed(lv_anim_t * a)
+static void lv_switch_anim_completed(lv_anim_t *a)
 {
-    lv_switch_t * sw = a->var;
+    lv_switch_t *sw = a->var;
     sw->anim_state = LV_SWITCH_ANIM_STATE_INV;
     lv_obj_invalidate((lv_obj_t *)sw);
 }
@@ -225,26 +223,26 @@ static void lv_switch_anim_completed(lv_anim_t * a)
  * Starts an animation for the switch knob. if the anim_time style property is greater than 0
  * @param obj the switch to animate
  */
-static void lv_switch_trigger_anim(lv_obj_t * obj)
+static void lv_switch_trigger_anim(lv_obj_t *obj)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);
-    lv_switch_t * sw = (lv_switch_t *)obj;
+    lv_switch_t *sw = (lv_switch_t *)obj;
 
     uint32_t anim_dur_full = lv_obj_get_style_anim_duration(obj, LV_PART_MAIN);
 
-    if(anim_dur_full > 0) {
+    if (anim_dur_full > 0) {
         bool chk = lv_obj_get_state(obj) & LV_STATE_CHECKED;
         int32_t anim_start;
         int32_t anim_end;
         /*No animation in progress -> simply set the values*/
-        if(sw->anim_state == LV_SWITCH_ANIM_STATE_INV) {
+        if (sw->anim_state == LV_SWITCH_ANIM_STATE_INV) {
             anim_start = chk ? LV_SWITCH_ANIM_STATE_START : LV_SWITCH_ANIM_STATE_END;
-            anim_end   = chk ? LV_SWITCH_ANIM_STATE_END : LV_SWITCH_ANIM_STATE_START;
+            anim_end = chk ? LV_SWITCH_ANIM_STATE_END : LV_SWITCH_ANIM_STATE_START;
         }
         /*Animation in progress. Start from the animation end value*/
         else {
             anim_start = sw->anim_state;
-            anim_end   = chk ? LV_SWITCH_ANIM_STATE_END : LV_SWITCH_ANIM_STATE_START;
+            anim_end = chk ? LV_SWITCH_ANIM_STATE_END : LV_SWITCH_ANIM_STATE_START;
         }
         /*Calculate actual animation duration*/
         uint32_t anim_dur = (anim_dur_full * LV_ABS(anim_start - anim_end)) / LV_SWITCH_ANIM_STATE_END;

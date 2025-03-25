@@ -24,7 +24,7 @@
 #define CHAT_BOT_WORK_MODE_HOLD     0
 #define CHAT_BOT_WORK_MODE_ONE_SHOT 1
 
-#define CHAT_BOT_WORK_MODE CHAT_BOT_WORK_MODE_ONE_SHOT
+#define CHAT_BOT_WORK_MODE CHAT_BOT_WORK_MODE_HOLD
 
 /**
  * @brief Initialize the AI audio processing module.

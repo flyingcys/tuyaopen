@@ -34,7 +34,7 @@
  *  STATIC PROTOTYPES
  **********************/
 
-static void _invalidate_cache(const lv_draw_buf_t * draw_buf, const lv_area_t * area);
+static void _invalidate_cache(const lv_draw_buf_t *draw_buf, const lv_area_t *area);
 static uint32_t _width_to_stride(uint32_t w, lv_color_format_t cf);
 
 /**********************
@@ -51,9 +51,9 @@ static uint32_t _width_to_stride(uint32_t w, lv_color_format_t cf);
 
 void lv_draw_buf_vglite_init_handlers(void)
 {
-    lv_draw_buf_handlers_t * handlers = lv_draw_buf_get_handlers();
-    lv_draw_buf_handlers_t * font_handlers = lv_draw_buf_get_font_handlers();
-    lv_draw_buf_handlers_t * image_handlers = lv_draw_buf_get_image_handlers();
+    lv_draw_buf_handlers_t *handlers = lv_draw_buf_get_handlers();
+    lv_draw_buf_handlers_t *font_handlers = lv_draw_buf_get_font_handlers();
+    lv_draw_buf_handlers_t *image_handlers = lv_draw_buf_get_image_handlers();
 
     handlers->invalidate_cache_cb = _invalidate_cache;
     font_handlers->invalidate_cache_cb = _invalidate_cache;
@@ -62,20 +62,19 @@ void lv_draw_buf_vglite_init_handlers(void)
     handlers->width_to_stride_cb = _width_to_stride;
     font_handlers->width_to_stride_cb = _width_to_stride;
     image_handlers->width_to_stride_cb = _width_to_stride;
-
 }
 
 /**********************
  *   STATIC FUNCTIONS
  **********************/
 
-static void _invalidate_cache(const lv_draw_buf_t * draw_buf, const lv_area_t * area)
+static void _invalidate_cache(const lv_draw_buf_t *draw_buf, const lv_area_t *area)
 {
-    const lv_image_header_t * header = &draw_buf->header;
+    const lv_image_header_t *header = &draw_buf->header;
     uint32_t stride = header->stride;
     lv_color_format_t cf = header->cf;
 
-    if(area->y1 == 0) {
+    if (area->y1 == 0) {
         uint32_t size = stride * lv_area_get_height(area);
 
         /* Invalidate full buffer. */
@@ -83,7 +82,7 @@ static void _invalidate_cache(const lv_draw_buf_t * draw_buf, const lv_area_t * 
         return;
     }
 
-    const uint8_t * buf_u8 = draw_buf->data;
+    const uint8_t *buf_u8 = draw_buf->data;
     /* ARM require a 32 byte aligned address. */
     uint8_t align_bytes = 32;
     uint8_t bits_per_pixel = lv_color_format_get_bpp(cf);
@@ -91,14 +90,14 @@ static void _invalidate_cache(const lv_draw_buf_t * draw_buf, const lv_area_t * 
     uint16_t align_pixels = align_bytes * 8 / bits_per_pixel;
     uint16_t offset_x = 0;
 
-    if(area->x1 >= (int32_t)(area->x1 % align_pixels)) {
+    if (area->x1 >= (int32_t)(area->x1 % align_pixels)) {
         uint16_t shift_x = area->x1 - (area->x1 % align_pixels);
 
         offset_x = area->x1 - shift_x;
         buf_u8 += (shift_x * bits_per_pixel) / 8;
     }
 
-    if(area->y1) {
+    if (area->y1) {
         uint16_t shift_y = area->y1;
 
         buf_u8 += shift_y * stride;
@@ -111,8 +110,8 @@ static void _invalidate_cache(const lv_draw_buf_t * draw_buf, const lv_area_t * 
     uint16_t line_size = (line_pixels * bits_per_pixel) / 8;
     uint16_t area_height = lv_area_get_height(area);
 
-    for(uint16_t y = 0; y < area_height; y++) {
-        const void * line_addr = buf_u8 + y * stride;
+    for (uint16_t y = 0; y < area_height; y++) {
+        const void *line_addr = buf_u8 + y * stride;
 
         DEMO_CleanInvalidateCacheByAddr((void *)line_addr, line_size);
     }

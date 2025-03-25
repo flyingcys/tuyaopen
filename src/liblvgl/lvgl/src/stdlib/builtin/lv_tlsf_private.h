@@ -33,7 +33,7 @@ typedef struct {
     lv_tlsf_t tlsf;
     size_t cur_used;
     size_t max_used;
-    lv_ll_t  pool_ll;
+    lv_ll_t pool_ll;
 } lv_tlsf_state_t;
 
 /**********************

@@ -7,11 +7,11 @@
 #include "lv_test_helpers.h"
 #include "lv_test_indev.h"
 
-#define SWITCHES_CNT    10
+#define SWITCHES_CNT 10
 
 uint8_t value_changed_event_cnt = 0;
-lv_obj_t * scr = NULL;
-lv_obj_t * sw = NULL;
+lv_obj_t *scr = NULL;
+lv_obj_t *sw = NULL;
 
 void setUp(void)
 {
@@ -31,14 +31,13 @@ static void mouse_click_on_switch(void)
     lv_test_mouse_click_at(sw->coords.x1, sw->coords.y1);
 }
 
-static void event_handler(lv_event_t * e)
+static void event_handler(lv_event_t *e)
 {
     lv_event_code_t event = lv_event_get_code(e);
 
-    if(LV_EVENT_VALUE_CHANGED == event) {
+    if (LV_EVENT_VALUE_CHANGED == event) {
         value_changed_event_cnt++;
     }
-
 }
 
 void test_switch_should_have_default_state_after_being_created(void)
@@ -51,15 +50,15 @@ void test_switch_should_not_leak_memory_after_deletion(void)
 {
     size_t idx = 0;
     size_t initial_available_memory = 0;
-    lv_obj_t * switches[SWITCHES_CNT] = {NULL};
+    lv_obj_t *switches[SWITCHES_CNT] = {NULL};
 
     initial_available_memory = lv_test_get_free_mem();
 
-    for(idx = 0; idx < SWITCHES_CNT; idx++) {
+    for (idx = 0; idx < SWITCHES_CNT; idx++) {
         switches[idx] = lv_switch_create(scr);
     }
 
-    for(idx = 0; idx < SWITCHES_CNT; idx++) {
+    for (idx = 0; idx < SWITCHES_CNT; idx++) {
         lv_obj_delete(switches[idx]);
     }
 
@@ -69,7 +68,7 @@ void test_switch_should_not_leak_memory_after_deletion(void)
 
 void test_switch_animation(void)
 {
-    lv_switch_t * anim_sw = (lv_switch_t *) sw;
+    lv_switch_t *anim_sw = (lv_switch_t *)sw;
     int32_t initial_anim_state = anim_sw->anim_state;
 
     /* Trigger animation */

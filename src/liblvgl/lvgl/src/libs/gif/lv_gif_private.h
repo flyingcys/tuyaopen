@@ -33,12 +33,11 @@ extern "C" {
 
 struct lv_gif_t {
     lv_image_t img;
-    gd_GIF * gif;
-    lv_timer_t * timer;
+    gd_GIF *gif;
+    lv_timer_t *timer;
     lv_image_dsc_t imgdsc;
     uint32_t last_call;
 };
-
 
 /**********************
  * GLOBAL PROTOTYPES

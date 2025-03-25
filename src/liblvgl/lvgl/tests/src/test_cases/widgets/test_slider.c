@@ -5,12 +5,12 @@
 #include "unity/unity.h"
 #include "lv_test_indev.h"
 
-static lv_obj_t * active_screen = NULL;
-static lv_obj_t * slider = NULL;
-static lv_obj_t * sliderRangeMode = NULL;
-static lv_obj_t * sliderNormalMode = NULL;
-static lv_obj_t * sliderSymmetricalMode = NULL;
-static lv_group_t * g = NULL;
+static lv_obj_t *active_screen = NULL;
+static lv_obj_t *slider = NULL;
+static lv_obj_t *sliderRangeMode = NULL;
+static lv_obj_t *sliderNormalMode = NULL;
+static lv_obj_t *sliderSymmetricalMode = NULL;
+static lv_group_t *g = NULL;
 
 void setUp(void)
 {
@@ -50,13 +50,13 @@ void test_slider_event_keys_right_and_up_increment_value_by_one(void)
     lv_slider_set_value(slider, 10, LV_ANIM_OFF);
     int32_t value = lv_slider_get_value(slider);
 
-    lv_obj_send_event(slider, LV_EVENT_KEY, (void *) &key);
+    lv_obj_send_event(slider, LV_EVENT_KEY, (void *)&key);
 
     int32_t new_value = lv_slider_get_value(slider);
     TEST_ASSERT_EQUAL_INT32(value + 1, new_value);
 
     key = LV_KEY_UP;
-    lv_obj_send_event(slider, LV_EVENT_KEY, (void *) &key);
+    lv_obj_send_event(slider, LV_EVENT_KEY, (void *)&key);
     TEST_ASSERT_EQUAL_INT32(new_value + 1, lv_slider_get_value(slider));
 }
 
@@ -66,13 +66,13 @@ void test_slider_event_keys_left_and_down_decrement_value_by_one(void)
     lv_slider_set_value(slider, 10, LV_ANIM_OFF);
     int32_t value = lv_slider_get_value(slider);
 
-    lv_obj_send_event(slider, LV_EVENT_KEY, (void *) &key);
+    lv_obj_send_event(slider, LV_EVENT_KEY, (void *)&key);
 
     int32_t new_value = lv_slider_get_value(slider);
     TEST_ASSERT_EQUAL_INT32(value - 1, new_value);
 
     key = LV_KEY_DOWN;
-    lv_obj_send_event(slider, LV_EVENT_KEY, (void *) &key);
+    lv_obj_send_event(slider, LV_EVENT_KEY, (void *)&key);
     TEST_ASSERT_EQUAL_INT32(new_value - 1, lv_slider_get_value(slider));
 }
 
@@ -82,14 +82,14 @@ void test_slider_event_invalid_key_should_not_change_values(void)
     lv_slider_set_value(slider, 10, LV_ANIM_OFF);
     int32_t value = lv_slider_get_value(slider);
 
-    lv_obj_send_event(slider, LV_EVENT_KEY, (void *) &key);
+    lv_obj_send_event(slider, LV_EVENT_KEY, (void *)&key);
 
     TEST_ASSERT_EQUAL_INT32(value, lv_slider_get_value(slider));
 }
 
 void test_slider_range_mode_should_leave_edit_mode_if_released(void)
 {
-    lv_slider_t * ptr = (lv_slider_t *) sliderRangeMode;
+    lv_slider_t *ptr = (lv_slider_t *)sliderRangeMode;
 
     /* Setup group and encoder indev */
     lv_group_add_obj(g, sliderNormalMode);
@@ -109,7 +109,7 @@ void test_slider_range_mode_should_leave_edit_mode_if_released(void)
 
 void test_slider_range_mode_should_not_leave_edit_mode_if_released_with_no_left_knob_focus(void)
 {
-    lv_slider_t * ptr = (lv_slider_t *) sliderRangeMode;
+    lv_slider_t *ptr = (lv_slider_t *)sliderRangeMode;
 
     /* Setup group and encoder indev */
     lv_group_add_obj(g, sliderRangeMode);
@@ -128,7 +128,7 @@ void test_slider_range_mode_should_not_leave_edit_mode_if_released_with_no_left_
 
 void test_slider_normal_mode_should_leave_edit_mode_if_released(void)
 {
-    lv_slider_t * ptr = (lv_slider_t *) sliderNormalMode;
+    lv_slider_t *ptr = (lv_slider_t *)sliderNormalMode;
     ptr->left_knob_focus = 1;
 
     /* Setup group and encoder indev */
@@ -161,34 +161,27 @@ void test_ranged_mode_adjust_with_encoder(void)
 
     /*Adjust the right knob*/
     lv_test_encoder_turn(-10);
-    TEST_ASSERT_EQUAL(80, lv_slider_get_value(sliderRangeMode));  /*Updated?*/
-    TEST_ASSERT_EQUAL(10, lv_slider_get_left_value(sliderRangeMode));     /*Maintained?*/
+    TEST_ASSERT_EQUAL(80, lv_slider_get_value(sliderRangeMode));      /*Updated?*/
+    TEST_ASSERT_EQUAL(10, lv_slider_get_left_value(sliderRangeMode)); /*Maintained?*/
 
     /*Focus the left knob*/
     lv_test_encoder_click();
 
     /*Adjust the left knob*/
     lv_test_encoder_turn(5);
-    TEST_ASSERT_EQUAL(80, lv_slider_get_value(sliderRangeMode));  /*Maintained?*/
-    TEST_ASSERT_EQUAL(15, lv_slider_get_left_value(sliderRangeMode));  /*Updated?*/
-
+    TEST_ASSERT_EQUAL(80, lv_slider_get_value(sliderRangeMode));      /*Maintained?*/
+    TEST_ASSERT_EQUAL(15, lv_slider_get_left_value(sliderRangeMode)); /*Updated?*/
 }
 
 void test_normal_mode_slider_hit_test(void)
 {
     /* Validate if point 0,0 can click in the slider */
-    lv_point_t point = {
-        .x = 0,
-        .y = 0
-    };
+    lv_point_t point = {.x = 0, .y = 0};
 
-    lv_hit_test_info_t info = {
-        .res = false,
-        .point = &point
-    };
+    lv_hit_test_info_t info = {.res = false, .point = &point};
 
     lv_slider_set_value(sliderNormalMode, 100, LV_ANIM_OFF);
-    lv_obj_send_event(sliderNormalMode, LV_EVENT_HIT_TEST, (void *) &info);
+    lv_obj_send_event(sliderNormalMode, LV_EVENT_HIT_TEST, (void *)&info);
 
     /* point can click slider */
     TEST_ASSERT(info.res);
@@ -197,16 +190,10 @@ void test_normal_mode_slider_hit_test(void)
 void test_slider_range_event_hit_test(void)
 {
     /* Validate if point 0,0 can click in the slider */
-    lv_point_t point = {
-        .x = 0,
-        .y = 0
-    };
+    lv_point_t point = {.x = 0, .y = 0};
 
-    lv_hit_test_info_t info = {
-        .res = false,
-        .point = &point
-    };
-    lv_obj_send_event(sliderRangeMode, LV_EVENT_HIT_TEST, (void *) &info);
+    lv_hit_test_info_t info = {.res = false, .point = &point};
+    lv_obj_send_event(sliderRangeMode, LV_EVENT_HIT_TEST, (void *)&info);
 
     /* point can click slider in the left knob */
     TEST_ASSERT(info.res);

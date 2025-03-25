@@ -30,57 +30,52 @@
 #include "tvgPaint.h"
 #include "tvgLoader.h"
 
+struct PictureIterator : Iterator {
+    Paint *paint = nullptr;
+    Paint *ptr = nullptr;
 
-struct PictureIterator : Iterator
-{
-    Paint* paint = nullptr;
-    Paint* ptr = nullptr;
+    PictureIterator(Paint *p) : paint(p) {}
 
-    PictureIterator(Paint* p) : paint(p) {}
-
-    const Paint* next() override
+    const Paint *next() override
     {
-        if (!ptr) ptr = paint;
-        else ptr = nullptr;
+        if (!ptr)
+            ptr = paint;
+        else
+            ptr = nullptr;
         return ptr;
     }
 
     uint32_t count() override
     {
-        if (paint) return 1;
-        else return 0;
+        if (paint)
+            return 1;
+        else
+            return 0;
     }
 
-    void begin() override
-    {
-        ptr = nullptr;
-    }
+    void begin() override { ptr = nullptr; }
 };
 
+struct Picture::Impl {
+    ImageLoader *loader = nullptr;
 
-struct Picture::Impl
-{
-    ImageLoader* loader = nullptr;
-
-    Paint* paint = nullptr;           //vector picture uses
-    Surface* surface = nullptr;       //bitmap picture uses
-    RenderData rd = nullptr;          //engine data
+    Paint *paint = nullptr;     // vector picture uses
+    Surface *surface = nullptr; // bitmap picture uses
+    RenderData rd = nullptr;    // engine data
     float w = 0, h = 0;
-    RenderMesh rm;                    //mesh data
-    Picture* picture = nullptr;
+    RenderMesh rm; // mesh data
+    Picture *picture = nullptr;
     bool resizing = false;
-    bool needComp = false;            //need composition
+    bool needComp = false; // need composition
 
-    RenderTransform resizeTransform(const RenderTransform* pTransform);
+    RenderTransform resizeTransform(const RenderTransform *pTransform);
     bool needComposition(uint8_t opacity);
-    bool render(RenderMethod* renderer);
+    bool render(RenderMethod *renderer);
     bool size(float w, float h);
-    RenderRegion bounds(RenderMethod* renderer);
-    Result load(ImageLoader* ploader);
+    RenderRegion bounds(RenderMethod *renderer);
+    Result load(ImageLoader *ploader);
 
-    Impl(Picture* p) : picture(p)
-    {
-    }
+    Impl(Picture *p) : picture(p) {}
 
     ~Impl()
     {
@@ -90,28 +85,31 @@ struct Picture::Impl
                 renderer->dispose(rd);
             }
         }
-        delete(paint);
+        delete (paint);
     }
 
-    RenderData update(RenderMethod* renderer, const RenderTransform* pTransform, Array<RenderData>& clips, uint8_t opacity, RenderUpdateFlag pFlag, bool clipper)
+    RenderData update(RenderMethod *renderer, const RenderTransform *pTransform, Array<RenderData> &clips,
+                      uint8_t opacity, RenderUpdateFlag pFlag, bool clipper)
     {
         auto flag = load();
 
         if (surface) {
             auto transform = resizeTransform(pTransform);
-            rd = renderer->prepare(surface, &rm, rd, &transform, clips, opacity, static_cast<RenderUpdateFlag>(pFlag | flag));
+            rd = renderer->prepare(surface, &rm, rd, &transform, clips, opacity,
+                                   static_cast<RenderUpdateFlag>(pFlag | flag));
         } else if (paint) {
             if (resizing) {
                 loader->resize(paint, w, h);
                 resizing = false;
             }
             needComp = needComposition(opacity) ? true : false;
-            rd = paint->pImpl->update(renderer, pTransform, clips, opacity, static_cast<RenderUpdateFlag>(pFlag | flag), clipper);
+            rd = paint->pImpl->update(renderer, pTransform, clips, opacity, static_cast<RenderUpdateFlag>(pFlag | flag),
+                                      clipper);
         }
         return rd;
     }
 
-    bool bounds(float* x, float* y, float* w, float* h, bool stroking)
+    bool bounds(float *x, float *y, float *w, float *h, bool stroking)
     {
         if (rm.triangleCnt > 0) {
             auto triangles = rm.triangles;
@@ -119,70 +117,96 @@ struct Picture::Impl
             auto max = triangles[0].vertex[0].pt;
 
             for (uint32_t i = 0; i < rm.triangleCnt; ++i) {
-                if (triangles[i].vertex[0].pt.x < min.x) min.x = triangles[i].vertex[0].pt.x;
-                else if (triangles[i].vertex[0].pt.x > max.x) max.x = triangles[i].vertex[0].pt.x;
-                if (triangles[i].vertex[0].pt.y < min.y) min.y = triangles[i].vertex[0].pt.y;
-                else if (triangles[i].vertex[0].pt.y > max.y) max.y = triangles[i].vertex[0].pt.y;
+                if (triangles[i].vertex[0].pt.x < min.x)
+                    min.x = triangles[i].vertex[0].pt.x;
+                else if (triangles[i].vertex[0].pt.x > max.x)
+                    max.x = triangles[i].vertex[0].pt.x;
+                if (triangles[i].vertex[0].pt.y < min.y)
+                    min.y = triangles[i].vertex[0].pt.y;
+                else if (triangles[i].vertex[0].pt.y > max.y)
+                    max.y = triangles[i].vertex[0].pt.y;
 
-                if (triangles[i].vertex[1].pt.x < min.x) min.x = triangles[i].vertex[1].pt.x;
-                else if (triangles[i].vertex[1].pt.x > max.x) max.x = triangles[i].vertex[1].pt.x;
-                if (triangles[i].vertex[1].pt.y < min.y) min.y = triangles[i].vertex[1].pt.y;
-                else if (triangles[i].vertex[1].pt.y > max.y) max.y = triangles[i].vertex[1].pt.y;
+                if (triangles[i].vertex[1].pt.x < min.x)
+                    min.x = triangles[i].vertex[1].pt.x;
+                else if (triangles[i].vertex[1].pt.x > max.x)
+                    max.x = triangles[i].vertex[1].pt.x;
+                if (triangles[i].vertex[1].pt.y < min.y)
+                    min.y = triangles[i].vertex[1].pt.y;
+                else if (triangles[i].vertex[1].pt.y > max.y)
+                    max.y = triangles[i].vertex[1].pt.y;
 
-                if (triangles[i].vertex[2].pt.x < min.x) min.x = triangles[i].vertex[2].pt.x;
-                else if (triangles[i].vertex[2].pt.x > max.x) max.x = triangles[i].vertex[2].pt.x;
-                if (triangles[i].vertex[2].pt.y < min.y) min.y = triangles[i].vertex[2].pt.y;
-                else if (triangles[i].vertex[2].pt.y > max.y) max.y = triangles[i].vertex[2].pt.y;
+                if (triangles[i].vertex[2].pt.x < min.x)
+                    min.x = triangles[i].vertex[2].pt.x;
+                else if (triangles[i].vertex[2].pt.x > max.x)
+                    max.x = triangles[i].vertex[2].pt.x;
+                if (triangles[i].vertex[2].pt.y < min.y)
+                    min.y = triangles[i].vertex[2].pt.y;
+                else if (triangles[i].vertex[2].pt.y > max.y)
+                    max.y = triangles[i].vertex[2].pt.y;
             }
-            if (x) *x = min.x;
-            if (y) *y = min.y;
-            if (w) *w = max.x - min.x;
-            if (h) *h = max.y - min.y;
+            if (x)
+                *x = min.x;
+            if (y)
+                *y = min.y;
+            if (w)
+                *w = max.x - min.x;
+            if (h)
+                *h = max.y - min.y;
         } else {
-            if (x) *x = 0;
-            if (y) *y = 0;
-            if (w) *w = this->w;
-            if (h) *h = this->h;
+            if (x)
+                *x = 0;
+            if (y)
+                *y = 0;
+            if (w)
+                *w = this->w;
+            if (h)
+                *h = this->h;
         }
         return true;
     }
 
-    Result load(const string& path)
+    Result load(const string &path)
     {
-        if (paint || surface) return Result::InsufficientCondition;
+        if (paint || surface)
+            return Result::InsufficientCondition;
 
-        bool invalid;  //Invalid Path
-        auto loader = static_cast<ImageLoader*>(LoaderMgr::loader(path, &invalid));
+        bool invalid; // Invalid Path
+        auto loader = static_cast<ImageLoader *>(LoaderMgr::loader(path, &invalid));
         if (!loader) {
-            if (invalid) return Result::InvalidArguments;
+            if (invalid)
+                return Result::InvalidArguments;
             return Result::NonSupport;
         }
         return load(loader);
     }
 
-    Result load(const char* data, uint32_t size, const string& mimeType, bool copy)
+    Result load(const char *data, uint32_t size, const string &mimeType, bool copy)
     {
-        if (paint || surface) return Result::InsufficientCondition;
-        auto loader = static_cast<ImageLoader*>(LoaderMgr::loader(data, size, mimeType, copy));
-        if (!loader) return Result::NonSupport;
+        if (paint || surface)
+            return Result::InsufficientCondition;
+        auto loader = static_cast<ImageLoader *>(LoaderMgr::loader(data, size, mimeType, copy));
+        if (!loader)
+            return Result::NonSupport;
         return load(loader);
     }
 
-    Result load(uint32_t* data, uint32_t w, uint32_t h, bool copy)
+    Result load(uint32_t *data, uint32_t w, uint32_t h, bool copy)
     {
-        if (paint || surface) return Result::InsufficientCondition;
+        if (paint || surface)
+            return Result::InsufficientCondition;
 
-        auto loader = static_cast<ImageLoader*>(LoaderMgr::loader(data, w, h, copy));
-        if (!loader) return Result::FailedAllocation;
+        auto loader = static_cast<ImageLoader *>(LoaderMgr::loader(data, w, h, copy));
+        if (!loader)
+            return Result::FailedAllocation;
 
         return load(loader);
     }
 
-    void mesh(const Polygon* triangles, const uint32_t triangleCnt)
+    void mesh(const Polygon *triangles, const uint32_t triangleCnt)
     {
         if (triangles && triangleCnt > 0) {
             this->rm.triangleCnt = triangleCnt;
-            this->rm.triangles = (Polygon*)malloc(sizeof(Polygon) * triangleCnt);
+            this->rm.triangles = (Polygon *)malloc(sizeof(Polygon) * triangleCnt);
             memcpy(this->rm.triangles, triangles, sizeof(Polygon) * triangleCnt);
         } else {
             free(this->rm.triangles);
@@ -191,14 +215,15 @@ struct Picture::Impl
         }
     }
 
-    Paint* duplicate()
+    Paint *duplicate()
     {
         load();
 
         auto ret = Picture::gen().release();
         auto dup = ret->pImpl;
 
-        if (paint) dup->paint = paint->duplicate();
+        if (paint)
+            dup->paint = paint->duplicate();
 
         if (loader) {
             dup->loader = loader;
@@ -212,33 +237,39 @@ struct Picture::Impl
 
         if (rm.triangleCnt > 0) {
             dup->rm.triangleCnt = rm.triangleCnt;
-            dup->rm.triangles = (Polygon*)malloc(sizeof(Polygon) * rm.triangleCnt);
+            dup->rm.triangles = (Polygon *)malloc(sizeof(Polygon) * rm.triangleCnt);
             memcpy(dup->rm.triangles, rm.triangles, sizeof(Polygon) * rm.triangleCnt);
         }
 
         return ret;
     }
 
-    Iterator* iterator()
+    Iterator *iterator()
     {
         load();
         return new PictureIterator(paint);
     }
 
-    uint32_t* data(uint32_t* w, uint32_t* h)
+    uint32_t *data(uint32_t *w, uint32_t *h)
     {
-        //Try it, If not loaded yet.
+        // Try it, If not loaded yet.
         load();
 
         if (loader) {
-            if (w) *w = static_cast<uint32_t>(loader->w);
-            if (h) *h = static_cast<uint32_t>(loader->h);
+            if (w)
+                *w = static_cast<uint32_t>(loader->w);
+            if (h)
+                *h = static_cast<uint32_t>(loader->h);
         } else {
-            if (w) *w = 0;
-            if (h) *h = 0;
+            if (w)
+                *w = 0;
+            if (h)
+                *h = 0;
         }
-        if (surface) return surface->buf32;
-        else return nullptr;
+        if (surface)
+            return surface->buf32;
+        else
+            return nullptr;
     }
 
     RenderUpdateFlag load();
@@ -247,4 +278,3 @@ struct Picture::Impl
 #endif //_TVG_PICTURE_H_
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

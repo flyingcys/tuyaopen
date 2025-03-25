@@ -26,7 +26,7 @@ extern "C" {
 
 typedef struct {
     lv_layout_update_cb_t cb;
-    void * user_data;
+    void *user_data;
 } lv_layout_dsc_t;
 
 /**********************
@@ -45,7 +45,7 @@ void lv_layout_deinit(void);
  * Update the layout of a widget
  * @param obj   pointer to a widget
  */
-void lv_layout_apply(lv_obj_t * obj);
+void lv_layout_apply(lv_obj_t *obj);
 
 /**********************
  *      MACROS

@@ -45,27 +45,21 @@
  *   GLOBAL FUNCTIONS
  **********************/
 
-void lv_draw_vg_lite_img(lv_draw_unit_t * draw_unit, const lv_draw_image_dsc_t * dsc,
-                         const lv_area_t * coords, bool no_cache)
+void lv_draw_vg_lite_img(lv_draw_unit_t *draw_unit, const lv_draw_image_dsc_t *dsc, const lv_area_t *coords,
+                         bool no_cache)
 {
-    lv_draw_vg_lite_unit_t * u = (lv_draw_vg_lite_unit_t *)draw_unit;
+    lv_draw_vg_lite_unit_t *u = (lv_draw_vg_lite_unit_t *)draw_unit;
 
     /* The coordinates passed in by coords are not transformed,
      * so the transformed area needs to be calculated once.
      */
     lv_area_t image_tf_area;
-    lv_image_buf_get_transformed_area(
-        &image_tf_area,
-        lv_area_get_width(coords),
-        lv_area_get_height(coords),
-        dsc->rotation,
-        dsc->scale_x,
-        dsc->scale_y,
-        &dsc->pivot);
+    lv_image_buf_get_transformed_area(&image_tf_area, lv_area_get_width(coords), lv_area_get_height(coords),
+                                      dsc->rotation, dsc->scale_x, dsc->scale_y, &dsc->pivot);
     lv_area_move(&image_tf_area, coords->x1, coords->y1);
 
     lv_area_t clip_area;
-    if(!lv_area_intersect(&clip_area, &image_tf_area, draw_unit->clip_area)) {
+    if (!lv_area_intersect(&clip_area, &image_tf_area, draw_unit->clip_area)) {
         /*Fully clipped, nothing to do*/
         return;
     }
@@ -77,18 +71,17 @@ void lv_draw_vg_lite_img(lv_draw_unit_t * draw_unit, const lv_draw_image_dsc_t *
 
     /* if not support blend normal, premultiply alpha */
     bool premultiply = !lv_vg_lite_support_blend_normal();
-    if(!lv_vg_lite_buffer_open_image(&src_buf, &decoder_dsc, dsc->src, no_cache, premultiply)) {
+    if (!lv_vg_lite_buffer_open_image(&src_buf, &decoder_dsc, dsc->src, no_cache, premultiply)) {
         LV_PROFILER_END;
         return;
     }
 
     vg_lite_color_t color = 0;
-    if(LV_COLOR_FORMAT_IS_ALPHA_ONLY(decoder_dsc.decoded->header.cf) || dsc->recolor_opa > LV_OPA_TRANSP) {
+    if (LV_COLOR_FORMAT_IS_ALPHA_ONLY(decoder_dsc.decoded->header.cf) || dsc->recolor_opa > LV_OPA_TRANSP) {
         /* alpha image and image recolor */
         src_buf.image_mode = VG_LITE_MULTIPLY_IMAGE_MODE;
         color = lv_vg_lite_color(dsc->recolor, LV_OPA_MIX2(dsc->opa, dsc->recolor_opa), true);
-    }
-    else if(dsc->opa < LV_OPA_COVER) {
+    } else if (dsc->opa < LV_OPA_COVER) {
         /* normal image opa */
         src_buf.image_mode = VG_LITE_MULTIPLY_IMAGE_MODE;
         lv_memset(&color, dsc->opa, sizeof(color));
@@ -115,7 +108,7 @@ void lv_draw_vg_lite_img(lv_draw_unit_t * draw_unit, const lv_draw_image_dsc_t *
     vg_lite_filter_t filter = no_transform ? VG_LITE_FILTER_POINT : VG_LITE_FILTER_BI_LINEAR;
 
     /* If clipping is not required, blit directly */
-    if(lv_area_is_in(&image_tf_area, draw_unit->clip_area, false) && dsc->clip_radius <= 0) {
+    if (lv_area_is_in(&image_tf_area, draw_unit->clip_area, false) && dsc->clip_radius <= 0) {
         /* The image area is the coordinates relative to the image itself */
         lv_area_t src_area = *coords;
         lv_area_move(&src_area, -coords->x1, -coords->y1);
@@ -125,64 +118,40 @@ void lv_draw_vg_lite_img(lv_draw_unit_t * draw_unit, const lv_draw_image_dsc_t *
         lv_vg_lite_rect(&rect, &src_area);
 
         LV_PROFILER_BEGIN_TAG("vg_lite_blit_rect");
-        LV_VG_LITE_CHECK_ERROR(vg_lite_blit_rect(
-                                   &u->target_buffer,
-                                   &src_buf,
-                                   &rect,
-                                   &matrix,
-                                   blend,
-                                   color,
-                                   filter));
+        LV_VG_LITE_CHECK_ERROR(vg_lite_blit_rect(&u->target_buffer, &src_buf, &rect, &matrix, blend, color, filter));
         LV_PROFILER_END_TAG("vg_lite_blit_rect");
-    }
-    else {
-        lv_vg_lite_path_t * path = lv_vg_lite_path_get(u, VG_LITE_FP32);
+    } else {
+        lv_vg_lite_path_t *path = lv_vg_lite_path_get(u, VG_LITE_FP32);
 
         /**
          * When the image is transformed or rounded, create a path around
          * the image and follow the image_matrix for coordinate transformation
          */
-        if(!no_transform || dsc->clip_radius) {
+        if (!no_transform || dsc->clip_radius) {
             /* apply the image transform to the path */
             lv_vg_lite_path_set_transform(path, &image_matrix);
-            lv_vg_lite_path_append_rect(
-                path,
-                0, 0,
-                lv_area_get_width(coords), lv_area_get_height(coords),
-                dsc->clip_radius);
+            lv_vg_lite_path_append_rect(path, 0, 0, lv_area_get_width(coords), lv_area_get_height(coords),
+                                        dsc->clip_radius);
             lv_vg_lite_path_set_transform(path, NULL);
-        }
-        else {
+        } else {
             /* append normal rect to the path */
-            lv_vg_lite_path_append_rect(
-                path,
-                clip_area.x1, clip_area.y1,
-                lv_area_get_width(&clip_area), lv_area_get_height(&clip_area),
-                0);
+            lv_vg_lite_path_append_rect(path, clip_area.x1, clip_area.y1, lv_area_get_width(&clip_area),
+                                        lv_area_get_height(&clip_area), 0);
         }
 
         lv_vg_lite_path_set_bonding_box_area(path, &clip_area);
         lv_vg_lite_path_end(path);
 
-        vg_lite_path_t * vg_lite_path = lv_vg_lite_path_get_path(path);
+        vg_lite_path_t *vg_lite_path = lv_vg_lite_path_get_path(path);
         LV_VG_LITE_ASSERT_PATH(vg_lite_path);
 
         vg_lite_matrix_t path_matrix = u->global_matrix;
         LV_VG_LITE_ASSERT_MATRIX(&path_matrix);
 
         LV_PROFILER_BEGIN_TAG("vg_lite_draw_pattern");
-        LV_VG_LITE_CHECK_ERROR(vg_lite_draw_pattern(
-                                   &u->target_buffer,
-                                   vg_lite_path,
-                                   VG_LITE_FILL_EVEN_ODD,
-                                   &path_matrix,
-                                   &src_buf,
-                                   &matrix,
-                                   blend,
-                                   VG_LITE_PATTERN_COLOR,
-                                   0,
-                                   color,
-                                   filter));
+        LV_VG_LITE_CHECK_ERROR(vg_lite_draw_pattern(&u->target_buffer, vg_lite_path, VG_LITE_FILL_EVEN_ODD,
+                                                    &path_matrix, &src_buf, &matrix, blend, VG_LITE_PATTERN_COLOR, 0,
+                                                    color, filter));
         LV_PROFILER_END_TAG("vg_lite_draw_pattern");
 
         lv_vg_lite_path_drop(u, path);

@@ -44,13 +44,13 @@
 
 #define VAD_ACTIVE_RB_SIZE (300 * 16000 * 16 * 1 / 8 / 1000) // 300ms
 
-#define SPEAKER_ENABLE_PIN TUYA_GPIO_NUM_28
+#define SPEAKER_ENABLE_PIN TUYA_GPIO_NUM_7
 
 #define APP_BUTTON_NAME   "app_button"
-#define AUDIO_TRIGGER_PIN TUYA_GPIO_NUM_12
+#define AUDIO_TRIGGER_PIN TUYA_GPIO_NUM_17
 static TDL_BUTTON_HANDLE sg_button_hdl = NULL;
 
-#define CHAT_LED_PIN TUYA_GPIO_NUM_1
+#define CHAT_LED_PIN TUYA_GPIO_NUM_18
 
 static TUYA_AUDIO_RECORDER_HANDLE ty_ai_handle = NULL;
 
@@ -146,6 +146,7 @@ static int _audio_frame_put(TKL_AUDIO_FRAME_INFO_T *pframe)
     ty_vad_frame_put(pframe->pbuf, pframe->used_size);
 
     if (NULL != sg_vad_active_rb) {
+        // vad active 前的声音缓存
         tuya_ring_buff_write(sg_vad_active_rb, pframe->pbuf, pframe->used_size);
     }
 
@@ -183,7 +184,7 @@ static int _audio_frame_put(TKL_AUDIO_FRAME_INFO_T *pframe)
         }
     } else {
         // PR_DEBUG("vad none");
-        if (last_vad_active_time - tal_system_get_millisecond() > 1000) {
+        if (tal_system_get_millisecond() - last_vad_active_time > 1000) {
             // 停止本次会话
             if (VOICE_STATE_IN_VOICE == state) {
                 state = VOICE_STATE_IN_STOP;
@@ -301,7 +302,7 @@ static OPERATE_RET _audio_init(void)
     TKL_AUDIO_CONFIG_T config;
 
     memset(&config, 0, sizeof(TKL_AUDIO_CONFIG_T));
-    config.enable = 0;
+    config.enable = 1;
     config.ai_chn = 0;
     config.sample = AUDIO_SAMPLE_RATE;
     config.datebits = AUDIO_SAMPLE_BITS;
@@ -335,7 +336,7 @@ static OPERATE_RET _audio_init(void)
     }
 
     // set mic volume
-    tkl_ai_set_vol(TKL_AUDIO_TYPE_BOARD, 0, 80);
+    tkl_ai_set_vol(TKL_AUDIO_TYPE_BOARD, 0, 100); // todo
 
     // set spk volume
     tuya_audio_player_set_volume(audio_volume_get());

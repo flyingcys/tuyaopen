@@ -7,10 +7,7 @@
 LV_IMAGE_DECLARE(test_img_lvgl_logo_png);
 LV_IMAGE_DECLARE(test_arc_bg);
 
-void setUp(void)
-{
-
-}
+void setUp(void) {}
 
 void tearDown(void)
 {
@@ -18,9 +15,9 @@ void tearDown(void)
     lv_obj_clean(lv_screen_active());
 }
 
-static lv_obj_t * img_create(void)
+static lv_obj_t *img_create(void)
 {
-    lv_obj_t * img = lv_image_create(lv_screen_active());
+    lv_obj_t *img = lv_image_create(lv_screen_active());
     lv_image_set_src(img, &test_img_lvgl_logo_png);
     lv_obj_set_style_bg_opa(img, LV_OPA_20, 0);
     lv_obj_set_style_bg_color(img, lv_color_hex(0x000000), 0);
@@ -31,9 +28,9 @@ static lv_obj_t * img_create(void)
 
 void test_image_rotated_pivot_center(void)
 {
-    lv_obj_t * img;
+    lv_obj_t *img;
     uint32_t i;
-    for(i = 0; i < 8; i++) {
+    for (i = 0; i < 8; i++) {
         img = img_create();
         lv_obj_set_pos(img, 100 + (i % 4) * 160, 150 + (i / 4) * 150);
         lv_image_set_rotation(img, i * 450);
@@ -45,9 +42,9 @@ void test_image_rotated_pivot_center(void)
 
 void test_image_rotated_pivot_top_left(void)
 {
-    lv_obj_t * img;
+    lv_obj_t *img;
     uint32_t i;
-    for(i = 0; i < 8; i++) {
+    for (i = 0; i < 8; i++) {
         img = img_create();
         lv_obj_set_pos(img, 120 + (i % 4) * 180, 100 + (i / 4) * 300);
         lv_image_set_rotation(img, i * 450);
@@ -59,9 +56,9 @@ void test_image_rotated_pivot_top_left(void)
 
 void test_image_scale_pivot_center(void)
 {
-    lv_obj_t * img;
+    lv_obj_t *img;
     uint32_t i;
-    for(i = 0; i < 8; i++) {
+    for (i = 0; i < 8; i++) {
         img = img_create();
         lv_obj_set_pos(img, 40 + (i % 4) * 200, 150 + (i / 4) * 150);
         lv_image_set_scale(img, 64 + i * 64);
@@ -73,9 +70,9 @@ void test_image_scale_pivot_center(void)
 
 void test_image_scale_pivot_top_left(void)
 {
-    lv_obj_t * img;
+    lv_obj_t *img;
     uint32_t i;
-    for(i = 0; i < 8; i++) {
+    for (i = 0; i < 8; i++) {
         img = img_create();
         lv_obj_set_pos(img, 10 + (i % 4) * 190, 150 + (i / 4) * 150);
         lv_image_set_scale(img, 64 + i * 64);
@@ -87,9 +84,9 @@ void test_image_scale_pivot_top_left(void)
 
 void test_image_scale_x_pivot_center(void)
 {
-    lv_obj_t * img;
+    lv_obj_t *img;
     uint32_t i;
-    for(i = 0; i < 8; i++) {
+    for (i = 0; i < 8; i++) {
         img = img_create();
         lv_obj_set_pos(img, 40 + (i % 4) * 200, 150 + (i / 4) * 150);
         lv_image_set_scale_x(img, 64 + i * 64);
@@ -101,9 +98,9 @@ void test_image_scale_x_pivot_center(void)
 
 void test_image_scale_x_pivot_top_left(void)
 {
-    lv_obj_t * img;
+    lv_obj_t *img;
     uint32_t i;
-    for(i = 0; i < 8; i++) {
+    for (i = 0; i < 8; i++) {
         img = img_create();
         lv_obj_set_pos(img, 10 + (i % 4) * 190, 150 + (i / 4) * 150);
         lv_image_set_scale_x(img, 64 + i * 64);
@@ -115,9 +112,9 @@ void test_image_scale_x_pivot_top_left(void)
 
 void test_image_scale_y_pivot_center(void)
 {
-    lv_obj_t * img;
+    lv_obj_t *img;
     uint32_t i;
-    for(i = 0; i < 8; i++) {
+    for (i = 0; i < 8; i++) {
         img = img_create();
         lv_obj_set_pos(img, 40 + (i % 4) * 200, 150 + (i / 4) * 150);
         lv_image_set_scale_y(img, 64 + i * 64);
@@ -129,9 +126,9 @@ void test_image_scale_y_pivot_center(void)
 
 void test_image_scale_y_pivot_top_left(void)
 {
-    lv_obj_t * img;
+    lv_obj_t *img;
     uint32_t i;
-    for(i = 0; i < 8; i++) {
+    for (i = 0; i < 8; i++) {
         img = img_create();
         lv_obj_set_pos(img, 10 + (i % 4) * 190, 150 + (i / 4) * 150);
         lv_image_set_scale_y(img, 64 + i * 64);
@@ -143,9 +140,9 @@ void test_image_scale_y_pivot_top_left(void)
 
 void test_image_rotate_and_scale_pivot_center(void)
 {
-    lv_obj_t * img;
+    lv_obj_t *img;
     uint32_t i;
-    for(i = 0; i < 8; i++) {
+    for (i = 0; i < 8; i++) {
         img = img_create();
         lv_obj_set_pos(img, 40 + (i % 4) * 200, 150 + (i / 4) * 150);
         lv_image_set_scale_x(img, 64 + i * 64);
@@ -159,9 +156,9 @@ void test_image_rotate_and_scale_pivot_center(void)
 
 void test_image_rotate_and_scale_pivot_top_left(void)
 {
-    lv_obj_t * img;
+    lv_obj_t *img;
     uint32_t i;
-    for(i = 0; i < 8; i++) {
+    for (i = 0; i < 8; i++) {
         img = img_create();
         lv_obj_set_pos(img, 120 + (i % 4) * 180, 120 + (i / 4) * 220);
         lv_image_set_scale_x(img, 64 + i * 64);
@@ -175,15 +172,15 @@ void test_image_rotate_and_scale_pivot_top_left(void)
 
 void test_image_normal_align(void)
 {
-    lv_obj_t * img;
+    lv_obj_t *img;
     uint32_t i;
     lv_image_align_t aligns[] = {
-        LV_IMAGE_ALIGN_TOP_LEFT, LV_IMAGE_ALIGN_TOP_MID, LV_IMAGE_ALIGN_TOP_RIGHT,
-        LV_IMAGE_ALIGN_LEFT_MID, LV_IMAGE_ALIGN_CENTER, LV_IMAGE_ALIGN_RIGHT_MID,
+        LV_IMAGE_ALIGN_TOP_LEFT,    LV_IMAGE_ALIGN_TOP_MID,    LV_IMAGE_ALIGN_TOP_RIGHT,
+        LV_IMAGE_ALIGN_LEFT_MID,    LV_IMAGE_ALIGN_CENTER,     LV_IMAGE_ALIGN_RIGHT_MID,
         LV_IMAGE_ALIGN_BOTTOM_LEFT, LV_IMAGE_ALIGN_BOTTOM_MID, LV_IMAGE_ALIGN_BOTTOM_RIGHT,
     };
 
-    for(i = 0; i < 9; i++) {
+    for (i = 0; i < 9; i++) {
         img = img_create();
         lv_obj_set_size(img, 200, 120);
         lv_obj_set_pos(img, 30 + (i % 3) * 260, 40 + (i / 3) * 150);
@@ -195,15 +192,15 @@ void test_image_normal_align(void)
 
 void test_image_normal_align_offset(void)
 {
-    lv_obj_t * img;
+    lv_obj_t *img;
     uint32_t i;
     lv_image_align_t aligns[] = {
-        LV_IMAGE_ALIGN_TOP_LEFT, LV_IMAGE_ALIGN_TOP_MID, LV_IMAGE_ALIGN_TOP_RIGHT,
-        LV_IMAGE_ALIGN_LEFT_MID, LV_IMAGE_ALIGN_CENTER, LV_IMAGE_ALIGN_RIGHT_MID,
+        LV_IMAGE_ALIGN_TOP_LEFT,    LV_IMAGE_ALIGN_TOP_MID,    LV_IMAGE_ALIGN_TOP_RIGHT,
+        LV_IMAGE_ALIGN_LEFT_MID,    LV_IMAGE_ALIGN_CENTER,     LV_IMAGE_ALIGN_RIGHT_MID,
         LV_IMAGE_ALIGN_BOTTOM_LEFT, LV_IMAGE_ALIGN_BOTTOM_MID, LV_IMAGE_ALIGN_BOTTOM_RIGHT,
     };
 
-    for(i = 0; i < 9; i++) {
+    for (i = 0; i < 9; i++) {
         img = img_create();
         lv_obj_set_size(img, 200, 120);
         lv_obj_set_pos(img, 30 + (i % 3) * 260, 40 + (i / 3) * 150);
@@ -217,15 +214,15 @@ void test_image_normal_align_offset(void)
 
 void test_image_transform_align(void)
 {
-    lv_obj_t * img;
+    lv_obj_t *img;
     uint32_t i;
     lv_image_align_t aligns[] = {
-        LV_IMAGE_ALIGN_TOP_LEFT, LV_IMAGE_ALIGN_TOP_MID, LV_IMAGE_ALIGN_TOP_RIGHT,
-        LV_IMAGE_ALIGN_LEFT_MID, LV_IMAGE_ALIGN_CENTER, LV_IMAGE_ALIGN_RIGHT_MID,
+        LV_IMAGE_ALIGN_TOP_LEFT,    LV_IMAGE_ALIGN_TOP_MID,    LV_IMAGE_ALIGN_TOP_RIGHT,
+        LV_IMAGE_ALIGN_LEFT_MID,    LV_IMAGE_ALIGN_CENTER,     LV_IMAGE_ALIGN_RIGHT_MID,
         LV_IMAGE_ALIGN_BOTTOM_LEFT, LV_IMAGE_ALIGN_BOTTOM_MID, LV_IMAGE_ALIGN_BOTTOM_RIGHT,
     };
 
-    for(i = 0; i < 9; i++) {
+    for (i = 0; i < 9; i++) {
         img = img_create();
         lv_obj_set_size(img, 200, 120);
         lv_obj_set_pos(img, 30 + (i % 3) * 260, 40 + (i / 3) * 150);
@@ -240,15 +237,15 @@ void test_image_transform_align(void)
 
 void test_image_transform_align_offset(void)
 {
-    lv_obj_t * img;
+    lv_obj_t *img;
     uint32_t i;
     lv_image_align_t aligns[] = {
-        LV_IMAGE_ALIGN_TOP_LEFT, LV_IMAGE_ALIGN_TOP_MID, LV_IMAGE_ALIGN_TOP_RIGHT,
-        LV_IMAGE_ALIGN_LEFT_MID, LV_IMAGE_ALIGN_CENTER, LV_IMAGE_ALIGN_RIGHT_MID,
+        LV_IMAGE_ALIGN_TOP_LEFT,    LV_IMAGE_ALIGN_TOP_MID,    LV_IMAGE_ALIGN_TOP_RIGHT,
+        LV_IMAGE_ALIGN_LEFT_MID,    LV_IMAGE_ALIGN_CENTER,     LV_IMAGE_ALIGN_RIGHT_MID,
         LV_IMAGE_ALIGN_BOTTOM_LEFT, LV_IMAGE_ALIGN_BOTTOM_MID, LV_IMAGE_ALIGN_BOTTOM_RIGHT,
     };
 
-    for(i = 0; i < 9; i++) {
+    for (i = 0; i < 9; i++) {
         img = img_create();
         lv_obj_set_size(img, 200, 120);
         lv_obj_set_pos(img, 30 + (i % 3) * 260, 40 + (i / 3) * 150);
@@ -265,7 +262,7 @@ void test_image_transform_align_offset(void)
 
 void test_image_stretch(void)
 {
-    lv_obj_t * img;
+    lv_obj_t *img;
     uint32_t i;
 
     int32_t img_w = test_img_lvgl_logo_png.header.w;
@@ -274,7 +271,7 @@ void test_image_stretch(void)
     int32_t w_array[] = {img_w / 2, img_w, img_w * 2};
     int32_t h_array[] = {img_h / 2, img_h, img_h * 2};
 
-    for(i = 0; i < 9; i++) {
+    for (i = 0; i < 9; i++) {
         img = img_create();
         lv_obj_set_size(img, w_array[i / 3], h_array[i % 3]);
         lv_obj_set_pos(img, 30 + (i % 3) * 260, 40 + (i / 3) * 150);
@@ -286,7 +283,7 @@ void test_image_stretch(void)
 
 void test_image_tile(void)
 {
-    lv_obj_t * img;
+    lv_obj_t *img;
 
     img = img_create();
     lv_obj_set_size(img, 350, LV_SIZE_CONTENT);
@@ -322,7 +319,7 @@ void test_image_tile(void)
 
 void test_image_ignore_transformation_settings_when_stretched(void)
 {
-    lv_obj_t * img = img_create();
+    lv_obj_t *img = img_create();
     lv_obj_set_size(img, 200, 300);
     lv_image_set_inner_align(img, LV_IMAGE_ALIGN_STRETCH);
 
@@ -345,7 +342,7 @@ void test_image_ignore_transformation_settings_when_stretched(void)
 
 void test_image_ignore_transformation_settings_when_tiled(void)
 {
-    lv_obj_t * img = img_create();
+    lv_obj_t *img = img_create();
     lv_obj_set_size(img, 200, 300);
     lv_image_set_inner_align(img, LV_IMAGE_ALIGN_TILE);
 
@@ -365,12 +362,12 @@ void test_image_ignore_transformation_settings_when_tiled(void)
 
 void test_image_clip_radius(void)
 {
-    lv_obj_t * par = lv_obj_create(lv_screen_active());
+    lv_obj_t *par = lv_obj_create(lv_screen_active());
     lv_obj_set_scrollbar_mode(par, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_style_radius(par, 0, 0);
     lv_obj_center(par);
 
-    lv_obj_t * img = lv_img_create(par);
+    lv_obj_t *img = lv_img_create(par);
     lv_image_set_src(img, &test_arc_bg);
     lv_obj_center(img);
 
@@ -390,8 +387,8 @@ void test_image_clip_radius(void)
 void test_image_properties(void)
 {
 #if LV_USE_OBJ_PROPERTY
-    lv_obj_t * obj = lv_image_create(lv_screen_active());
-    lv_property_t prop = { };
+    lv_obj_t *obj = lv_image_create(lv_screen_active());
+    lv_property_t prop = {};
 
     prop.id = LV_PROPERTY_IMAGE_SRC;
     prop.ptr = &test_arc_bg;

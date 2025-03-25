@@ -1,6 +1,6 @@
 /**
-* @file lv_image_cache.h
-*
+ * @file lv_image_cache.h
+ *
  */
 
 #ifndef LV_IMAGE_CACHE_H
@@ -40,7 +40,8 @@ lv_result_t lv_image_cache_init(uint32_t size);
  * Resize image cache.
  * If set to 0, the cache will be disabled.
  * @param new_size  new size of the cache in bytes.
- * @param evict_now true: evict the images should be removed by the eviction policy, false: wait for the next cache cleanup.
+ * @param evict_now true: evict the images should be removed by the eviction policy, false: wait for the next cache
+ * cleanup.
  */
 void lv_image_cache_resize(uint32_t new_size, bool evict_now);
 
@@ -48,7 +49,7 @@ void lv_image_cache_resize(uint32_t new_size, bool evict_now);
  * Invalidate image cache. Use NULL to invalidate all images.
  * @param src pointer to an image source.
  */
-void lv_image_cache_drop(const void * src);
+void lv_image_cache_drop(const void *src);
 
 /**
  * Return true if the image cache is enabled.

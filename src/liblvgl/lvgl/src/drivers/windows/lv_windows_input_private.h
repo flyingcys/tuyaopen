@@ -31,26 +31,14 @@ extern "C" {
  * GLOBAL PROTOTYPES
  **********************/
 
-bool lv_windows_pointer_device_window_message_handler(
-    HWND hWnd,
-    UINT uMsg,
-    WPARAM wParam,
-    LPARAM lParam,
-    LRESULT * plResult);
+bool lv_windows_pointer_device_window_message_handler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+                                                      LRESULT *plResult);
 
-bool lv_windows_keypad_device_window_message_handler(
-    HWND hWnd,
-    UINT uMsg,
-    WPARAM wParam,
-    LPARAM lParam,
-    LRESULT * plResult);
+bool lv_windows_keypad_device_window_message_handler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+                                                     LRESULT *plResult);
 
-bool lv_windows_encoder_device_window_message_handler(
-    HWND hWnd,
-    UINT uMsg,
-    WPARAM wParam,
-    LPARAM lParam,
-    LRESULT * plResult);
+bool lv_windows_encoder_device_window_message_handler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+                                                      LRESULT *plResult);
 
 /**********************
  *      MACROS

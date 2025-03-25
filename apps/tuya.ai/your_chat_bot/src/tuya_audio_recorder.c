@@ -141,7 +141,7 @@ static void _tuya_voice_custom(char *type, cJSON *json)
         cJSON_free(data);
         if (strcmp(type, "response") == 0 && cJSON_GetArraySize(json) == 0) {
             // If response is empty, it indicates an empty voice, play a prompt tone.
-            tuya_audio_player_play_alert(AUDIO_ALART_TYPE_PLEASE_AGAIN, TRUE);
+            // tuya_audio_player_play_alert(AUDIO_ALART_TYPE_PLEASE_AGAIN, TRUE);
         }
 
         // syncDialogText without id

@@ -30,20 +30,16 @@
 #include "tvgLottieParserHandler.h"
 #include "tvgLottieProperty.h"
 
-struct LottieParser : LookaheadParserHandler
-{
+struct LottieParser : LookaheadParserHandler {
 public:
-    LottieParser(const char *str, const char* dirName) : LookaheadParserHandler(str)
-    {
-        this->dirName = dirName;
-    }
+    LottieParser(const char *str, const char *dirName) : LookaheadParserHandler(str) { this->dirName = dirName; }
 
     bool parse();
-    bool apply(LottieSlot* slot);
-    const char* sid(bool first = false);
+    bool apply(LottieSlot *slot);
+    const char *sid(bool first = false);
 
-    LottieComposition* comp = nullptr;
-    const char* dirName = nullptr;       //base resource directory
+    LottieComposition *comp = nullptr;
+    const char *dirName = nullptr; // base resource directory
 
 private:
     BlendMethod getBlendMethod();
@@ -53,72 +49,72 @@ private:
     StrokeCap getStrokeCap();
     StrokeJoin getStrokeJoin();
     CompositeMethod getMaskMethod(bool inversed);
-    LottieInterpolator* getInterpolator(const char* key, Point& in, Point& out);
+    LottieInterpolator *getInterpolator(const char *key, Point &in, Point &out);
     uint8_t getDirection();
 
-    void getInterpolatorPoint(Point& pt);
-    void getPathSet(LottiePathSet& path);
-    void getLayerSize(float& val);
-    void getValue(TextDocument& doc);
-    void getValue(PathSet& path);
-    void getValue(Array<Point>& pts);
-    void getValue(ColorStop& color);
-    void getValue(float& val);
-    void getValue(uint8_t& val);
-    void getValue(Point& pt);
-    void getValue(RGB24& color);
+    void getInterpolatorPoint(Point &pt);
+    void getPathSet(LottiePathSet &path);
+    void getLayerSize(float &val);
+    void getValue(TextDocument &doc);
+    void getValue(PathSet &path);
+    void getValue(Array<Point> &pts);
+    void getValue(ColorStop &color);
+    void getValue(float &val);
+    void getValue(uint8_t &val);
+    void getValue(Point &pt);
+    void getValue(RGB24 &color);
 
-    template<typename T> bool parseTangent(const char *key, LottieVectorFrame<T>& value);
-    template<typename T> bool parseTangent(const char *key, LottieScalarFrame<T>& value);
-    template<typename T> void parseKeyFrame(T& prop);
-    template<typename T> void parsePropertyInternal(T& prop);
-    template<LottieProperty::Type type = LottieProperty::Type::Invalid, typename T> void parseProperty(T& prop, LottieObject* obj = nullptr);
-    template<LottieProperty::Type type = LottieProperty::Type::Invalid, typename T> void parseSlotProperty(T& prop);
+    template <typename T> bool parseTangent(const char *key, LottieVectorFrame<T> &value);
+    template <typename T> bool parseTangent(const char *key, LottieScalarFrame<T> &value);
+    template <typename T> void parseKeyFrame(T &prop);
+    template <typename T> void parsePropertyInternal(T &prop);
+    template <LottieProperty::Type type = LottieProperty::Type::Invalid, typename T>
+    void parseProperty(T &prop, LottieObject *obj = nullptr);
+    template <LottieProperty::Type type = LottieProperty::Type::Invalid, typename T> void parseSlotProperty(T &prop);
 
-    LottieObject* parseObject();
-    LottieObject* parseAsset();
-    LottieImage* parseImage(const char* data, const char* subPath, bool embedded);
-    LottieLayer* parseLayer();
-    LottieObject* parseGroup();
-    LottieRect* parseRect();
-    LottieEllipse* parseEllipse();
-    LottieSolidFill* parseSolidFill();
-    LottieTransform* parseTransform(bool ddd = false);
-    LottieSolidStroke* parseSolidStroke();
-    LottieGradientStroke* parseGradientStroke();
-    LottiePath* parsePath();
-    LottiePolyStar* parsePolyStar();
-    LottieRoundedCorner* parseRoundedCorner();
-    LottieGradientFill* parseGradientFill();
-    LottieLayer* parseLayers();
-    LottieMask* parseMask();
-    LottieTrimpath* parseTrimpath();
-    LottieRepeater* parseRepeater();
-    LottieFont* parseFont();
-    LottieMarker* parseMarker();
+    LottieObject *parseObject();
+    LottieObject *parseAsset();
+    LottieImage *parseImage(const char *data, const char *subPath, bool embedded);
+    LottieLayer *parseLayer();
+    LottieObject *parseGroup();
+    LottieRect *parseRect();
+    LottieEllipse *parseEllipse();
+    LottieSolidFill *parseSolidFill();
+    LottieTransform *parseTransform(bool ddd = false);
+    LottieSolidStroke *parseSolidStroke();
+    LottieGradientStroke *parseGradientStroke();
+    LottiePath *parsePath();
+    LottiePolyStar *parsePolyStar();
+    LottieRoundedCorner *parseRoundedCorner();
+    LottieGradientFill *parseGradientFill();
+    LottieLayer *parseLayers();
+    LottieMask *parseMask();
+    LottieTrimpath *parseTrimpath();
+    LottieRepeater *parseRepeater();
+    LottieFont *parseFont();
+    LottieMarker *parseMarker();
 
-    void parseObject(Array<LottieObject*>& parent);
-    void parseShapes(Array<LottieObject*>& parent);
-    void parseText(Array<LottieObject*>& parent);
-    void parseMasks(LottieLayer* layer);
-    void parseTimeRemap(LottieLayer* layer);
-    void parseStrokeDash(LottieStroke* stroke);
-    void parseGradient(LottieGradient* gradient, const char* key);
-    void parseTextRange(LottieText* text);
+    void parseObject(Array<LottieObject *> &parent);
+    void parseShapes(Array<LottieObject *> &parent);
+    void parseText(Array<LottieObject *> &parent);
+    void parseMasks(LottieLayer *layer);
+    void parseTimeRemap(LottieLayer *layer);
+    void parseStrokeDash(LottieStroke *stroke);
+    void parseGradient(LottieGradient *gradient, const char *key);
+    void parseTextRange(LottieText *text);
     void parseAssets();
     void parseFonts();
-    void parseChars(Array<LottieGlyph*>& glyphs);
+    void parseChars(Array<LottieGlyph *> &glyphs);
     void parseMarkers();
-    void postProcess(Array<LottieGlyph*>& glyphs);
+    void postProcess(Array<LottieGlyph *> &glyphs);
 
-    //Current parsing context
+    // Current parsing context
     struct Context {
-        LottieLayer* layer = nullptr;
-        LottieObject* parent = nullptr;
+        LottieLayer *layer = nullptr;
+        LottieObject *parent = nullptr;
     } context;
 };
 
 #endif //_TVG_LOTTIE_PARSER_H_
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

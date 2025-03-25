@@ -43,14 +43,14 @@ struct lv_indev_t {
     uint32_t pr_timestamp;         /**< Pressed time stamp*/
     uint32_t longpr_rep_timestamp; /**< Long press repeat time stamp*/
 
-    void * driver_data;
-    void * user_data;
+    void *driver_data;
+    void *user_data;
 
     /**< Pointer to the assigned display*/
-    lv_display_t * disp;
+    lv_display_t *disp;
 
     /**< Timer to periodically read the input device*/
-    lv_timer_t * read_timer;
+    lv_timer_t *read_timer;
 
     /**< Number of pixels to slide before actually drag the object*/
     uint8_t scroll_limit;
@@ -75,18 +75,18 @@ struct lv_indev_t {
 
     struct {
         /*Pointer and button data*/
-        lv_point_t act_point; /**< Current point of input device.*/
-        lv_point_t last_point; /**< Last point of input device.*/
+        lv_point_t act_point;      /**< Current point of input device.*/
+        lv_point_t last_point;     /**< Last point of input device.*/
         lv_point_t last_raw_point; /**< Last point read from read_cb. */
-        lv_point_t vect; /**< Difference between `act_point` and `last_point`.*/
-        lv_point_t scroll_sum; /*Count the dragged pixels to check LV_INDEV_DEF_SCROLL_LIMIT*/
+        lv_point_t vect;           /**< Difference between `act_point` and `last_point`.*/
+        lv_point_t scroll_sum;     /*Count the dragged pixels to check LV_INDEV_DEF_SCROLL_LIMIT*/
         lv_point_t scroll_throw_vect;
         lv_point_t scroll_throw_vect_ori;
-        lv_obj_t * act_obj;      /*The object being pressed*/
-        lv_obj_t * last_obj;     /*The last object which was pressed*/
-        lv_obj_t * scroll_obj;   /*The object being scrolled*/
-        lv_obj_t * last_pressed; /*The lastly pressed object*/
-        lv_obj_t * last_hovered; /*The lastly hovered object*/
+        lv_obj_t *act_obj;      /*The object being pressed*/
+        lv_obj_t *last_obj;     /*The last object which was pressed*/
+        lv_obj_t *scroll_obj;   /*The object being scrolled*/
+        lv_obj_t *last_pressed; /*The lastly pressed object*/
+        lv_obj_t *last_hovered; /*The lastly hovered object*/
         lv_area_t scroll_area;
         lv_point_t gesture_sum; /*Count the gesture pixels to check LV_INDEV_DEF_GESTURE_LIMIT*/
         int32_t diff;
@@ -103,12 +103,12 @@ struct lv_indev_t {
         uint32_t last_key;
     } keypad;
 
-    lv_obj_t * cursor;     /**< Cursor for LV_INPUT_TYPE_POINTER*/
-    lv_group_t * group;   /**< Keypad destination group*/
-    const lv_point_t * btn_points; /**< Array points assigned to the button ()screen will be pressed
-                                      here by the buttons*/
+    lv_obj_t *cursor;             /**< Cursor for LV_INPUT_TYPE_POINTER*/
+    lv_group_t *group;            /**< Keypad destination group*/
+    const lv_point_t *btn_points; /**< Array points assigned to the button ()screen will be pressed
+                                     here by the buttons*/
     lv_event_list_t event_list;
-    lv_anim_t * scroll_throw_anim;
+    lv_anim_t *scroll_throw_anim;
 };
 
 /**********************
@@ -121,7 +121,7 @@ struct lv_indev_t {
  * @param indev     pointer to an indev
  * @return          the found scrollable object or NULL if not found.
  */
-lv_obj_t * lv_indev_find_scroll_obj(lv_indev_t * indev);
+lv_obj_t *lv_indev_find_scroll_obj(lv_indev_t *indev);
 
 /**********************
  *      MACROS

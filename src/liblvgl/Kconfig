@@ -1,12 +1,20 @@
 config ENABLE_LIBLVGL
     bool "configure lvgl"
     select ENABLE_DISPLAY_DRIVER
-    default n
+    default y
 
 if (ENABLE_LIBLVGL)
     config ENABLE_LVGL_DEMO
         bool "enable lvgl demo"
         default n
+
+    config LV_DISP_HOR_RES
+        int "screen width"
+        default 240
+
+    config LV_DISP_VER_RES
+        int "screen height"
+        default 240
 
     config LVGL_ENABLE_TOUCH
         bool "enable lvgl touch"
@@ -25,6 +33,6 @@ if (ENABLE_LIBLVGL)
 
     config LVGL_COLOR_16_SWAP
         bool "swap color bytes"
-        default n
+        default y
 
 endif

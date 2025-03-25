@@ -26,14 +26,14 @@ extern "C" {
  *      TYPEDEFS
  **********************/
 
-typedef struct  {
-    uint8_t * buf;
-    lv_opa_t * cir_opa;         /**< Opacity of values on the circumference of an 1/4 circle */
-    uint16_t * x_start_on_y;    /**< The x coordinate of the circle for each y value */
-    uint16_t * opa_start_on_y;  /**< The index of `cir_opa` for each y value */
-    int32_t life;               /**< How many times the entry way used */
-    uint32_t used_cnt;          /**< Like a semaphore to count the referencing masks */
-    int32_t radius;             /**< The radius of the entry */
+typedef struct {
+    uint8_t *buf;
+    lv_opa_t *cir_opa;        /**< Opacity of values on the circumference of an 1/4 circle */
+    uint16_t *x_start_on_y;   /**< The x coordinate of the circle for each y value */
+    uint16_t *opa_start_on_y; /**< The index of `cir_opa` for each y value */
+    int32_t life;             /**< How many times the entry way used */
+    uint32_t used_cnt;        /**< Like a semaphore to count the referencing masks */
+    int32_t radius;           /**< The radius of the entry */
 } lv_draw_sw_mask_radius_circle_dsc_t;
 
 struct lv_draw_sw_mask_common_dsc_t {
@@ -76,7 +76,7 @@ struct lv_draw_sw_mask_line_param_t {
 
     /** Invert the mask. The default is: Keep the left part.
      *It is used to select left/right/top/bottom */
-    uint8_t inv: 1;
+    uint8_t inv : 1;
 };
 
 struct lv_draw_sw_mask_angle_param_t {
@@ -102,10 +102,10 @@ struct lv_draw_sw_mask_radius_param_t {
         lv_area_t rect;
         int32_t radius;
         /** Invert the mask. 0: Keep the pixels inside. */
-        uint8_t outer: 1;
+        uint8_t outer : 1;
     } cfg;
 
-    lv_draw_sw_mask_radius_circle_dsc_t * circle;
+    lv_draw_sw_mask_radius_circle_dsc_t *circle;
 };
 
 struct lv_draw_sw_mask_fade_param_t {
@@ -119,7 +119,6 @@ struct lv_draw_sw_mask_fade_param_t {
         lv_opa_t opa_top;
         lv_opa_t opa_bottom;
     } cfg;
-
 };
 
 struct lv_draw_sw_mask_map_param_t {
@@ -128,7 +127,7 @@ struct lv_draw_sw_mask_map_param_t {
 
     struct {
         lv_area_t coords;
-        const lv_opa_t * map;
+        const lv_opa_t *map;
     } cfg;
 };
 
@@ -148,7 +147,7 @@ void lv_draw_sw_mask_cleanup(void);
  *      MACROS
  **********************/
 
-#endif  /*LV_DRAW_SW_COMPLEX*/
+#endif /*LV_DRAW_SW_COMPLEX*/
 
 #ifdef __cplusplus
 } /*extern "C"*/

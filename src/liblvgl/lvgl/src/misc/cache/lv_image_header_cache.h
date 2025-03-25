@@ -1,6 +1,6 @@
 /**
-* @file lv_image_header_cache.h
-*
+ * @file lv_image_header_cache.h
+ *
  */
 
 #ifndef LV_IMAGE_HEADER_CACHE_H
@@ -40,7 +40,8 @@ lv_result_t lv_image_header_cache_init(uint32_t count);
  * Resize image header cache.
  * If set to 0, the cache is disabled.
  * @param count  new max count of cached image headers.
- * @param evict_now true: evict the image headers should be removed by the eviction policy, false: wait for the next cache cleanup.
+ * @param evict_now true: evict the image headers should be removed by the eviction policy, false: wait for the next
+ * cache cleanup.
  */
 void lv_image_header_cache_resize(uint32_t count, bool evict_now);
 
@@ -49,7 +50,7 @@ void lv_image_header_cache_resize(uint32_t count, bool evict_now);
  * It's also automatically called when an image is invalidated.
  * @param src pointer to an image source.
  */
-void lv_image_header_cache_drop(const void * src);
+void lv_image_header_cache_drop(const void *src);
 
 /**
  * Return true if the image header cache is enabled.

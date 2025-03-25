@@ -30,12 +30,12 @@ extern "C" {
 
 struct lv_label_t {
     lv_obj_t obj;
-    char * text;
+    char *text;
     union {
-        char * tmp_ptr; /**< Pointer to the allocated memory containing the character replaced by dots */
+        char *tmp_ptr; /**< Pointer to the allocated memory containing the character replaced by dots */
         char tmp[LV_LABEL_DOT_NUM + 1]; /**< Directly store the characters if <=4 characters */
     } dot;
-    uint32_t dot_end;  /**< The real text length, used in dot mode */
+    uint32_t dot_end; /**< The real text length, used in dot mode */
 
 #if LV_LABEL_LONG_TXT_HINT
     lv_draw_label_hint_t hint;
@@ -54,7 +54,6 @@ struct lv_label_t {
     uint8_t dot_tmp_alloc : 1;          /**< 1: dot is allocated, 0: dot directly holds up to 4 chars */
     uint8_t invalid_size_cache : 1;     /**< 1: Recalculate size and update cache */
 };
-
 
 /**********************
  * GLOBAL PROTOTYPES

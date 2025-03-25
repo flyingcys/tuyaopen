@@ -31,7 +31,8 @@
 /* Internal Class Implementation                                        */
 /************************************************************************/
 
-static bool _isImportanceApplicable(SvgStyleFlags &toFlagsImportance, SvgStyleFlags fromFlagsImportance, SvgStyleFlags flag)
+static bool _isImportanceApplicable(SvgStyleFlags &toFlagsImportance, SvgStyleFlags fromFlagsImportance,
+                                    SvgStyleFlags flag)
 {
     if (!(toFlagsImportance & flag) && (fromFlagsImportance & flag)) {
         return true;
@@ -39,10 +40,11 @@ static bool _isImportanceApplicable(SvgStyleFlags &toFlagsImportance, SvgStyleFl
     return false;
 }
 
-static void _copyStyle(SvgStyleProperty* to, const SvgStyleProperty* from)
+static void _copyStyle(SvgStyleProperty *to, const SvgStyleProperty *from)
 {
-    if (from == nullptr) return;
-    //Copy the properties of 'from' only if they were explicitly set (not the default ones).
+    if (from == nullptr)
+        return;
+    // Copy the properties of 'from' only if they were explicitly set (not the default ones).
     if ((from->curColorSet && !(to->flags & SvgStyleFlags::Color)) ||
         _isImportanceApplicable(to->flagsImportance, from->flagsImportance, SvgStyleFlags::Color)) {
         to->color = from->color;
@@ -68,14 +70,15 @@ static void _copyStyle(SvgStyleProperty* to, const SvgStyleProperty* from)
             to->flagsImportance = (to->flagsImportance | SvgStyleFlags::Display);
         }
     }
-    //Fill
+    // Fill
     if (((from->fill.flags & SvgFillFlags::Paint) && !(to->flags & SvgStyleFlags::Fill)) ||
         _isImportanceApplicable(to->flagsImportance, from->flagsImportance, SvgStyleFlags::Fill)) {
         to->fill.paint.color = from->fill.paint.color;
         to->fill.paint.none = from->fill.paint.none;
         to->fill.paint.curColor = from->fill.paint.curColor;
         if (from->fill.paint.url) {
-            if (to->fill.paint.url) free(to->fill.paint.url);
+            if (to->fill.paint.url)
+                free(to->fill.paint.url);
             to->fill.paint.url = strdup(from->fill.paint.url);
         }
         to->fill.flags = (to->fill.flags | SvgFillFlags::Paint);
@@ -102,14 +105,15 @@ static void _copyStyle(SvgStyleProperty* to, const SvgStyleProperty* from)
             to->flagsImportance = (to->flagsImportance | SvgStyleFlags::FillRule);
         }
     }
-    //Stroke
+    // Stroke
     if (((from->stroke.flags & SvgStrokeFlags::Paint) && !(to->flags & SvgStyleFlags::Stroke)) ||
         _isImportanceApplicable(to->flagsImportance, from->flagsImportance, SvgStyleFlags::Stroke)) {
         to->stroke.paint.color = from->stroke.paint.color;
         to->stroke.paint.none = from->stroke.paint.none;
         to->stroke.paint.curColor = from->stroke.paint.curColor;
         if (from->stroke.paint.url) {
-            if (to->stroke.paint.url) free(to->stroke.paint.url);
+            if (to->stroke.paint.url)
+                free(to->stroke.paint.url);
             to->stroke.paint.url = strdup(from->stroke.paint.url);
         }
         to->stroke.flags = (to->stroke.flags | SvgStrokeFlags::Paint);
@@ -169,8 +173,8 @@ static void _copyStyle(SvgStyleProperty* to, const SvgStyleProperty* from)
             to->flagsImportance = (to->flagsImportance | SvgStyleFlags::StrokeLineJoin);
         }
     }
-    //Opacity
-    //TODO: it can be set to be 255 and shouldn't be changed by attribute 'opacity'
+    // Opacity
+    // TODO: it can be set to be 255 and shouldn't be changed by attribute 'opacity'
     if ((from->opacity < 255 && !(to->flags & SvgStyleFlags::Opacity)) ||
         _isImportanceApplicable(to->flagsImportance, from->flagsImportance, SvgStyleFlags::Opacity)) {
         to->opacity = from->opacity;
@@ -181,64 +185,66 @@ static void _copyStyle(SvgStyleProperty* to, const SvgStyleProperty* from)
     }
 }
 
-
 /************************************************************************/
 /* External Class Implementation                                        */
 /************************************************************************/
 
-void cssCopyStyleAttr(SvgNode* to, const SvgNode* from)
+void cssCopyStyleAttr(SvgNode *to, const SvgNode *from)
 {
-    //Copy matrix attribute
+    // Copy matrix attribute
     if (from->transform && !(to->style->flags & SvgStyleFlags::Transform)) {
-        to->transform = (Matrix*)malloc(sizeof(Matrix));
+        to->transform = (Matrix *)malloc(sizeof(Matrix));
         if (to->transform) {
             *to->transform = *from->transform;
             to->style->flags = (to->style->flags | SvgStyleFlags::Transform);
         }
     }
-    //Copy style attribute
+    // Copy style attribute
     _copyStyle(to->style, from->style);
 
     if (from->style->clipPath.url) {
-        if (to->style->clipPath.url) free(to->style->clipPath.url);
+        if (to->style->clipPath.url)
+            free(to->style->clipPath.url);
         to->style->clipPath.url = strdup(from->style->clipPath.url);
     }
     if (from->style->mask.url) {
-        if (to->style->mask.url) free(to->style->mask.url);
+        if (to->style->mask.url)
+            free(to->style->mask.url);
         to->style->mask.url = strdup(from->style->mask.url);
     }
 }
 
-
-SvgNode* cssFindStyleNode(const SvgNode* style, const char* title, SvgNodeType type)
+SvgNode *cssFindStyleNode(const SvgNode *style, const char *title, SvgNodeType type)
 {
-    if (!style) return nullptr;
+    if (!style)
+        return nullptr;
 
     auto child = style->child.data;
     for (uint32_t i = 0; i < style->child.count; ++i, ++child) {
         if ((*child)->type == type) {
-            if ((!title && !(*child)->id) || (title && (*child)->id && !strcmp((*child)->id, title))) return (*child);
+            if ((!title && !(*child)->id) || (title && (*child)->id && !strcmp((*child)->id, title)))
+                return (*child);
         }
     }
     return nullptr;
 }
 
-
-SvgNode* cssFindStyleNode(const SvgNode* style, const char* title)
+SvgNode *cssFindStyleNode(const SvgNode *style, const char *title)
 {
-    if (!style || !title) return nullptr;
+    if (!style || !title)
+        return nullptr;
 
     auto child = style->child.data;
     for (uint32_t i = 0; i < style->child.count; ++i, ++child) {
         if ((*child)->type == SvgNodeType::CssStyle) {
-            if ((*child)->id && !strcmp((*child)->id, title)) return (*child);
+            if ((*child)->id && !strcmp((*child)->id, title))
+                return (*child);
         }
     }
     return nullptr;
 }
 
-
-void cssUpdateStyle(SvgNode* doc, SvgNode* style)
+void cssUpdateStyle(SvgNode *doc, SvgNode *style)
 {
     if (doc->child.count > 0) {
         auto child = doc->child.data;
@@ -251,13 +257,12 @@ void cssUpdateStyle(SvgNode* doc, SvgNode* style)
     }
 }
 
-
-void cssApplyStyleToPostponeds(Array<SvgNodeIdPair>& postponeds, SvgNode* style)
+void cssApplyStyleToPostponeds(Array<SvgNodeIdPair> &postponeds, SvgNode *style)
 {
     for (uint32_t i = 0; i < postponeds.count; ++i) {
         auto nodeIdPair = postponeds[i];
 
-        //css styling: tag.name has higher priority than .name
+        // css styling: tag.name has higher priority than .name
         if (auto cssNode = cssFindStyleNode(style, nodeIdPair.id, nodeIdPair.node->type)) {
             cssCopyStyleAttr(nodeIdPair.node, cssNode);
         }
@@ -268,4 +273,3 @@ void cssApplyStyleToPostponeds(Array<SvgNodeIdPair>& postponeds, SvgNode* style)
 }
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

@@ -28,42 +28,45 @@
 #include "tvgTaskScheduler.h"
 
 #ifdef THORVG_THREAD_SUPPORT
-    #include <thread>
-    #include <atomic>
+#include <thread>
+#include <atomic>
 #endif
 
 /************************************************************************/
 /* Internal Class Implementation                                        */
 /************************************************************************/
 
-namespace tvg {
+namespace tvg
+{
 
 struct TaskSchedulerImpl;
-static TaskSchedulerImpl* inst = nullptr;
+static TaskSchedulerImpl *inst = nullptr;
 
 #ifdef THORVG_THREAD_SUPPORT
 
 static thread_local bool _async = true;
 
 struct TaskQueue {
-    Inlist<Task>             taskDeque;
-    mutex                    mtx;
-    condition_variable       ready;
-    bool                     done = false;
+    Inlist<Task> taskDeque;
+    mutex mtx;
+    condition_variable ready;
+    bool done = false;
 
-    bool tryPop(Task** task)
+    bool tryPop(Task **task)
     {
         unique_lock<mutex> lock{mtx, try_to_lock};
-        if (!lock || taskDeque.empty()) return false;
+        if (!lock || taskDeque.empty())
+            return false;
         *task = taskDeque.front();
         return true;
     }
 
-    bool tryPush(Task* task)
+    bool tryPush(Task *task)
     {
         {
             unique_lock<mutex> lock{mtx, try_to_lock};
-            if (!lock) return false;
+            if (!lock)
+                return false;
             taskDeque.back(task);
         }
         ready.notify_one();
@@ -79,7 +82,7 @@ struct TaskQueue {
         ready.notify_all();
     }
 
-    bool pop(Task** task)
+    bool pop(Task **task)
     {
         unique_lock<mutex> lock{mtx};
 
@@ -87,13 +90,14 @@ struct TaskQueue {
             ready.wait(lock);
         }
 
-        if (taskDeque.empty()) return false;
+        if (taskDeque.empty())
+            return false;
 
         *task = taskDeque.front();
         return true;
     }
 
-    void push(Task* task)
+    void push(Task *task)
     {
         {
             lock_guard<mutex> lock{mtx};
@@ -103,12 +107,10 @@ struct TaskQueue {
     }
 };
 
-
-struct TaskSchedulerImpl
-{
-    Array<thread*>                 threads;
-    Array<TaskQueue*>              taskQueues;
-    atomic<uint32_t>               idx{0};
+struct TaskSchedulerImpl {
+    Array<thread *> threads;
+    Array<TaskQueue *> taskQueues;
+    atomic<uint32_t> idx{0};
 
     TaskSchedulerImpl(uint32_t threadCnt)
     {
@@ -131,18 +133,18 @@ struct TaskSchedulerImpl
         }
         for (auto thread = threads.begin(); thread < threads.end(); ++thread) {
             (*thread)->join();
-            delete(*thread);
+            delete (*thread);
         }
         for (auto tq = taskQueues.begin(); tq < taskQueues.end(); ++tq) {
-            delete(*tq);
+            delete (*tq);
         }
     }
 
     void run(unsigned i)
     {
-        Task* task;
+        Task *task;
 
-        //Thread Loop
+        // Thread Loop
         while (true) {
             auto success = false;
             for (uint32_t x = 0; x < threads.count * 2; ++x) {
@@ -152,47 +154,45 @@ struct TaskSchedulerImpl
                 }
             }
 
-            if (!success && !taskQueues[i]->pop(&task)) break;
+            if (!success && !taskQueues[i]->pop(&task))
+                break;
             (*task)(i + 1);
         }
     }
 
-    void request(Task* task)
+    void request(Task *task)
     {
-        //Async
+        // Async
         if (threads.count > 0 && _async) {
             task->prepare();
             auto i = idx++;
             for (uint32_t n = 0; n < threads.count; ++n) {
-                if (taskQueues[(i + n) % threads.count]->tryPush(task)) return;
+                if (taskQueues[(i + n) % threads.count]->tryPush(task))
+                    return;
             }
             taskQueues[i % threads.count]->push(task);
-        //Sync
+            // Sync
         } else {
             task->run(0);
         }
     }
 
-    uint32_t threadCnt()
-    {
-        return threads.count;
-    }
+    uint32_t threadCnt() { return threads.count; }
 };
 
-#else //THORVG_THREAD_SUPPORT
+#else // THORVG_THREAD_SUPPORT
 
 static bool _async = true;
 
-struct TaskSchedulerImpl
-{
+struct TaskSchedulerImpl {
     TaskSchedulerImpl(TVG_UNUSED uint32_t threadCnt) {}
-    void request(Task* task) { task->run(0); }
+    void request(Task *task) { task->run(0); }
     uint32_t threadCnt() { return 0; }
 };
 
-#endif //THORVG_THREAD_SUPPORT
+#endif // THORVG_THREAD_SUPPORT
 
-} //namespace
+} // namespace tvg
 
 /************************************************************************/
 /* External Class Implementation                                        */
@@ -200,36 +200,34 @@ struct TaskSchedulerImpl
 
 void TaskScheduler::init(uint32_t threads)
 {
-    if (inst) return;
+    if (inst)
+        return;
     inst = new TaskSchedulerImpl(threads);
 }
 
-
 void TaskScheduler::term()
 {
-    delete(inst);
+    delete (inst);
     inst = nullptr;
 }
 
-
-void TaskScheduler::request(Task* task)
+void TaskScheduler::request(Task *task)
 {
-    if (inst) inst->request(task);
+    if (inst)
+        inst->request(task);
 }
-
 
 uint32_t TaskScheduler::threads()
 {
-    if (inst) return inst->threadCnt();
+    if (inst)
+        return inst->threadCnt();
     return 0;
 }
 
-
 void TaskScheduler::async(bool on)
 {
-    //toggle async tasking for each thread on/off
+    // toggle async tasking for each thread on/off
     _async = on;
 }
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

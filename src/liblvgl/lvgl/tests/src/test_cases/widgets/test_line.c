@@ -4,8 +4,8 @@
 
 #include "unity/unity.h"
 
-static lv_obj_t * active_screen = NULL;
-static lv_obj_t * line = NULL;
+static lv_obj_t *active_screen = NULL;
+static lv_obj_t *line = NULL;
 
 static const uint16_t default_point_num = 0U;
 static const int32_t initial_extra_draw_size = 5U;
@@ -41,8 +41,8 @@ void test_line_should_return_valid_y_invert(void)
 
 void test_line_size_should_be_updated_after_adding_points(void)
 {
-    static lv_point_precise_t points[] = { {5, 5} };
-    uint16_t point_cnt = (uint16_t) sizeof(points) / sizeof(lv_point_precise_t);
+    static lv_point_precise_t points[] = {{5, 5}};
+    uint16_t point_cnt = (uint16_t)sizeof(points) / sizeof(lv_point_precise_t);
     lv_line_set_points(line, points, point_cnt);
 
     int32_t calculated_width = 0;
@@ -50,7 +50,7 @@ void test_line_size_should_be_updated_after_adding_points(void)
 
     /* Get the biggest coordinate on both axis */
     uint16_t point_idx = 0;
-    for(point_idx = 0; point_idx < point_cnt; point_idx++) {
+    for (point_idx = 0; point_idx < point_cnt; point_idx++) {
         calculated_width = (int32_t)LV_MAX(points[point_idx].x, calculated_width);
         calculated_height = (int32_t)LV_MAX(points[point_idx].y, calculated_height);
     }
@@ -59,11 +59,11 @@ void test_line_size_should_be_updated_after_adding_points(void)
     TEST_ASSERT_EQUAL_UINT16(calculated_height, lv_obj_get_self_height(line));
 }
 
-static void line_event_cb(lv_event_t * e)
+static void line_event_cb(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
 
-    if(code == LV_EVENT_REFR_EXT_DRAW_SIZE) {
+    if (code == LV_EVENT_REFR_EXT_DRAW_SIZE) {
         /* Set the new line extra draw size */
         lv_event_set_ext_draw_size(e, initial_extra_draw_size);
     }
@@ -90,13 +90,13 @@ void test_line_should_update_extra_draw_size_based_on_style(void)
 
 void test_line_basic_render(void)
 {
-    static lv_point_precise_t points[] = { {5, 5},
-        {100, 5},    /*Horizontal*/
-        {100, 100},  /*Vertical*/
-        {120, 5},    /*Steep*/
-        {200, 20},   /*Flat*/
+    static lv_point_precise_t points[] = {
+        {5, 5},     {100, 5}, /*Horizontal*/
+        {100, 100},           /*Vertical*/
+        {120, 5},             /*Steep*/
+        {200, 20},            /*Flat*/
     };
-    uint16_t point_cnt = (uint16_t) sizeof(points) / sizeof(lv_point_precise_t);
+    uint16_t point_cnt = (uint16_t)sizeof(points) / sizeof(lv_point_precise_t);
     lv_line_set_points(line, points, point_cnt);
     lv_obj_set_pos(line, 10, 10);
 
@@ -112,10 +112,10 @@ void test_line_basic_render(void)
 
 void test_line_dash_gap(void)
 {
-    static lv_point_precise_t line_points1[3] = { {50, 50}, {250, 50}, {250, 250} };
-    static lv_point_precise_t line_points2[3] = { {50, 250}, {50, 50}, {250, 50} };
+    static lv_point_precise_t line_points1[3] = {{50, 50}, {250, 50}, {250, 250}};
+    static lv_point_precise_t line_points2[3] = {{50, 250}, {50, 50}, {250, 50}};
 
-    lv_obj_t * line1;
+    lv_obj_t *line1;
     line1 = lv_line_create(lv_screen_active());
     lv_line_set_points(line1, line_points1, 3);
     lv_obj_set_style_line_width(line1, 1, LV_PART_MAIN);
@@ -124,7 +124,7 @@ void test_line_dash_gap(void)
 
     lv_obj_align(line1, LV_ALIGN_LEFT_MID, 0, 0);
 
-    lv_obj_t * line2;
+    lv_obj_t *line2;
     line2 = lv_line_create(lv_screen_active());
     lv_line_set_points(line2, line_points2, 3);
     lv_obj_set_style_line_width(line2, 2, LV_PART_MAIN);
@@ -133,7 +133,7 @@ void test_line_dash_gap(void)
 
     lv_obj_center(line2);
 
-    lv_obj_t * line3;
+    lv_obj_t *line3;
     line3 = lv_line_create(lv_screen_active());
     lv_line_set_points(line3, line_points2, 3);
     lv_obj_set_style_line_width(line3, 5, LV_PART_MAIN);

@@ -7,7 +7,7 @@
 #if LV_USE_QRCODE
 #include <string.h>
 
-static lv_obj_t * active_screen = NULL;
+static lv_obj_t *active_screen = NULL;
 
 void setUp(void)
 {
@@ -24,14 +24,14 @@ void test_barcode_normal(void)
     lv_color_t bg_color = lv_palette_lighten(LV_PALETTE_LIGHT_BLUE, 5);
     lv_color_t fg_color = lv_palette_darken(LV_PALETTE_BLUE, 4);
 
-    lv_obj_t * qr = lv_qrcode_create(active_screen);
+    lv_obj_t *qr = lv_qrcode_create(active_screen);
     TEST_ASSERT_NOT_NULL(qr);
     lv_qrcode_set_size(qr, 150);
     lv_qrcode_set_dark_color(qr, fg_color);
     lv_qrcode_set_light_color(qr, bg_color);
 
     /*Set data*/
-    const char * data = "https://lvgl.io";
+    const char *data = "https://lvgl.io";
     lv_result_t res = lv_qrcode_update(qr, data, strlen(data));
     TEST_ASSERT_EQUAL(res, LV_RESULT_OK);
     lv_obj_center(qr);
@@ -44,17 +44,11 @@ void test_barcode_normal(void)
 
 #else
 
-void setUp(void)
-{
-}
+void setUp(void) {}
 
-void tearDown(void)
-{
-}
+void tearDown(void) {}
 
-void test_barcode_normal(void)
-{
-}
+void test_barcode_normal(void) {}
 
 #endif
 

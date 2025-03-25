@@ -30,25 +30,17 @@
 
 struct LottieComposition;
 
-struct LottieBuilder
-{
-    LottieExpressions* exps = nullptr;
+struct LottieBuilder {
+    LottieExpressions *exps = nullptr;
 
-    LottieBuilder()
-    {
-        exps = LottieExpressions::instance();
-    }
+    LottieBuilder() { exps = LottieExpressions::instance(); }
 
-    ~LottieBuilder()
-    {
-        LottieExpressions::retrieve(exps);
-    }
+    ~LottieBuilder() { LottieExpressions::retrieve(exps); }
 
-    bool update(LottieComposition* comp, float progress);
-    void build(LottieComposition* comp);
+    bool update(LottieComposition *comp, float progress);
+    void build(LottieComposition *comp);
 };
 
 #endif //_TVG_LOTTIE_BUILDER_H
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

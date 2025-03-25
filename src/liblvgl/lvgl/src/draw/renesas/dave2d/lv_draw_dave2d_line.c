@@ -1,11 +1,11 @@
 #include "lv_draw_dave2d.h"
 #if LV_USE_DRAW_DAVE2D
 
-void lv_draw_dave2d_line(lv_draw_dave2d_unit_t * u, const lv_draw_line_dsc_t * dsc)
+void lv_draw_dave2d_line(lv_draw_dave2d_unit_t *u, const lv_draw_line_dsc_t *dsc)
 {
 
     lv_area_t clip_line;
-    d2_u32     mode;
+    d2_u32 mode;
     lv_area_t buffer_area;
     lv_value_precise_t p1_x;
     lv_value_precise_t p1_y;
@@ -21,10 +21,11 @@ void lv_draw_dave2d_line(lv_draw_dave2d_unit_t * u, const lv_draw_line_dsc_t * d
 
     bool is_common;
     is_common = lv_area_intersect(&clip_line, &clip_line, u->base_unit.clip_area);
-    if(!is_common) return;
+    if (!is_common)
+        return;
 
 #if LV_USE_OS
-    lv_result_t  status;
+    lv_result_t status;
     status = lv_mutex_lock(u->pd2Mutex);
     LV_ASSERT(LV_RESULT_OK == status);
 #endif
@@ -43,7 +44,7 @@ void lv_draw_dave2d_line(lv_draw_dave2d_unit_t * u, const lv_draw_line_dsc_t * d
 
     bool dashed = dsc->dash_gap && dsc->dash_width;
 
-    if(dashed) {
+    if (dashed) {
         /* TODO */
         LV_ASSERT(0);
     }
@@ -62,17 +63,16 @@ void lv_draw_dave2d_line(lv_draw_dave2d_unit_t * u, const lv_draw_line_dsc_t * d
 
     d2_cliprect(u->d2_handle, clip_line.x1, clip_line.y1, clip_line.x2, clip_line.y2);
 
-    if((dsc->round_end == 1) || (dsc->round_start == 1)) {
+    if ((dsc->round_end == 1) || (dsc->round_start == 1)) {
         mode = d2_lc_round;
-    }
-    else {
+    } else {
         mode = d2_lc_butt; // lines end directly at endpoints
     }
 
     d2_setlinecap(u->d2_handle, mode);
 
-    d2_renderline(u->d2_handle, D2_FIX4(p1_x), D2_FIX4(p1_y), D2_FIX4(p2_x),
-                  D2_FIX4(p2_y), D2_FIX4(dsc->width), d2_le_exclude_none);
+    d2_renderline(u->d2_handle, D2_FIX4(p1_x), D2_FIX4(p1_y), D2_FIX4(p2_x), D2_FIX4(p2_y), D2_FIX4(dsc->width),
+                  d2_le_exclude_none);
 
     //
     // Execute render operations

@@ -360,7 +360,7 @@ FT_BEGIN_HEADER
  *   the `FT_CONFIG_OPTION_MAC_FONTS` option.
  */
 #ifdef FT_CONFIG_OPTION_MAC_FONTS
-    #define FT_CONFIG_OPTION_GUESSING_EMBEDDED_RFORK
+#define FT_CONFIG_OPTION_GUESSING_EMBEDDED_RFORK
 #endif
 
 /**************************************************************************
@@ -378,7 +378,7 @@ FT_BEGIN_HEADER
  * The size in bytes of the render pool used by the scan-line converter to
  * do all of its work.
  */
-#define FT_RENDER_POOL_SIZE  16384L
+#define FT_RENDER_POOL_SIZE 16384L
 
 /**************************************************************************
  *
@@ -387,7 +387,7 @@ FT_BEGIN_HEADER
  *   The maximum number of modules that can be registered in a single
  *   FreeType library object.  32~is the default.
  */
-#define FT_MAX_MODULES  32
+#define FT_MAX_MODULES 32
 
 /**************************************************************************
  *
@@ -667,7 +667,7 @@ FT_BEGIN_HEADER
  * https://www.microsoft.com/typography/cleartype/truetypecleartype.aspx
  */
 /* #define TT_CONFIG_OPTION_SUBPIXEL_HINTING  1         */
-#define TT_CONFIG_OPTION_SUBPIXEL_HINTING  2
+#define TT_CONFIG_OPTION_SUBPIXEL_HINTING 2
 /* #define TT_CONFIG_OPTION_SUBPIXEL_HINTING  ( 1 | 2 ) */
 
 /**************************************************************************
@@ -718,7 +718,7 @@ FT_BEGIN_HEADER
  * line.
  */
 #ifndef TT_CONFIG_OPTION_MAX_RUNNABLE_OPCODES
-    #define TT_CONFIG_OPTION_MAX_RUNNABLE_OPCODES  1000000L
+#define TT_CONFIG_OPTION_MAX_RUNNABLE_OPCODES 1000000L
 #endif
 
 /*************************************************************************/
@@ -734,14 +734,14 @@ FT_BEGIN_HEADER
  * `T1_MAX_DICT_DEPTH` is the maximum depth of nest dictionaries and arrays
  * in the Type~1 stream (see `t1load.c`).  A minimum of~4 is required.
  */
-#define T1_MAX_DICT_DEPTH  5
+#define T1_MAX_DICT_DEPTH 5
 
 /**************************************************************************
  *
  * `T1_MAX_SUBRS_CALLS` details the maximum number of nested sub-routine
  * calls during glyph loading.
  */
-#define T1_MAX_SUBRS_CALLS  16
+#define T1_MAX_SUBRS_CALLS 16
 
 /**************************************************************************
  *
@@ -751,7 +751,7 @@ FT_BEGIN_HEADER
  * The Chinese font 'MingTiEG-Medium' (covering the CNS 11643 character
  * set) needs 256.
  */
-#define T1_MAX_CHARSTRINGS_OPERANDS  256
+#define T1_MAX_CHARSTRINGS_OPERANDS 256
 
 /**************************************************************************
  *
@@ -796,17 +796,17 @@ FT_BEGIN_HEADER
  *
  * Do **not** undefine these macros!
  */
-#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1   500
-#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1   400
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1 500
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1 400
 
-#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2  1000
-#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y2   275
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2 1000
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y2 275
 
-#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3  1667
-#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y3   275
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3 1667
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y3 275
 
-#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X4  2333
-#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y4     0
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_X4 2333
+#define CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y4 0
 
 /**************************************************************************
  *
@@ -864,7 +864,7 @@ FT_BEGIN_HEADER
  * (yet) handle.  Currently, this needs option `AF_CONFIG_OPTION_CJK`.
  */
 #ifdef AF_CONFIG_OPTION_CJK
-    #define AF_CONFIG_OPTION_INDIC
+#define AF_CONFIG_OPTION_INDIC
 #endif
 
 /**************************************************************************
@@ -902,17 +902,17 @@ FT_BEGIN_HEADER
  * requested by the definitions above.  Don't change this.
  */
 #ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
-    #define  TT_USE_BYTECODE_INTERPRETER
+#define TT_USE_BYTECODE_INTERPRETER
 
-    #ifdef TT_CONFIG_OPTION_SUBPIXEL_HINTING
-        #if TT_CONFIG_OPTION_SUBPIXEL_HINTING & 1
-            #define  TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
-        #endif
+#ifdef TT_CONFIG_OPTION_SUBPIXEL_HINTING
+#if TT_CONFIG_OPTION_SUBPIXEL_HINTING & 1
+#define TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
+#endif
 
-        #if TT_CONFIG_OPTION_SUBPIXEL_HINTING & 2
-            #define  TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL
-        #endif
-    #endif
+#if TT_CONFIG_OPTION_SUBPIXEL_HINTING & 2
+#define TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL
+#endif
+#endif
 #endif
 
 /*
@@ -926,35 +926,26 @@ FT_BEGIN_HEADER
  * to test for availability.
  */
 #ifdef TT_CONFIG_OPTION_COLOR_LAYERS
-    #define  TT_SUPPORT_COLRV1
+#define TT_SUPPORT_COLRV1
 #endif
 
 /*
  * Check CFF darkening parameters.  The checks are the same as in function
  * `cff_property_set` in file `cffdrivr.c`.
  */
-#if CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1 < 0   || \
-    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2 < 0   || \
-    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3 < 0   || \
-    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X4 < 0   || \
-    \
-    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1 < 0   || \
-    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y2 < 0   || \
-    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y3 < 0   || \
-    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y4 < 0   || \
-    \
-    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1 >        \
-    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2     || \
-    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2 >        \
-    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3     || \
-    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3 >        \
-    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X4     || \
-    \
-    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1 > 500 || \
-    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y2 > 500 || \
-    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y3 > 500 || \
-    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y4 > 500
-    #error "Invalid CFF darkening parameters!"
+#if CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1 < 0 || CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2 < 0 ||                    \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3 < 0 || CFF_CONFIG_OPTION_DARKENING_PARAMETER_X4 < 0 ||                    \
+                                                                                                                       \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1 < 0 || CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y2 < 0 ||                    \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y3 < 0 || CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y4 < 0 ||                    \
+                                                                                                                       \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X1 > CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2 ||                             \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X2 > CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3 ||                             \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_X3 > CFF_CONFIG_OPTION_DARKENING_PARAMETER_X4 ||                             \
+                                                                                                                       \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y1 > 500 || CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y2 > 500 ||                \
+    CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y3 > 500 || CFF_CONFIG_OPTION_DARKENING_PARAMETER_Y4 > 500
+#error "Invalid CFF darkening parameters!"
 #endif
 
 FT_END_HEADER

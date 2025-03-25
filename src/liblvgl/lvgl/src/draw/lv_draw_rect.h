@@ -22,7 +22,7 @@ extern "C" {
 /*********************
  *      DEFINES
  *********************/
-#define LV_RADIUS_CIRCLE        0x7FFF /**< A very big radius to always draw as circle*/
+#define LV_RADIUS_CIRCLE 0x7FFF /**< A very big radius to always draw as circle*/
 LV_EXPORT_CONST_INT(LV_RADIUS_CIRCLE);
 
 /**********************
@@ -36,12 +36,12 @@ typedef struct {
 
     /*Background*/
     lv_opa_t bg_opa;
-    lv_color_t bg_color;        /**< First element of a gradient is a color, so it maps well here*/
+    lv_color_t bg_color; /**< First element of a gradient is a color, so it maps well here*/
     lv_grad_dsc_t bg_grad;
 
     /*Background img*/
-    const void * bg_image_src;
-    const void * bg_image_symbol_font;
+    const void *bg_image_src;
+    const void *bg_image_symbol_font;
     lv_color_t bg_image_recolor;
     lv_opa_t bg_image_opa;
     lv_opa_t bg_image_recolor_opa;
@@ -102,7 +102,7 @@ typedef struct {
     int32_t ofs_x;
     int32_t ofs_y;
     lv_opa_t opa;
-    uint8_t bg_cover    : 1;
+    uint8_t bg_cover : 1;
 } lv_draw_box_shadow_dsc_t;
 
 /**********************
@@ -113,46 +113,46 @@ typedef struct {
  * Initialize a rectangle draw descriptor.
  * @param dsc       pointer to a draw descriptor
  */
-void /* LV_ATTRIBUTE_FAST_MEM */ lv_draw_rect_dsc_init(lv_draw_rect_dsc_t * dsc);
+void /* LV_ATTRIBUTE_FAST_MEM */ lv_draw_rect_dsc_init(lv_draw_rect_dsc_t *dsc);
 
 /**
  * Initialize a fill draw descriptor.
  * @param dsc       pointer to a draw descriptor
  */
-void lv_draw_fill_dsc_init(lv_draw_fill_dsc_t * dsc);
+void lv_draw_fill_dsc_init(lv_draw_fill_dsc_t *dsc);
 
 /**
  * Try to get a fill draw descriptor from a draw task.
  * @param task      draw task
  * @return          the task's draw descriptor or NULL if the task is not of type LV_DRAW_TASK_TYPE_FILL
  */
-lv_draw_fill_dsc_t * lv_draw_task_get_fill_dsc(lv_draw_task_t * task);
+lv_draw_fill_dsc_t *lv_draw_task_get_fill_dsc(lv_draw_task_t *task);
 
 /**
  * Initialize a border draw descriptor.
  * @param dsc       pointer to a draw descriptor
  */
-void lv_draw_border_dsc_init(lv_draw_border_dsc_t * dsc);
+void lv_draw_border_dsc_init(lv_draw_border_dsc_t *dsc);
 
 /**
  * Try to get a border draw descriptor from a draw task.
  * @param task      draw task
  * @return          the task's draw descriptor or NULL if the task is not of type LV_DRAW_TASK_TYPE_BORDER
  */
-lv_draw_border_dsc_t * lv_draw_task_get_border_dsc(lv_draw_task_t * task);
+lv_draw_border_dsc_t *lv_draw_task_get_border_dsc(lv_draw_task_t *task);
 
 /**
  * Initialize a box shadow draw descriptor.
  * @param dsc       pointer to a draw descriptor
  */
-void lv_draw_box_shadow_dsc_init(lv_draw_box_shadow_dsc_t * dsc);
+void lv_draw_box_shadow_dsc_init(lv_draw_box_shadow_dsc_t *dsc);
 
 /**
  * Try to get a box shadow draw descriptor from a draw task.
  * @param task      draw task
  * @return          the task's draw descriptor or NULL if the task is not of type LV_DRAW_TASK_TYPE_BOX_SHADOW
  */
-lv_draw_box_shadow_dsc_t * lv_draw_task_get_box_shadow_dsc(lv_draw_task_t * task);
+lv_draw_box_shadow_dsc_t *lv_draw_task_get_box_shadow_dsc(lv_draw_task_t *task);
 
 /**
  * The rectangle is a wrapper for fill, border, bg. image and box shadow.
@@ -161,7 +161,7 @@ lv_draw_box_shadow_dsc_t * lv_draw_task_get_box_shadow_dsc(lv_draw_task_t * task
  * @param dsc           pointer to an initialized draw descriptor variable
  * @param coords        the coordinates of the rectangle
  */
-void lv_draw_rect(lv_layer_t * layer, const lv_draw_rect_dsc_t * dsc, const lv_area_t * coords);
+void lv_draw_rect(lv_layer_t *layer, const lv_draw_rect_dsc_t *dsc, const lv_area_t *coords);
 
 /**********************
  *      MACROS

@@ -5,7 +5,7 @@
 #include "unity/unity.h"
 #include <unistd.h>
 
-static void obj_set_height_helper(void * obj, int32_t height)
+static void obj_set_height_helper(void *obj, int32_t height)
 {
     lv_obj_set_height((lv_obj_t *)obj, (int32_t)height);
 }
@@ -13,7 +13,7 @@ static void obj_set_height_helper(void * obj, int32_t height)
 void test_gradient_vertical_misalignment(void)
 {
     /* Tests gradient caching as the height of widget changes.*/
-    lv_obj_t * obj = lv_obj_create(lv_screen_active());
+    lv_obj_t *obj = lv_obj_create(lv_screen_active());
     lv_obj_set_style_bg_grad_dir(obj, LV_GRAD_DIR_VER, 0);
     lv_obj_set_style_bg_grad_color(obj, lv_color_hex(0xff0000), 0);
     lv_obj_set_style_bg_color(obj, lv_color_hex(0x00ff00), 0);
@@ -35,7 +35,7 @@ void test_gradient_vertical_misalignment(void)
     lv_anim_start(&a);
 
     uint32_t i;
-    for(i = 0; i < 100; i++) {
+    for (i = 0; i < 100; i++) {
         lv_timer_handler();
         lv_tick_inc(73); /*Use a not round number to cover more anim states */
         usleep(1000);
@@ -47,17 +47,17 @@ void test_custom_prop_ids(void)
     uint8_t fake_flag = 0;
     uint32_t initial_custom_props = lv_style_get_num_custom_props();
     uint32_t max_props_to_register = 64;
-    for(uint32_t i = 0; i < max_props_to_register; i++) {
+    for (uint32_t i = 0; i < max_props_to_register; i++) {
         lv_style_prop_t prop = lv_style_register_prop(fake_flag);
         /* Should have a higher index than the last built-in prop */
         TEST_ASSERT_GREATER_THAN(LV_STYLE_LAST_BUILT_IN_PROP, prop);
-        if(i == 0) {
+        if (i == 0) {
             /* Should be equal to the first expected index of a custom prop */
             TEST_ASSERT_EQUAL(LV_STYLE_NUM_BUILT_IN_PROPS + initial_custom_props, prop);
         }
         /*We should find our flags*/
         TEST_ASSERT_EQUAL(fake_flag, lv_style_prop_lookup_flags(prop));
-        if(fake_flag == 0xff)
+        if (fake_flag == 0xff)
             fake_flag = 0;
         else
             fake_flag++;
@@ -71,17 +71,14 @@ void test_custom_prop_ids(void)
     TEST_ASSERT_EQUAL(LV_GLOBAL_DEFAULT()->style_custom_table_size, 64);
 }
 
-const lv_style_const_prop_t const_style_props[] = {
-    LV_STYLE_CONST_WIDTH(51),
-    LV_STYLE_CONST_HEIGHT(50),
-    LV_STYLE_CONST_PROPS_END
-};
+const lv_style_const_prop_t const_style_props[] = {LV_STYLE_CONST_WIDTH(51), LV_STYLE_CONST_HEIGHT(50),
+                                                   LV_STYLE_CONST_PROPS_END};
 
 LV_STYLE_CONST_INIT(const_style, const_style_props);
 
 void test_const_style(void)
 {
-    lv_obj_t * obj = lv_obj_create(lv_screen_active());
+    lv_obj_t *obj = lv_obj_create(lv_screen_active());
     lv_obj_add_style(obj, &const_style, LV_PART_MAIN);
     TEST_ASSERT_EQUAL(51, lv_obj_get_style_width(obj, LV_PART_MAIN));
     TEST_ASSERT_EQUAL(50, lv_obj_get_style_height(obj, LV_PART_MAIN));
@@ -100,7 +97,7 @@ void test_style_replacement(void)
     lv_style_set_bg_color(&style_blue, lv_color_hex(0x0000ff));
 
     /*Create object with style*/
-    lv_obj_t * obj = lv_obj_create(lv_screen_active());
+    lv_obj_t *obj = lv_obj_create(lv_screen_active());
     lv_obj_add_style(obj, &style_red, LV_PART_MAIN);
     TEST_ASSERT_EQUAL_COLOR(lv_color_hex(0xff0000), lv_obj_get_style_bg_color(obj, LV_PART_MAIN));
 
@@ -125,7 +122,7 @@ void test_style_has_prop(void)
     lv_style_set_outline_color(&style, lv_color_white());
 
     /*Create object with style*/
-    lv_obj_t * obj = lv_obj_create(lv_screen_active());
+    lv_obj_t *obj = lv_obj_create(lv_screen_active());
 
     TEST_ASSERT_EQUAL(false, lv_obj_has_style_prop(obj, LV_PART_MAIN, LV_STYLE_OUTLINE_COLOR));
     TEST_ASSERT_EQUAL(false, lv_obj_has_style_prop(obj, LV_PART_MAIN, LV_STYLE_OUTLINE_WIDTH));

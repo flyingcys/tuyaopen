@@ -44,7 +44,7 @@ extern "C" {
  * @param disp      create the sys. mon. on this display's system layer
  * @return          the create label
  */
-lv_obj_t * lv_sysmon_create(lv_display_t * disp);
+lv_obj_t *lv_sysmon_create(lv_display_t *disp);
 
 #if LV_USE_PERF_MONITOR
 
@@ -52,13 +52,13 @@ lv_obj_t * lv_sysmon_create(lv_display_t * disp);
  * Show system performance monitor: CPU usage and FPS count
  * @param disp      target display, NULL: use the default displays
  */
-void lv_sysmon_show_performance(lv_display_t * disp);
+void lv_sysmon_show_performance(lv_display_t *disp);
 
 /**
  * Hide system performance monitor
  * @param disp      target display, NULL: use the default
  */
-void lv_sysmon_hide_performance(lv_display_t * disp);
+void lv_sysmon_hide_performance(lv_display_t *disp);
 
 #endif /*LV_USE_PERF_MONITOR*/
 
@@ -68,13 +68,13 @@ void lv_sysmon_hide_performance(lv_display_t * disp);
  * Show system memory monitor: used memory and the memory fragmentation
  * @param disp      target display, NULL: use the default displays
  */
-void lv_sysmon_show_memory(lv_display_t * disp);
+void lv_sysmon_show_memory(lv_display_t *disp);
 
 /**
  * Hide system memory monitor
  * @param disp      target display, NULL: use the default displays
  */
-void lv_sysmon_hide_memory(lv_display_t * disp);
+void lv_sysmon_hide_memory(lv_display_t *disp);
 
 #endif /*LV_USE_MEM_MONITOR*/
 

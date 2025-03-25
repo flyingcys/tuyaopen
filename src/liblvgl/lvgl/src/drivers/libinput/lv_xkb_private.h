@@ -31,10 +31,9 @@ extern "C" {
  **********************/
 
 struct lv_xkb_t {
-    struct xkb_keymap * keymap;
-    struct xkb_state * state;
+    struct xkb_keymap *keymap;
+    struct xkb_state *state;
 };
-
 
 /**********************
  * GLOBAL PROTOTYPES

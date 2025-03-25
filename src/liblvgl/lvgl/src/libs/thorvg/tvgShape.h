@@ -30,19 +30,15 @@
 #include "tvgMath.h"
 #include "tvgPaint.h"
 
-
-struct Shape::Impl
-{
-    RenderShape rs;                     //shape data
-    RenderData rd = nullptr;            //engine data
-    Shape* shape;
+struct Shape::Impl {
+    RenderShape rs;          // shape data
+    RenderData rd = nullptr; // engine data
+    Shape *shape;
     uint8_t flag = RenderUpdateFlag::None;
-    uint8_t opacity;                    //for composition
-    bool needComp = false;              //composite or not
+    uint8_t opacity;       // for composition
+    bool needComp = false; // composite or not
 
-    Impl(Shape* s) : shape(s)
-    {
-    }
+    Impl(Shape *s) : shape(s) {}
 
     ~Impl()
     {
@@ -51,9 +47,9 @@ struct Shape::Impl
         }
     }
 
-    bool render(RenderMethod* renderer)
+    bool render(RenderMethod *renderer)
     {
-        Compositor* cmp = nullptr;
+        Compositor *cmp = nullptr;
         bool ret;
 
         if (needComp) {
@@ -61,35 +57,43 @@ struct Shape::Impl
             renderer->beginComposite(cmp, CompositeMethod::None, opacity);
         }
         ret = renderer->renderShape(rd);
-        if (cmp) renderer->endComposite(cmp);
+        if (cmp)
+            renderer->endComposite(cmp);
         return ret;
     }
 
     bool needComposition(uint8_t opacity)
     {
-        if (opacity == 0) return false;
+        if (opacity == 0)
+            return false;
 
-        //Shape composition is only necessary when stroking & fill are valid.
-        if (!rs.stroke || rs.stroke->width < FLOAT_EPSILON || (!rs.stroke->fill && rs.stroke->color[3] == 0)) return false;
-        if (!rs.fill && rs.color[3] == 0) return false;
+        // Shape composition is only necessary when stroking & fill are valid.
+        if (!rs.stroke || rs.stroke->width < FLOAT_EPSILON || (!rs.stroke->fill && rs.stroke->color[3] == 0))
+            return false;
+        if (!rs.fill && rs.color[3] == 0)
+            return false;
 
-        //translucent fill & stroke
-        if (opacity < 255) return true;
+        // translucent fill & stroke
+        if (opacity < 255)
+            return true;
 
-        //Composition test
-        const Paint* target;
+        // Composition test
+        const Paint *target;
         auto method = shape->composite(&target);
-        if (!target || method == CompositeMethod::ClipPath) return false;
+        if (!target || method == CompositeMethod::ClipPath)
+            return false;
         if (target->pImpl->opacity == 255 || target->pImpl->opacity == 0) {
             if (target->identifier() == TVG_CLASS_ID_SHAPE) {
-                auto shape = static_cast<const Shape*>(target);
+                auto shape = static_cast<const Shape *>(target);
                 if (!shape->fill()) {
                     uint8_t r, g, b, a;
                     shape->fillColor(&r, &g, &b, &a);
                     if (a == 0 || a == 255) {
                         if (method == CompositeMethod::LumaMask || method == CompositeMethod::InvLumaMask) {
-                            if ((r == 255 && g == 255 && b == 255) || (r == 0 && g == 0 && b == 0)) return false;
-                        } else return false;
+                            if ((r == 255 && g == 255 && b == 255) || (r == 0 && g == 0 && b == 0))
+                                return false;
+                        } else
+                            return false;
                     }
                 }
             }
@@ -98,11 +102,12 @@ struct Shape::Impl
         return true;
     }
 
-    RenderData update(RenderMethod* renderer, const RenderTransform* transform, Array<RenderData>& clips, uint8_t opacity, RenderUpdateFlag pFlag, bool clipper)
-    {     
+    RenderData update(RenderMethod *renderer, const RenderTransform *transform, Array<RenderData> &clips,
+                      uint8_t opacity, RenderUpdateFlag pFlag, bool clipper)
+    {
         if ((needComp = needComposition(opacity))) {
             /* Overriding opacity value. If this scene is half-translucent,
-               It must do intermediate composition with that opacity value. */ 
+               It must do intermediate composition with that opacity value. */
             this->opacity = opacity;
             opacity = 255;
         }
@@ -112,51 +117,54 @@ struct Shape::Impl
         return rd;
     }
 
-    RenderRegion bounds(RenderMethod* renderer)
-    {
-        return renderer->region(rd);
-    }
+    RenderRegion bounds(RenderMethod *renderer) { return renderer->region(rd); }
 
-    bool bounds(float* x, float* y, float* w, float* h, bool stroking)
+    bool bounds(float *x, float *y, float *w, float *h, bool stroking)
     {
-        //Path bounding size
-        if (rs.path.pts.count > 0 ) {
+        // Path bounding size
+        if (rs.path.pts.count > 0) {
             auto pts = rs.path.pts.begin();
-            Point min = { pts->x, pts->y };
-            Point max = { pts->x, pts->y };
+            Point min = {pts->x, pts->y};
+            Point max = {pts->x, pts->y};
 
             for (auto pts2 = pts + 1; pts2 < rs.path.pts.end(); ++pts2) {
-                if (pts2->x < min.x) min.x = pts2->x;
-                if (pts2->y < min.y) min.y = pts2->y;
-                if (pts2->x > max.x) max.x = pts2->x;
-                if (pts2->y > max.y) max.y = pts2->y;
+                if (pts2->x < min.x)
+                    min.x = pts2->x;
+                if (pts2->y < min.y)
+                    min.y = pts2->y;
+                if (pts2->x > max.x)
+                    max.x = pts2->x;
+                if (pts2->y > max.y)
+                    max.y = pts2->y;
             }
 
-            if (x) *x = min.x;
-            if (y) *y = min.y;
-            if (w) *w = max.x - min.x;
-            if (h) *h = max.y - min.y;
+            if (x)
+                *x = min.x;
+            if (y)
+                *y = min.y;
+            if (w)
+                *w = max.x - min.x;
+            if (h)
+                *h = max.y - min.y;
         }
 
-        //Stroke feathering
+        // Stroke feathering
         if (stroking && rs.stroke) {
-            if (x) *x -= rs.stroke->width * 0.5f;
-            if (y) *y -= rs.stroke->width * 0.5f;
-            if (w) *w += rs.stroke->width;
-            if (h) *h += rs.stroke->width;
+            if (x)
+                *x -= rs.stroke->width * 0.5f;
+            if (y)
+                *y -= rs.stroke->width * 0.5f;
+            if (w)
+                *w += rs.stroke->width;
+            if (h)
+                *h += rs.stroke->width;
         }
         return rs.path.pts.count > 0 ? true : false;
     }
 
-    void reserveCmd(uint32_t cmdCnt)
-    {
-        rs.path.cmds.reserve(cmdCnt);
-    }
+    void reserveCmd(uint32_t cmdCnt) { rs.path.cmds.reserve(cmdCnt); }
 
-    void reservePts(uint32_t ptsCnt)
-    {
-        rs.path.pts.reserve(ptsCnt);
-    }
+    void reservePts(uint32_t ptsCnt) { rs.path.pts.reserve(ptsCnt); }
 
     void grow(uint32_t cmdCnt, uint32_t ptsCnt)
     {
@@ -164,7 +172,7 @@ struct Shape::Impl
         rs.path.pts.grow(ptsCnt);
     }
 
-    void append(const PathCommand* cmds, uint32_t cmdCnt, const Point* pts, uint32_t ptsCnt)
+    void append(const PathCommand *cmds, uint32_t cmdCnt, const Point *pts, uint32_t ptsCnt)
     {
         memcpy(rs.path.cmds.end(), cmds, sizeof(PathCommand) * cmdCnt);
         memcpy(rs.path.pts.end(), pts, sizeof(Point) * ptsCnt);
@@ -202,8 +210,9 @@ struct Shape::Impl
 
     void close()
     {
-        //Don't close multiple times.
-        if (rs.path.cmds.count > 0 && rs.path.cmds.last() == PathCommand::Close) return;
+        // Don't close multiple times.
+        if (rs.path.cmds.count > 0 && rs.path.cmds.last() == PathCommand::Close)
+            return;
 
         rs.path.cmds.push(PathCommand::Close);
 
@@ -212,7 +221,8 @@ struct Shape::Impl
 
     bool strokeWidth(float width)
     {
-        if (!rs.stroke) rs.stroke = new RenderStroke();
+        if (!rs.stroke)
+            rs.stroke = new RenderStroke();
         rs.stroke->width = width;
         flag |= RenderUpdateFlag::Stroke;
 
@@ -222,11 +232,13 @@ struct Shape::Impl
     bool strokeTrim(float begin, float end, bool individual)
     {
         if (!rs.stroke) {
-            if (begin == 0.0f && end == 1.0f) return true;
+            if (begin == 0.0f && end == 1.0f)
+                return true;
             rs.stroke = new RenderStroke();
         }
 
-        if (mathEqual(rs.stroke->trim.begin, begin) && mathEqual(rs.stroke->trim.end, end)) return true;
+        if (mathEqual(rs.stroke->trim.begin, begin) && mathEqual(rs.stroke->trim.end, end))
+            return true;
 
         rs.stroke->trim.begin = begin;
         rs.stroke->trim.end = end;
@@ -238,7 +250,8 @@ struct Shape::Impl
 
     bool strokeCap(StrokeCap cap)
     {
-        if (!rs.stroke) rs.stroke = new RenderStroke();
+        if (!rs.stroke)
+            rs.stroke = new RenderStroke();
         rs.stroke->cap = cap;
         flag |= RenderUpdateFlag::Stroke;
 
@@ -247,7 +260,8 @@ struct Shape::Impl
 
     bool strokeJoin(StrokeJoin join)
     {
-        if (!rs.stroke) rs.stroke = new RenderStroke();
+        if (!rs.stroke)
+            rs.stroke = new RenderStroke();
         rs.stroke->join = join;
         flag |= RenderUpdateFlag::Stroke;
 
@@ -256,7 +270,8 @@ struct Shape::Impl
 
     bool strokeMiterlimit(float miterlimit)
     {
-        if (!rs.stroke) rs.stroke = new RenderStroke();
+        if (!rs.stroke)
+            rs.stroke = new RenderStroke();
         rs.stroke->miterlimit = miterlimit;
         flag |= RenderUpdateFlag::Stroke;
 
@@ -265,9 +280,10 @@ struct Shape::Impl
 
     bool strokeColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
     {
-        if (!rs.stroke) rs.stroke = new RenderStroke();
+        if (!rs.stroke)
+            rs.stroke = new RenderStroke();
         if (rs.stroke->fill) {
-            delete(rs.stroke->fill);
+            delete (rs.stroke->fill);
             rs.stroke->fill = nullptr;
             flag |= RenderUpdateFlag::GradientStroke;
         }
@@ -285,10 +301,13 @@ struct Shape::Impl
     Result strokeFill(unique_ptr<Fill> f)
     {
         auto p = f.release();
-        if (!p) return Result::MemoryCorruption;
+        if (!p)
+            return Result::MemoryCorruption;
 
-        if (!rs.stroke) rs.stroke = new RenderStroke();
-        if (rs.stroke->fill && rs.stroke->fill != p) delete(rs.stroke->fill);
+        if (!rs.stroke)
+            rs.stroke = new RenderStroke();
+        if (rs.stroke->fill && rs.stroke->fill != p)
+            delete (rs.stroke->fill);
         rs.stroke->fill = p;
 
         flag |= RenderUpdateFlag::Stroke;
@@ -297,29 +316,32 @@ struct Shape::Impl
         return Result::Success;
     }
 
-    Result strokeDash(const float* pattern, uint32_t cnt, float offset)
+    Result strokeDash(const float *pattern, uint32_t cnt, float offset)
     {
         if ((cnt == 1) || (!pattern && cnt > 0) || (pattern && cnt == 0)) {
             return Result::InvalidArguments;
         }
 
         for (uint32_t i = 0; i < cnt; i++) {
-            if (pattern[i] < FLOAT_EPSILON) return Result::InvalidArguments;
+            if (pattern[i] < FLOAT_EPSILON)
+                return Result::InvalidArguments;
         }
 
-        //Reset dash
+        // Reset dash
         if (!pattern && cnt == 0) {
             free(rs.stroke->dashPattern);
             rs.stroke->dashPattern = nullptr;
         } else {
-            if (!rs.stroke) rs.stroke = new RenderStroke();
+            if (!rs.stroke)
+                rs.stroke = new RenderStroke();
             if (rs.stroke->dashCnt != cnt) {
                 free(rs.stroke->dashPattern);
                 rs.stroke->dashPattern = nullptr;
             }
             if (!rs.stroke->dashPattern) {
-                rs.stroke->dashPattern = static_cast<float*>(malloc(sizeof(float) * cnt));
-                if (!rs.stroke->dashPattern) return Result::FailedAllocation;
+                rs.stroke->dashPattern = static_cast<float *>(malloc(sizeof(float) * cnt));
+                if (!rs.stroke->dashPattern)
+                    return Result::FailedAllocation;
             }
             for (uint32_t i = 0; i < cnt; ++i) {
                 rs.stroke->dashPattern[i] = pattern[i];
@@ -334,49 +356,48 @@ struct Shape::Impl
 
     bool strokeFirst()
     {
-        if (!rs.stroke) return true;
+        if (!rs.stroke)
+            return true;
         return rs.stroke->strokeFirst;
     }
 
     bool strokeFirst(bool strokeFirst)
     {
-        if (!rs.stroke) rs.stroke = new RenderStroke();
+        if (!rs.stroke)
+            rs.stroke = new RenderStroke();
         rs.stroke->strokeFirst = strokeFirst;
         flag |= RenderUpdateFlag::Stroke;
 
         return true;
     }
 
-    void update(RenderUpdateFlag flag)
-    {
-        this->flag |= flag;
-    }
+    void update(RenderUpdateFlag flag) { this->flag |= flag; }
 
-    Paint* duplicate()
+    Paint *duplicate()
     {
         auto ret = Shape::gen().release();
         auto dup = ret->pImpl;
 
         dup->rs.rule = rs.rule;
 
-        //Color
+        // Color
         memcpy(dup->rs.color, rs.color, sizeof(rs.color));
         dup->flag = RenderUpdateFlag::Color;
 
-        //Path
+        // Path
         if (rs.path.cmds.count > 0 && rs.path.pts.count > 0) {
             dup->rs.path.cmds = rs.path.cmds;
             dup->rs.path.pts = rs.path.pts;
             dup->flag |= RenderUpdateFlag::Path;
         }
 
-        //Stroke
+        // Stroke
         if (rs.stroke) {
             dup->rs.stroke = new RenderStroke();
             *dup->rs.stroke = *rs.stroke;
             memcpy(dup->rs.stroke->color, rs.stroke->color, sizeof(rs.stroke->color));
             if (rs.stroke->dashCnt > 0) {
-                dup->rs.stroke->dashPattern = static_cast<float*>(malloc(sizeof(float) * rs.stroke->dashCnt));
+                dup->rs.stroke->dashPattern = static_cast<float *>(malloc(sizeof(float) * rs.stroke->dashCnt));
                 memcpy(dup->rs.stroke->dashPattern, rs.stroke->dashPattern, sizeof(float) * rs.stroke->dashCnt);
             }
             if (rs.stroke->fill) {
@@ -386,7 +407,7 @@ struct Shape::Impl
             dup->flag |= RenderUpdateFlag::Stroke;
         }
 
-        //Fill
+        // Fill
         if (rs.fill) {
             dup->rs.fill = rs.fill->duplicate();
             dup->flag |= RenderUpdateFlag::Gradient;
@@ -395,13 +416,9 @@ struct Shape::Impl
         return ret;
     }
 
-    Iterator* iterator()
-    {
-        return nullptr;
-    }
+    Iterator *iterator() { return nullptr; }
 };
 
 #endif //_TVG_SHAPE_H_
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

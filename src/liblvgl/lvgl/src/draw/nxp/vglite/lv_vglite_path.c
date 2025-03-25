@@ -42,9 +42,7 @@
  *   GLOBAL FUNCTIONS
  **********************/
 
-void vglite_create_rect_path_data(int32_t * path_data, uint32_t * path_data_size,
-                                  int32_t radius,
-                                  const lv_area_t * coords)
+void vglite_create_rect_path_data(int32_t *path_data, uint32_t *path_data_size, int32_t radius, const lv_area_t *coords)
 {
     int32_t rect_width = lv_area_get_width(coords);
     int32_t rect_height = lv_area_get_height(coords);
@@ -56,7 +54,7 @@ void vglite_create_rect_path_data(int32_t * path_data, uint32_t * path_data_size
     /* Path data element index */
     uint8_t pidx = 0;
 
-    if((radius == (int32_t)LV_RADIUS_CIRCLE) && (rect_width == rect_height)) {
+    if ((radius == (int32_t)LV_RADIUS_CIRCLE) && (rect_width == rect_height)) {
 
         /* Get the control point offset for rounded cases */
         int32_t cpoff = (int32_t)((float)final_radius * BEZIER_OPTIM_CIRCLE);
@@ -105,8 +103,7 @@ void vglite_create_rect_path_data(int32_t * path_data, uint32_t * path_data_size
 
         /* Ending point */
         path_data[pidx++] = VLC_OP_END;
-    }
-    else if(radius > 0) {
+    } else if (radius > 0) {
         /* Get the control point offset for rounded cases */
         int32_t cpoff = (int32_t)((float)final_radius * BEZIER_OPTIM_CIRCLE);
 
@@ -118,7 +115,7 @@ void vglite_create_rect_path_data(int32_t * path_data, uint32_t * path_data_size
 
         /* Top side */
         path_data[pidx++] = VLC_OP_LINE;
-        path_data[pidx++] = coords->x2 - final_radius + 1;  /*Extended for VGLite*/
+        path_data[pidx++] = coords->x2 - final_radius + 1; /*Extended for VGLite*/
         path_data[pidx++] = coords->y1;
 
         /* Top-right corner */
@@ -132,8 +129,8 @@ void vglite_create_rect_path_data(int32_t * path_data, uint32_t * path_data_size
 
         /* Right side */
         path_data[pidx++] = VLC_OP_LINE;
-        path_data[pidx++] = coords->x2 + 1;                 /*Extended for VGLite*/
-        path_data[pidx++] = coords->y2 - final_radius + 1;  /*Extended for VGLite*/
+        path_data[pidx++] = coords->x2 + 1;                /*Extended for VGLite*/
+        path_data[pidx++] = coords->y2 - final_radius + 1; /*Extended for VGLite*/
 
         /* Bottom-right corner*/
         path_data[pidx++] = VLC_OP_CUBIC_REL;
@@ -147,7 +144,7 @@ void vglite_create_rect_path_data(int32_t * path_data, uint32_t * path_data_size
         /* Bottom side */
         path_data[pidx++] = VLC_OP_LINE;
         path_data[pidx++] = coords->x1 + final_radius;
-        path_data[pidx++] = coords->y2 + 1;                 /*Extended for VGLite*/
+        path_data[pidx++] = coords->y2 + 1; /*Extended for VGLite*/
 
         /* Bottom-left corner */
         path_data[pidx++] = VLC_OP_CUBIC_REL;
@@ -174,8 +171,7 @@ void vglite_create_rect_path_data(int32_t * path_data, uint32_t * path_data_size
 
         /* Ending point */
         path_data[pidx++] = VLC_OP_END;
-    }
-    else {
+    } else {
         /* Non-rounded rectangle case */
         /* Starting point */
         path_data[pidx++] = VLC_OP_MOVE;

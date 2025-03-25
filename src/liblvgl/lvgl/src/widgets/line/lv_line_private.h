@@ -31,14 +31,13 @@ extern "C" {
 struct lv_line_t {
     lv_obj_t obj;
     union {
-        const lv_point_precise_t * constant;
-        lv_point_precise_t * mut;
-    } point_array;                      /**< Pointer to an array with the points of the line*/
-    uint32_t point_num;                 /**< Number of points in 'point_array'*/
+        const lv_point_precise_t *constant;
+        lv_point_precise_t *mut;
+    } point_array;                       /**< Pointer to an array with the points of the line*/
+    uint32_t point_num;                  /**< Number of points in 'point_array'*/
     uint32_t y_inv : 1;                  /**< 1: y == 0 will be on the bottom*/
     uint32_t point_array_is_mutable : 1; /**< whether the point array is const or mutable*/
 };
-
 
 /**********************
  * GLOBAL PROTOTYPES

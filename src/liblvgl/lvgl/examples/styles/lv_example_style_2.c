@@ -21,13 +21,13 @@ void lv_example_style_2(void)
     grad.stops[1].opa = LV_OPA_COVER;
 
     /*Shift the gradient to the bottom*/
-    grad.stops[0].frac  = 128;
-    grad.stops[1].frac  = 192;
+    grad.stops[0].frac = 128;
+    grad.stops[1].frac = 192;
 
     lv_style_set_bg_grad(&style, &grad);
 
     /*Create an object with the new style*/
-    lv_obj_t * obj = lv_obj_create(lv_screen_active());
+    lv_obj_t *obj = lv_obj_create(lv_screen_active());
     lv_obj_add_style(obj, &style, 0);
     lv_obj_center(obj);
 }

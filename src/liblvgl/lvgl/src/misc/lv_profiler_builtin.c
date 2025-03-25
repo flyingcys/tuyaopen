@@ -19,19 +19,19 @@
 
 #define profiler_ctx LV_GLOBAL_DEFAULT()->profiler_context
 
-#define LV_PROFILER_STR_MAX_LEN 128
+#define LV_PROFILER_STR_MAX_LEN      128
 #define LV_PROFILER_TICK_PER_SEC_MAX 1000000
 
 #if LV_USE_OS
-    #define LV_PROFILER_MULTEX_INIT   lv_mutex_init(&profiler_ctx->mutex)
-    #define LV_PROFILER_MULTEX_DEINIT lv_mutex_delete(&profiler_ctx->mutex)
-    #define LV_PROFILER_MULTEX_LOCK   lv_mutex_lock(&profiler_ctx->mutex)
-    #define LV_PROFILER_MULTEX_UNLOCK lv_mutex_unlock(&profiler_ctx->mutex)
+#define LV_PROFILER_MULTEX_INIT   lv_mutex_init(&profiler_ctx->mutex)
+#define LV_PROFILER_MULTEX_DEINIT lv_mutex_delete(&profiler_ctx->mutex)
+#define LV_PROFILER_MULTEX_LOCK   lv_mutex_lock(&profiler_ctx->mutex)
+#define LV_PROFILER_MULTEX_UNLOCK lv_mutex_unlock(&profiler_ctx->mutex)
 #else
-    #define LV_PROFILER_MULTEX_INIT
-    #define LV_PROFILER_MULTEX_DEINIT
-    #define LV_PROFILER_MULTEX_LOCK
-    #define LV_PROFILER_MULTEX_UNLOCK
+#define LV_PROFILER_MULTEX_INIT
+#define LV_PROFILER_MULTEX_DEINIT
+#define LV_PROFILER_MULTEX_LOCK
+#define LV_PROFILER_MULTEX_UNLOCK
 #endif
 
 /**********************
@@ -42,12 +42,12 @@
  * @brief Structure representing a built-in profiler item in LVGL
  */
 typedef struct {
-    char tag;          /**< The tag of the profiler item */
-    uint32_t tick;     /**< The tick value of the profiler item */
-    const char * func; /**< A pointer to the function associated with the profiler item */
+    char tag;         /**< The tag of the profiler item */
+    uint32_t tick;    /**< The tick value of the profiler item */
+    const char *func; /**< A pointer to the function associated with the profiler item */
 #if LV_USE_OS
-    int tid;           /**< The thread ID of the profiler item */
-    int cpu;         /**< The CPU ID of the profiler item */
+    int tid; /**< The thread ID of the profiler item */
+    int cpu; /**< The CPU ID of the profiler item */
 #endif
 } lv_profiler_builtin_item_t;
 
@@ -55,13 +55,13 @@ typedef struct {
  * @brief Structure representing a context for the LVGL built-in profiler
  */
 typedef struct lv_profiler_builtin_ctx_t {
-    lv_profiler_builtin_item_t * item_arr; /**< Pointer to an array of profiler items */
-    uint32_t item_num;                     /**< Number of profiler items in the array */
-    uint32_t cur_index;                    /**< Index of the current profiler item */
-    lv_profiler_builtin_config_t config;   /**< Configuration for the built-in profiler */
-    bool enable;                           /**< Whether the built-in profiler is enabled */
+    lv_profiler_builtin_item_t *item_arr; /**< Pointer to an array of profiler items */
+    uint32_t item_num;                    /**< Number of profiler items in the array */
+    uint32_t cur_index;                   /**< Index of the current profiler item */
+    lv_profiler_builtin_config_t config;  /**< Configuration for the built-in profiler */
+    bool enable;                          /**< Whether the built-in profiler is enabled */
 #if LV_USE_OS
-    lv_mutex_t mutex;                      /**< Mutex to protect the built-in profiler */
+    lv_mutex_t mutex; /**< Mutex to protect the built-in profiler */
 #endif
 } lv_profiler_builtin_ctx_t;
 
@@ -69,7 +69,7 @@ typedef struct lv_profiler_builtin_ctx_t {
  *  STATIC PROTOTYPES
  **********************/
 
-static void default_flush_cb(const char * buf);
+static void default_flush_cb(const char *buf);
 static int default_tid_get_cb(void);
 static int default_cpu_get_cb(void);
 static void flush_no_lock(void);
@@ -86,7 +86,7 @@ static void flush_no_lock(void);
  *   GLOBAL FUNCTIONS
  **********************/
 
-void lv_profiler_builtin_config_init(lv_profiler_builtin_config_t * config)
+void lv_profiler_builtin_config_init(lv_profiler_builtin_config_t *config)
 {
     LV_ASSERT_NULL(config);
     lv_memzero(config, sizeof(lv_profiler_builtin_config_t));
@@ -98,24 +98,24 @@ void lv_profiler_builtin_config_init(lv_profiler_builtin_config_t * config)
     config->cpu_get_cb = default_cpu_get_cb;
 }
 
-void lv_profiler_builtin_init(const lv_profiler_builtin_config_t * config)
+void lv_profiler_builtin_init(const lv_profiler_builtin_config_t *config)
 {
     LV_ASSERT_NULL(config);
     LV_ASSERT_NULL(config->tick_get_cb);
 
     uint32_t num = config->buf_size / sizeof(lv_profiler_builtin_item_t);
-    if(num == 0) {
+    if (num == 0) {
         LV_LOG_WARN("buf_size must > %d", (int)sizeof(lv_profiler_builtin_item_t));
         return;
     }
 
-    if(config->tick_per_sec == 0 || config->tick_per_sec > LV_PROFILER_TICK_PER_SEC_MAX) {
+    if (config->tick_per_sec == 0 || config->tick_per_sec > LV_PROFILER_TICK_PER_SEC_MAX) {
         LV_LOG_WARN("tick_per_sec range must be between 1~%d", LV_PROFILER_TICK_PER_SEC_MAX);
         return;
     }
 
     /*Free the old item_arr memory*/
-    if(profiler_ctx) {
+    if (profiler_ctx) {
         lv_profiler_builtin_uninit();
     }
 
@@ -124,7 +124,7 @@ void lv_profiler_builtin_init(const lv_profiler_builtin_config_t * config)
 
     profiler_ctx->item_arr = lv_malloc(num * sizeof(lv_profiler_builtin_item_t));
     LV_ASSERT_MALLOC(profiler_ctx->item_arr);
-    if(profiler_ctx->item_arr == NULL) {
+    if (profiler_ctx->item_arr == NULL) {
         lv_free(profiler_ctx);
         profiler_ctx = NULL;
         LV_LOG_ERROR("malloc failed for item_arr");
@@ -135,7 +135,7 @@ void lv_profiler_builtin_init(const lv_profiler_builtin_config_t * config)
     profiler_ctx->item_num = num;
     profiler_ctx->config = *config;
 
-    if(profiler_ctx->config.flush_cb) {
+    if (profiler_ctx->config.flush_cb) {
         /* add profiler header for perfetto */
         profiler_ctx->config.flush_cb("# tracer: nop\n");
         profiler_ctx->config.flush_cb("#\n");
@@ -157,7 +157,7 @@ void lv_profiler_builtin_uninit(void)
 
 void lv_profiler_builtin_set_enable(bool enable)
 {
-    if(!profiler_ctx) {
+    if (!profiler_ctx) {
         return;
     }
 
@@ -173,23 +173,23 @@ void lv_profiler_builtin_flush(void)
     LV_PROFILER_MULTEX_UNLOCK;
 }
 
-void lv_profiler_builtin_write(const char * func, char tag)
+void lv_profiler_builtin_write(const char *func, char tag)
 {
     LV_ASSERT_NULL(profiler_ctx);
     LV_ASSERT_NULL(func);
 
-    if(!profiler_ctx->enable) {
+    if (!profiler_ctx->enable) {
         return;
     }
 
     LV_PROFILER_MULTEX_LOCK;
 
-    if(profiler_ctx->cur_index >= profiler_ctx->item_num) {
+    if (profiler_ctx->cur_index >= profiler_ctx->item_num) {
         flush_no_lock();
         profiler_ctx->cur_index = 0;
     }
 
-    lv_profiler_builtin_item_t * item = &profiler_ctx->item_arr[profiler_ctx->cur_index];
+    lv_profiler_builtin_item_t *item = &profiler_ctx->item_arr[profiler_ctx->cur_index];
     item->func = func;
     item->tag = tag;
     item->tick = profiler_ctx->config.tick_get_cb();
@@ -208,7 +208,7 @@ void lv_profiler_builtin_write(const char * func, char tag)
  *   STATIC FUNCTIONS
  **********************/
 
-static void default_flush_cb(const char * buf)
+static void default_flush_cb(const char *buf)
 {
     LV_LOG("%s", buf);
 }
@@ -225,7 +225,7 @@ static int default_cpu_get_cb(void)
 
 static void flush_no_lock(void)
 {
-    if(!profiler_ctx->config.flush_cb) {
+    if (!profiler_ctx->config.flush_cb) {
         LV_LOG_WARN("flush_cb is not registered");
         return;
     }
@@ -233,27 +233,17 @@ static void flush_no_lock(void)
     uint32_t cur = 0;
     char buf[LV_PROFILER_STR_MAX_LEN];
     uint32_t tick_per_sec = profiler_ctx->config.tick_per_sec;
-    while(cur < profiler_ctx->cur_index) {
-        lv_profiler_builtin_item_t * item = &profiler_ctx->item_arr[cur++];
+    while (cur < profiler_ctx->cur_index) {
+        lv_profiler_builtin_item_t *item = &profiler_ctx->item_arr[cur++];
         uint32_t sec = item->tick / tick_per_sec;
         uint32_t usec = (item->tick % tick_per_sec) * (LV_PROFILER_TICK_PER_SEC_MAX / tick_per_sec);
 
 #if LV_USE_OS
-        lv_snprintf(buf, sizeof(buf),
-                    "   LVGL-%d [%d] %" LV_PRIu32 ".%06" LV_PRIu32 ": tracing_mark_write: %c|1|%s\n",
-                    item->tid,
-                    item->cpu,
-                    sec,
-                    usec,
-                    item->tag,
-                    item->func);
+        lv_snprintf(buf, sizeof(buf), "   LVGL-%d [%d] %" LV_PRIu32 ".%06" LV_PRIu32 ": tracing_mark_write: %c|1|%s\n",
+                    item->tid, item->cpu, sec, usec, item->tag, item->func);
 #else
-        lv_snprintf(buf, sizeof(buf),
-                    "   LVGL-1 [0] %" LV_PRIu32 ".%06" LV_PRIu32 ": tracing_mark_write: %c|1|%s\n",
-                    sec,
-                    usec,
-                    item->tag,
-                    item->func);
+        lv_snprintf(buf, sizeof(buf), "   LVGL-1 [0] %" LV_PRIu32 ".%06" LV_PRIu32 ": tracing_mark_write: %c|1|%s\n",
+                    sec, usec, item->tag, item->func);
 #endif
         profiler_ctx->config.flush_cb(buf);
     }

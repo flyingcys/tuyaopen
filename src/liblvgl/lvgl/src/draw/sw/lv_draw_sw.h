@@ -53,7 +53,7 @@ void lv_draw_sw_deinit(void);
  * @param dsc           the draw descriptor
  * @param coords        the coordinates of the rectangle
  */
-void lv_draw_sw_fill(lv_draw_unit_t * draw_unit, lv_draw_fill_dsc_t * dsc, const lv_area_t * coords);
+void lv_draw_sw_fill(lv_draw_unit_t *draw_unit, lv_draw_fill_dsc_t *dsc, const lv_area_t *coords);
 
 /**
  * Draw border with SW render.
@@ -61,7 +61,7 @@ void lv_draw_sw_fill(lv_draw_unit_t * draw_unit, lv_draw_fill_dsc_t * dsc, const
  * @param dsc           the draw descriptor
  * @param coords        the coordinates of the rectangle
  */
-void lv_draw_sw_border(lv_draw_unit_t * draw_unit, const lv_draw_border_dsc_t * dsc, const lv_area_t * coords);
+void lv_draw_sw_border(lv_draw_unit_t *draw_unit, const lv_draw_border_dsc_t *dsc, const lv_area_t *coords);
 
 /**
  * Draw box shadow with SW render.
@@ -69,7 +69,7 @@ void lv_draw_sw_border(lv_draw_unit_t * draw_unit, const lv_draw_border_dsc_t * 
  * @param dsc           the draw descriptor
  * @param coords        the coordinates of the rectangle for which the box shadow should be drawn
  */
-void lv_draw_sw_box_shadow(lv_draw_unit_t * draw_unit, const lv_draw_box_shadow_dsc_t * dsc, const lv_area_t * coords);
+void lv_draw_sw_box_shadow(lv_draw_unit_t *draw_unit, const lv_draw_box_shadow_dsc_t *dsc, const lv_area_t *coords);
 
 /**
  * Draw an image with SW render. It handles image decoding, tiling, transformations, and recoloring.
@@ -77,8 +77,7 @@ void lv_draw_sw_box_shadow(lv_draw_unit_t * draw_unit, const lv_draw_box_shadow_
  * @param draw_dsc      the draw descriptor
  * @param coords        the coordinates of the image
  */
-void lv_draw_sw_image(lv_draw_unit_t * draw_unit, const lv_draw_image_dsc_t * draw_dsc,
-                      const lv_area_t * coords);
+void lv_draw_sw_image(lv_draw_unit_t *draw_unit, const lv_draw_image_dsc_t *draw_dsc, const lv_area_t *coords);
 
 /**
  * Draw a label with SW render.
@@ -86,7 +85,7 @@ void lv_draw_sw_image(lv_draw_unit_t * draw_unit, const lv_draw_image_dsc_t * dr
  * @param dsc           the draw descriptor
  * @param coords        the coordinates of the label
  */
-void lv_draw_sw_label(lv_draw_unit_t * draw_unit, const lv_draw_label_dsc_t * dsc, const lv_area_t * coords);
+void lv_draw_sw_label(lv_draw_unit_t *draw_unit, const lv_draw_label_dsc_t *dsc, const lv_area_t *coords);
 
 /**
  * Draw an arc with SW render.
@@ -94,14 +93,14 @@ void lv_draw_sw_label(lv_draw_unit_t * draw_unit, const lv_draw_label_dsc_t * ds
  * @param dsc           the draw descriptor
  * @param coords        the coordinates of the arc
  */
-void lv_draw_sw_arc(lv_draw_unit_t * draw_unit, const lv_draw_arc_dsc_t * dsc, const lv_area_t * coords);
+void lv_draw_sw_arc(lv_draw_unit_t *draw_unit, const lv_draw_arc_dsc_t *dsc, const lv_area_t *coords);
 
 /**
  * Draw a line with SW render.
  * @param draw_unit     pointer to a draw unit
  * @param dsc           the draw descriptor
  */
-void lv_draw_sw_line(lv_draw_unit_t * draw_unit, const lv_draw_line_dsc_t * dsc);
+void lv_draw_sw_line(lv_draw_unit_t *draw_unit, const lv_draw_line_dsc_t *dsc);
 
 /**
  * Blend a layer with SW render
@@ -109,14 +108,14 @@ void lv_draw_sw_line(lv_draw_unit_t * draw_unit, const lv_draw_line_dsc_t * dsc)
  * @param draw_dsc      the draw descriptor
  * @param coords        the coordinates of the layer
  */
-void lv_draw_sw_layer(lv_draw_unit_t * draw_unit, const lv_draw_image_dsc_t * draw_dsc, const lv_area_t * coords);
+void lv_draw_sw_layer(lv_draw_unit_t *draw_unit, const lv_draw_image_dsc_t *draw_dsc, const lv_area_t *coords);
 
 /**
  * Draw a triangle with SW render.
  * @param draw_unit     pointer to a draw unit
  * @param dsc           the draw descriptor
  */
-void lv_draw_sw_triangle(lv_draw_unit_t * draw_unit, const lv_draw_triangle_dsc_t * dsc);
+void lv_draw_sw_triangle(lv_draw_unit_t *draw_unit, const lv_draw_triangle_dsc_t *dsc);
 
 /**
  * Mask out a rectangle with radius from a current layer
@@ -124,7 +123,7 @@ void lv_draw_sw_triangle(lv_draw_unit_t * draw_unit, const lv_draw_triangle_dsc_
  * @param dsc           the draw descriptor
  * @param coords        the coordinates of the mask
  */
-void lv_draw_sw_mask_rect(lv_draw_unit_t * draw_unit, const lv_draw_mask_rect_dsc_t * dsc, const lv_area_t * coords);
+void lv_draw_sw_mask_rect(lv_draw_unit_t *draw_unit, const lv_draw_mask_rect_dsc_t *dsc, const lv_area_t *coords);
 
 /**
  * Used internally to get a transformed are of an image
@@ -139,9 +138,9 @@ void lv_draw_sw_mask_rect(lv_draw_unit_t * draw_unit, const lv_draw_mask_rect_ds
  * @param cf            color format of the source buffer
  * @param dest_buf      the destination buffer
  */
-void lv_draw_sw_transform(lv_draw_unit_t * draw_unit, const lv_area_t * dest_area, const void * src_buf,
-                          int32_t src_w, int32_t src_h, int32_t src_stride,
-                          const lv_draw_image_dsc_t * draw_dsc, const lv_draw_image_sup_t * sup, lv_color_format_t cf, void * dest_buf);
+void lv_draw_sw_transform(lv_draw_unit_t *draw_unit, const lv_area_t *dest_area, const void *src_buf, int32_t src_w,
+                          int32_t src_h, int32_t src_stride, const lv_draw_image_dsc_t *draw_dsc,
+                          const lv_draw_image_sup_t *sup, lv_color_format_t cf, void *dest_buf);
 
 #if LV_USE_VECTOR_GRAPHIC && LV_USE_THORVG
 /**
@@ -149,7 +148,7 @@ void lv_draw_sw_transform(lv_draw_unit_t * draw_unit, const lv_area_t * dest_are
  * @param draw_unit     pointer to a draw unit
  * @param dsc           the draw descriptor
  */
-void lv_draw_sw_vector(lv_draw_unit_t * draw_unit, const lv_draw_vector_task_dsc_t * dsc);
+void lv_draw_sw_vector(lv_draw_unit_t *draw_unit, const lv_draw_vector_task_dsc_t *dsc);
 #endif
 
 /**
@@ -159,7 +158,7 @@ void lv_draw_sw_vector(lv_draw_unit_t * draw_unit, const lv_draw_vector_task_dsc
  * @param buf           pointer to buffer
  * @param buf_size_px   number of pixels in the buffer
  */
-void lv_draw_sw_rgb565_swap(void * buf, uint32_t buf_size_px);
+void lv_draw_sw_rgb565_swap(void *buf, uint32_t buf_size_px);
 
 /**
  * Invert a draw buffer in the I1 color format.
@@ -169,7 +168,7 @@ void lv_draw_sw_rgb565_swap(void * buf, uint32_t buf_size_px);
  * @param buf          pointer to the buffer to be inverted
  * @param buf_size     size of the buffer in bytes
  */
-void lv_draw_sw_i1_invert(void * buf, uint32_t buf_size);
+void lv_draw_sw_i1_invert(void *buf, uint32_t buf_size);
 
 /**
  * Rotate a buffer into another buffer
@@ -182,7 +181,7 @@ void lv_draw_sw_i1_invert(void * buf, uint32_t buf_size);
  * @param rotation      LV_DISPLAY_ROTATION_0/90/180/270
  * @param color_format  LV_COLOR_FORMAT_RGB565/RGB888/XRGB8888/ARGB8888
  */
-void lv_draw_sw_rotate(const void * src, void * dest, int32_t src_width, int32_t src_height, int32_t src_stride,
+void lv_draw_sw_rotate(const void *src, void *dest, int32_t src_width, int32_t src_height, int32_t src_stride,
                        int32_t dest_stride, lv_display_rotation_t rotation, lv_color_format_t color_format);
 
 /***********************

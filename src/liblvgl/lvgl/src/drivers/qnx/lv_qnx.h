@@ -40,14 +40,14 @@ extern "C" {
  * @param   ver_res     The vertical resolution (size) of the window
  * @return  A pointer to a new display object if successful, NULL otherwise
  */
-lv_display_t * lv_qnx_window_create(int32_t hor_res, int32_t ver_res);
+lv_display_t *lv_qnx_window_create(int32_t hor_res, int32_t ver_res);
 
 /**
  * Set the title of the window identified by the given display.
  * @param   disp    The display object for the window
  * @param   title   The new title to set
  */
-void lv_qnx_window_set_title(lv_display_t * disp, const char * title);
+void lv_qnx_window_set_title(lv_display_t *disp, const char *title);
 
 /**
  * Create a pointer input device for the display.
@@ -55,7 +55,7 @@ void lv_qnx_window_set_title(lv_display_t * disp, const char * title);
  * @param   disp    The display object associated with the device
  * @return  true if successful, false otherwise
  */
-bool lv_qnx_add_pointer_device(lv_display_t * disp);
+bool lv_qnx_add_pointer_device(lv_display_t *disp);
 
 /**
  * Create a keyboard input device for the display.
@@ -63,7 +63,7 @@ bool lv_qnx_add_pointer_device(lv_display_t * disp);
  * @param   disp    The display object associated with the device
  * @return  true if successful, false otherwise
  */
-bool lv_qnx_add_keyboard_device(lv_display_t * disp);
+bool lv_qnx_add_keyboard_device(lv_display_t *disp);
 
 /**
  * Runs the event loop for the display.
@@ -71,7 +71,7 @@ bool lv_qnx_add_keyboard_device(lv_display_t * disp);
  * @param   disp    The display for the event loop
  * @return  Exit code
  */
-int lv_qnx_event_loop(lv_display_t * disp);
+int lv_qnx_event_loop(lv_display_t *disp);
 
 /**********************
  *      MACROS

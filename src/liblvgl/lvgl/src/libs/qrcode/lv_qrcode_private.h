@@ -34,7 +34,6 @@ struct lv_qrcode_t {
     lv_color_t light_color;
 };
 
-
 /**********************
  * GLOBAL PROTOTYPES
  **********************/

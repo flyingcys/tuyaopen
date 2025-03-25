@@ -33,10 +33,9 @@ extern "C" {
 
 struct lv_checkbox_t {
     lv_obj_t obj;
-    char * txt;
+    char *txt;
     uint32_t static_txt : 1;
 };
-
 
 /**********************
  * GLOBAL PROTOTYPES

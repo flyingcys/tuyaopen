@@ -8,8 +8,8 @@
 
 void test_txt_should_insert_string_into_another(void)
 {
-    const char * msg = "Hello ";
-    const char * suffix = "World";
+    const char *msg = "Hello ";
+    const char *suffix = "World";
     char target[20] = {0};
     size_t msg_len = strlen(msg);
 
@@ -22,7 +22,7 @@ void test_txt_should_insert_string_into_another(void)
 
 void test_txt_should_handle_null_pointers_when_inserting(void)
 {
-    const char * msg = "Hello ";
+    const char *msg = "Hello ";
     char target[20] = {0};
     size_t msg_len = strlen(msg);
 
@@ -63,7 +63,7 @@ void test_txt_get_encoded_next_should_decode_valid_ascii(void)
 
     result = lv_text_encoded_next(msg, NULL);
 
-    TEST_ASSERT_EQUAL_UINT32((uint32_t) 'H', result);
+    TEST_ASSERT_EQUAL_UINT32((uint32_t)'H', result);
 }
 
 void test_txt_get_encoded_next_detect_valid_2_byte_input(void)
@@ -129,7 +129,7 @@ void test_txt_get_encoded_next_detect_invalid_4_byte_input(void)
 /* See #2615 for more information */
 void test_txt_next_line_should_handle_empty_string(void)
 {
-    const lv_font_t * font_ptr = NULL;
+    const lv_font_t *font_ptr = NULL;
     int32_t letter_space = 0;
     int32_t max_width = 0;
     lv_text_flag_t flag = LV_TEXT_FLAG_NONE;

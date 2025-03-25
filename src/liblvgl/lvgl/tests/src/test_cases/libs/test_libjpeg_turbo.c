@@ -19,8 +19,8 @@ static void create_images(void)
 {
     lv_obj_clean(lv_screen_active());
 
-    lv_obj_t * img;
-    lv_obj_t * label;
+    lv_obj_t *img;
+    lv_obj_t *label;
 
     img = lv_image_create(lv_screen_active());
     lv_image_set_src(img, "A:src/test_assets/test_img_lvgl_logo.jpg");
@@ -65,7 +65,7 @@ void test_jpg_2(void)
     TEST_ASSERT_EQUAL_SCREENSHOT("libs/jpg_2.png");
 
     size_t mem_before = lv_test_get_free_mem();
-    for(uint32_t i = 0; i < 20; i++) {
+    for (uint32_t i = 0; i < 20; i++) {
         create_images();
 
         lv_obj_invalidate(lv_screen_active());

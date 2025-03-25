@@ -30,48 +30,43 @@
 
 #include <mutex>
 
-namespace tvg {
+namespace tvg
+{
 
-    struct Key
+struct Key {
+    std::mutex mtx;
+};
+
+struct ScopedLock {
+    Key *key = nullptr;
+
+    ScopedLock(Key &k)
     {
-        std::mutex mtx;
-    };
+        k.mtx.lock();
+        key = &k;
+    }
 
-    struct ScopedLock
-    {
-        Key* key = nullptr;
+    ~ScopedLock() { key->mtx.unlock(); }
+};
 
-        ScopedLock(Key& k)
-        {
-            k.mtx.lock();
-            key = &k;
-        }
+} // namespace tvg
 
-        ~ScopedLock()
-        {
-            key->mtx.unlock();
-        }
-    };
+#else // THORVG_THREAD_SUPPORT
 
-}
+namespace tvg
+{
 
-#else //THORVG_THREAD_SUPPORT
+struct Key {
+};
 
-namespace tvg {
+struct ScopedLock {
+    ScopedLock(Key &key) {}
+};
 
-    struct Key {};
+} // namespace tvg
 
-    struct ScopedLock
-    {
-        ScopedLock(Key& key) {}
-    };
-
-}
-
-#endif //THORVG_THREAD_SUPPORT
+#endif // THORVG_THREAD_SUPPORT
 
 #endif //_TVG_LOCK_H_
 
-
 #endif /* LV_USE_THORVG_INTERNAL */
-

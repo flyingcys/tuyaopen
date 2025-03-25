@@ -1,17 +1,18 @@
 /*******************************************************************************
  * Size: 8 px
  * Bpp: 1
- * Opts: --no-compress --no-prefilter --bpp 1 --size 8 --font unscii-8.ttf -r 0x20-0x7F --format lvgl -o lv_font_unscii_8.c --force-fast-kern-format
+ * Opts: --no-compress --no-prefilter --bpp 1 --size 8 --font unscii-8.ttf -r 0x20-0x7F --format lvgl -o
+ *lv_font_unscii_8.c --force-fast-kern-format
  ******************************************************************************/
 
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE
-    #include "lvgl.h"
+#include "lvgl.h"
 #else
-    #include "../../lvgl.h"
+#include "../../lvgl.h"
 #endif
 
 #ifndef LV_FONT_UNSCII_8
-    #define LV_FONT_UNSCII_8 1
+#define LV_FONT_UNSCII_8 1
 #endif
 
 #if LV_FONT_UNSCII_8
@@ -308,8 +309,7 @@ static LV_ATTRIBUTE_LARGE_CONST const uint8_t glyph_bitmap[] = {
     0x77, 0xb8,
 
     /* U+007F "" */
-    0xc1, 0x42, 0xbd, 0x2c, 0x40, 0x81, 0x0
-};
+    0xc1, 0x42, 0xbd, 0x2c, 0x40, 0x81, 0x0};
 
 /*---------------------
  *  GLYPH DESCRIPTION
@@ -412,20 +412,20 @@ static const lv_font_fmt_txt_glyph_dsc_t glyph_dsc[] = {
     {.bitmap_index = 469, .adv_w = 128, .box_w = 2, .box_h = 7, .ofs_x = 3, .ofs_y = 1},
     {.bitmap_index = 471, .adv_w = 128, .box_w = 6, .box_h = 7, .ofs_x = 1, .ofs_y = 1},
     {.bitmap_index = 477, .adv_w = 128, .box_w = 7, .box_h = 2, .ofs_x = 0, .ofs_y = 6},
-    {.bitmap_index = 479, .adv_w = 128, .box_w = 7, .box_h = 7, .ofs_x = 0, .ofs_y = 1}
-};
+    {.bitmap_index = 479, .adv_w = 128, .box_w = 7, .box_h = 7, .ofs_x = 0, .ofs_y = 1}};
 
 /*---------------------
  *  CHARACTER MAPPING
  *--------------------*/
 
 /*Collect the unicode lists and glyph_id offsets*/
-static const lv_font_fmt_txt_cmap_t cmaps[] = {
-    {
-        .range_start = 32, .range_length = 96, .glyph_id_start = 1,
-        .unicode_list = NULL, .glyph_id_ofs_list = NULL, .list_length = 0, .type = LV_FONT_FMT_TXT_CMAP_FORMAT0_TINY
-    }
-};
+static const lv_font_fmt_txt_cmap_t cmaps[] = {{.range_start = 32,
+                                                .range_length = 96,
+                                                .glyph_id_start = 1,
+                                                .unicode_list = NULL,
+                                                .glyph_id_ofs_list = NULL,
+                                                .list_length = 0,
+                                                .type = LV_FONT_FMT_TXT_CMAP_FORMAT0_TINY}};
 
 /*--------------------
  *  ALL CUSTOM DATA
@@ -460,10 +460,10 @@ const lv_font_t lv_font_unscii_8 = {
 #else
 lv_font_t lv_font_unscii_8 = {
 #endif
-    .get_glyph_dsc = lv_font_get_glyph_dsc_fmt_txt,    /*Function pointer to get glyph's data*/
-    .get_glyph_bitmap = lv_font_get_bitmap_fmt_txt,    /*Function pointer to get glyph's bitmap*/
-    .line_height = 9,          /*The maximum line height required by the font*/
-    .base_line = 0,             /*Baseline measured from the bottom of the line*/
+    .get_glyph_dsc = lv_font_get_glyph_dsc_fmt_txt, /*Function pointer to get glyph's data*/
+    .get_glyph_bitmap = lv_font_get_bitmap_fmt_txt, /*Function pointer to get glyph's bitmap*/
+    .line_height = 9,                               /*The maximum line height required by the font*/
+    .base_line = 0,                                 /*Baseline measured from the bottom of the line*/
 #if !(LVGL_VERSION_MAJOR == 6 && LVGL_VERSION_MINOR == 0)
     .subpx = LV_FONT_SUBPX_NONE,
 #endif
@@ -471,7 +471,7 @@ lv_font_t lv_font_unscii_8 = {
     .underline_position = 0,
     .underline_thickness = 0,
 #endif
-    .dsc = &font_dsc           /*The custom font data. Will be accessed by `get_glyph_bitmap/dsc` */
+    .dsc = &font_dsc /*The custom font data. Will be accessed by `get_glyph_bitmap/dsc` */
 };
 
 #endif /*#if LV_FONT_UNSCII_8*/

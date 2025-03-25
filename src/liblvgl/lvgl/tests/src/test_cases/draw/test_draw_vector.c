@@ -15,15 +15,15 @@ void tearDown(void)
     /* Function run after every test */
 }
 
-static void draw_shapes(lv_layer_t * layer)
+static void draw_shapes(lv_layer_t *layer)
 {
-    lv_vector_dsc_t * ctx = lv_vector_dsc_create(layer);
+    lv_vector_dsc_t *ctx = lv_vector_dsc_create(layer);
 
     lv_area_t rect = {0, 0, 640, 480};
     lv_vector_dsc_set_fill_color(ctx, lv_color_white());
     lv_vector_clear_area(ctx, &rect);
 
-    lv_vector_path_t * path = lv_vector_path_create(LV_VECTOR_PATH_QUALITY_MEDIUM);
+    lv_vector_path_t *path = lv_vector_path_create(LV_VECTOR_PATH_QUALITY_MEDIUM);
 
     lv_area_t rect1 = {50, 50, 150, 150};
     lv_vector_dsc_identity(ctx);
@@ -75,8 +75,8 @@ static void draw_shapes(lv_layer_t * layer)
     lv_vector_dsc_set_fill_image(ctx, &img_dsc);
     lv_matrix_identity(&mt);
     lv_matrix_translate(&mt, 50, 50);
-    //lv_matrix_rotate(&mt, 45);
-    //lv_matrix_scale(&mt, 1.5f, 1.5f);
+    // lv_matrix_rotate(&mt, 45);
+    // lv_matrix_scale(&mt, 1.5f, 1.5f);
     lv_matrix_translate(&mt, -50, -50);
     lv_vector_dsc_set_fill_transform(ctx, &mt);
     lv_vector_dsc_add_path(ctx, path);
@@ -100,9 +100,7 @@ static void draw_shapes(lv_layer_t * layer)
     lv_vector_dsc_identity(ctx);
     lv_vector_dsc_set_blend_mode(ctx, LV_VECTOR_BLEND_SRC_OVER);
 
-    rect = (lv_area_t) {
-        500, 50, 550, 100
-    };
+    rect = (lv_area_t){500, 50, 550, 100};
     lv_vector_dsc_set_fill_color(ctx, lv_color_lighten(lv_color_black(), 50));
     lv_vector_clear_area(ctx, &rect); // clear screen
 
@@ -133,15 +131,15 @@ static void draw_shapes(lv_layer_t * layer)
     lv_vector_dsc_delete(ctx);
 }
 
-static void draw_lines(lv_layer_t * layer)
+static void draw_lines(lv_layer_t *layer)
 {
-    lv_vector_dsc_t * ctx = lv_vector_dsc_create(layer);
+    lv_vector_dsc_t *ctx = lv_vector_dsc_create(layer);
 
     lv_area_t rect = {0, 0, 640, 480};
     lv_vector_dsc_set_fill_color(ctx, lv_color_white());
     lv_vector_clear_area(ctx, &rect);
 
-    lv_vector_path_t * path = lv_vector_path_create(LV_VECTOR_PATH_QUALITY_MEDIUM);
+    lv_vector_path_t *path = lv_vector_path_create(LV_VECTOR_PATH_QUALITY_MEDIUM);
 
     lv_vector_dsc_set_stroke_opa(ctx, LV_OPA_COVER);
     lv_vector_dsc_set_fill_opa(ctx, LV_OPA_0);
@@ -235,11 +233,11 @@ static void draw_lines(lv_layer_t * layer)
     lv_vector_dsc_delete(ctx);
 }
 
-static void canvas_draw(const char * name, void (*draw_cb)(lv_layer_t *))
+static void canvas_draw(const char *name, void (*draw_cb)(lv_layer_t *))
 {
     LV_UNUSED(name);
-    lv_obj_t * canvas = lv_canvas_create(lv_screen_active());
-    lv_draw_buf_t * draw_buf = lv_draw_buf_create(640, 480, LV_COLOR_FORMAT_ARGB8888, LV_STRIDE_AUTO);
+    lv_obj_t *canvas = lv_canvas_create(lv_screen_active());
+    lv_draw_buf_t *draw_buf = lv_draw_buf_create(640, 480, LV_COLOR_FORMAT_ARGB8888, LV_STRIDE_AUTO);
     TEST_ASSERT_NOT_NULL(draw_buf);
 
     lv_draw_buf_clear(draw_buf, NULL);
@@ -280,14 +278,14 @@ void test_transform(void)
     TEST_ASSERT_EQUAL_FLOAT(110.0f, p.x);
     TEST_ASSERT_EQUAL_FLOAT(110.0f, p.y);
 
-    lv_vector_path_t * path = lv_vector_path_create(LV_VECTOR_PATH_QUALITY_MEDIUM);
+    lv_vector_path_t *path = lv_vector_path_create(LV_VECTOR_PATH_QUALITY_MEDIUM);
     lv_vector_path_move_to(path, &p);
 
     lv_fpoint_t p2 = {20, 20};
     lv_vector_path_line_to(path, &p2);
     lv_matrix_transform_path(&matrix, path);
 
-    lv_fpoint_t * pt = lv_array_at(&path->points, 0);
+    lv_fpoint_t *pt = lv_array_at(&path->points, 0);
 
     TEST_ASSERT_EQUAL_FLOAT(210.0f, pt[0].x);
     TEST_ASSERT_EQUAL_FLOAT(210.0f, pt[0].y);
@@ -307,13 +305,13 @@ void test_draw_shapes(void)
     canvas_draw("draw_shapes", draw_shapes);
 }
 
-static void event_cb(lv_event_t * e)
+static void event_cb(lv_event_t *e)
 {
-    lv_layer_t * layer = lv_event_get_layer(e);
-    lv_obj_t * obj = lv_event_get_current_target_obj(e);
+    lv_layer_t *layer = lv_event_get_layer(e);
+    lv_obj_t *obj = lv_event_get_current_target_obj(e);
 
-    lv_vector_dsc_t * dsc = lv_vector_dsc_create(layer);
-    lv_vector_path_t * path = lv_vector_path_create(LV_VECTOR_PATH_QUALITY_MEDIUM);
+    lv_vector_dsc_t *dsc = lv_vector_dsc_create(layer);
+    lv_vector_path_t *path = lv_vector_path_create(LV_VECTOR_PATH_QUALITY_MEDIUM);
 
     lv_fpoint_t pts[] = {{10, 10}, {130, 130}, {10, 130}};
     lv_vector_path_move_to(path, &pts[0]);
@@ -332,7 +330,7 @@ static void event_cb(lv_event_t * e)
 
 void test_draw_during_rendering(void)
 {
-    lv_obj_t * obj = lv_obj_create(lv_screen_active());
+    lv_obj_t *obj = lv_obj_create(lv_screen_active());
     lv_obj_center(obj);
     lv_obj_add_event_cb(obj, event_cb, LV_EVENT_DRAW_MAIN, NULL);
 

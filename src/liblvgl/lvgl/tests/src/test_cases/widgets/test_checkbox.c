@@ -13,16 +13,16 @@ void test_checkbox_should_have_default_text_when_created(void);
 void test_checkbox_should_return_dynamically_allocated_text(void);
 void test_checkbox_should_allocate_memory_for_static_text(void);
 
-static lv_obj_t * active_screen = NULL;
-static lv_obj_t * checkbox = NULL;
+static lv_obj_t *active_screen = NULL;
+static lv_obj_t *checkbox = NULL;
 
 static volatile bool event_called = false;
 
-static void event_handler(lv_event_t * e)
+static void event_handler(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
 
-    if(LV_EVENT_VALUE_CHANGED == code) {
+    if (LV_EVENT_VALUE_CHANGED == code) {
         event_called = true;
     }
 }
@@ -52,7 +52,7 @@ void test_checkbox_should_call_event_handler_on_click_when_enabled(void)
 
 void test_checkbox_should_have_default_text_when_created(void)
 {
-    const char * default_text = "Check box";
+    const char *default_text = "Check box";
 
     active_screen = lv_screen_active();
     checkbox = lv_checkbox_create(active_screen);
@@ -63,7 +63,7 @@ void test_checkbox_should_have_default_text_when_created(void)
 
 void test_checkbox_should_return_dynamically_allocated_text(void)
 {
-    const char * message = "Hello World!";
+    const char *message = "Hello World!";
 
     active_screen = lv_screen_active();
     checkbox = lv_checkbox_create(active_screen);
@@ -77,7 +77,7 @@ void test_checkbox_should_return_dynamically_allocated_text(void)
 void test_checkbox_should_allocate_memory_for_static_text(void)
 {
     size_t initial_available_memory = 0;
-    const char * static_text = "Keep me while you exist";
+    const char *static_text = "Keep me while you exist";
 
     lv_mem_monitor_t m1;
     lv_mem_monitor(&m1);
@@ -97,10 +97,9 @@ void test_checkbox_should_allocate_memory_for_static_text(void)
 
 void test_checkbox_rtl(void)
 {
-    const char * message =
-        "מעבד, או בשמו המלא יחידת עיבוד מרכזית (באנגלית: CPU - Central Processing Unit).";
+    const char *message = "מעבד, או בשמו המלא יחידת עיבוד מרכזית (באנגלית: CPU - Central Processing Unit).";
 
-    lv_obj_t * screen = lv_obj_create(lv_screen_active());
+    lv_obj_t *screen = lv_obj_create(lv_screen_active());
     lv_obj_remove_style_all(screen);
     lv_obj_set_size(screen, 800, 480);
     lv_obj_center(screen);
@@ -108,7 +107,7 @@ void test_checkbox_rtl(void)
     lv_obj_set_style_bg_opa(screen, LV_OPA_100, 0);
     lv_obj_set_style_pad_all(screen, 0, 0);
 
-    lv_obj_t * test_checkbox = lv_checkbox_create(active_screen);
+    lv_obj_t *test_checkbox = lv_checkbox_create(active_screen);
 
     lv_checkbox_set_text(test_checkbox, message);
     lv_obj_set_style_text_font(test_checkbox, &lv_font_dejavu_16_persian_hebrew, 0);

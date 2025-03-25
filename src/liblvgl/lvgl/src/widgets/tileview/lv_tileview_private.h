@@ -32,14 +32,13 @@ extern "C" {
  **********************/
 struct lv_tileview_t {
     lv_obj_t obj;
-    lv_obj_t * tile_act;
+    lv_obj_t *tile_act;
 };
 
 struct lv_tileview_tile_t {
     lv_obj_t obj;
     lv_dir_t dir;
 };
-
 
 /**********************
  * GLOBAL PROTOTYPES

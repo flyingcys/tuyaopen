@@ -25,14 +25,13 @@
 
 #include "tvgMath.h"
 
-
-bool mathInverse(const Matrix* m, Matrix* out)
+bool mathInverse(const Matrix *m, Matrix *out)
 {
-    auto det = m->e11 * (m->e22 * m->e33 - m->e32 * m->e23) -
-               m->e12 * (m->e21 * m->e33 - m->e23 * m->e31) +
+    auto det = m->e11 * (m->e22 * m->e33 - m->e32 * m->e23) - m->e12 * (m->e21 * m->e33 - m->e23 * m->e31) +
                m->e13 * (m->e21 * m->e32 - m->e22 * m->e31);
 
-    if (mathZero(det)) return false;
+    if (mathZero(det))
+        return false;
 
     auto invDet = 1 / det;
 
@@ -49,8 +48,7 @@ bool mathInverse(const Matrix* m, Matrix* out)
     return true;
 }
 
-
-Matrix mathMultiply(const Matrix* lhs, const Matrix* rhs)
+Matrix mathMultiply(const Matrix *lhs, const Matrix *rhs)
 {
     Matrix m;
 
@@ -69,10 +67,10 @@ Matrix mathMultiply(const Matrix* lhs, const Matrix* rhs)
     return m;
 }
 
-
-void mathRotate(Matrix* m, float degree)
+void mathRotate(Matrix *m, float degree)
 {
-    if (degree == 0.0f) return;
+    if (degree == 0.0f)
+        return;
 
     auto radian = degree / 180.0f * MATH_PI;
     auto cosVal = cosf(radian);
@@ -84,19 +82,16 @@ void mathRotate(Matrix* m, float degree)
     m->e22 *= cosVal;
 }
 
-
-bool mathIdentity(const Matrix* m)
+bool mathIdentity(const Matrix *m)
 {
-    if (m->e11 != 1.0f || m->e12 != 0.0f || m->e13 != 0.0f ||
-        m->e21 != 0.0f || m->e22 != 1.0f || m->e23 != 0.0f ||
+    if (m->e11 != 1.0f || m->e12 != 0.0f || m->e13 != 0.0f || m->e21 != 0.0f || m->e22 != 1.0f || m->e23 != 0.0f ||
         m->e31 != 0.0f || m->e32 != 0.0f || m->e33 != 1.0f) {
         return false;
     }
     return true;
 }
 
-
-void mathMultiply(Point* pt, const Matrix* transform)
+void mathMultiply(Point *pt, const Matrix *transform)
 {
     auto tx = pt->x * transform->e11 + pt->y * transform->e12 + transform->e13;
     auto ty = pt->x * transform->e21 + pt->y * transform->e22 + transform->e23;
@@ -105,4 +100,3 @@ void mathMultiply(Point* pt, const Matrix* transform)
 }
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

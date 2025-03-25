@@ -28,7 +28,7 @@ extern "C" {
  * @param dev_path device path, e.g., /dev/input/event0
  * @return pointer to input device or NULL if opening failed
  */
-lv_indev_t * lv_evdev_create(lv_indev_type_t indev_type, const char * dev_path);
+lv_indev_t *lv_evdev_create(lv_indev_type_t indev_type, const char *dev_path);
 
 /**
  * Set whether coordinates of pointer device should be swapped. Defaults to
@@ -36,7 +36,7 @@ lv_indev_t * lv_evdev_create(lv_indev_type_t indev_type, const char * dev_path);
  * @param indev evdev input device
  * @param swap_axes whether to swap x and y axes
  */
-void lv_evdev_set_swap_axes(lv_indev_t * indev, bool swap_axes);
+void lv_evdev_set_swap_axes(lv_indev_t *indev, bool swap_axes);
 
 /**
  * Configure a coordinate transformation for pointer devices. Applied after
@@ -47,13 +47,13 @@ void lv_evdev_set_swap_axes(lv_indev_t * indev, bool swap_axes);
  * @param max_x pointer coordinate mapped to max x of display
  * @param max_y pointer coordinate mapped to max y of display
  */
-void lv_evdev_set_calibration(lv_indev_t * indev, int min_x, int min_y, int max_x, int max_y);
+void lv_evdev_set_calibration(lv_indev_t *indev, int min_x, int min_y, int max_x, int max_y);
 
 /**
  * Remove evdev input device.
  * @param indev evdev input device to close and free
  */
-void lv_evdev_delete(lv_indev_t * indev);
+void lv_evdev_delete(lv_indev_t *indev);
 
 #endif /*LV_USE_EVDEV*/
 

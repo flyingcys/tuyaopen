@@ -24,7 +24,7 @@ extern "C" {
  *      DEFINES
  *********************/
 
-#define LV_TXT_ENC_UTF8 1
+#define LV_TXT_ENC_UTF8  1
 #define LV_TXT_ENC_ASCII 2
 
 /**********************
@@ -36,21 +36,21 @@ extern "C" {
  */
 
 typedef enum {
-    LV_TEXT_FLAG_NONE      = 0x00,
-    LV_TEXT_FLAG_EXPAND    = 0x01, /**< Ignore max-width to avoid automatic word wrapping*/
-    LV_TEXT_FLAG_FIT       = 0x02, /**< Max-width is already equal to the longest line. (Used to skip some calculation)*/
+    LV_TEXT_FLAG_NONE = 0x00,
+    LV_TEXT_FLAG_EXPAND = 0x01, /**< Ignore max-width to avoid automatic word wrapping*/
+    LV_TEXT_FLAG_FIT = 0x02,    /**< Max-width is already equal to the longest line. (Used to skip some calculation)*/
     LV_TEXT_FLAG_BREAK_ALL = 0x04, /**< To prevent overflow, insert breaks between any two characters.
-                                        Otherwise breaks are inserted at word boundaries, as configured via LV_TXT_BREAK_CHARS
-                                        or according to LV_TXT_LINE_BREAK_LONG_LEN, LV_TXT_LINE_BREAK_LONG_PRE_MIN_LEN,
-                                        and LV_TXT_LINE_BREAK_LONG_POST_MIN_LEN.*/
+                                        Otherwise breaks are inserted at word boundaries, as configured via
+                                      LV_TXT_BREAK_CHARS or according to LV_TXT_LINE_BREAK_LONG_LEN,
+                                      LV_TXT_LINE_BREAK_LONG_PRE_MIN_LEN, and LV_TXT_LINE_BREAK_LONG_POST_MIN_LEN.*/
 } lv_text_flag_t;
 
 /** Label align policy*/
 typedef enum {
-    LV_TEXT_ALIGN_AUTO, /**< Align text auto*/
-    LV_TEXT_ALIGN_LEFT, /**< Align text to left*/
+    LV_TEXT_ALIGN_AUTO,   /**< Align text auto*/
+    LV_TEXT_ALIGN_LEFT,   /**< Align text to left*/
     LV_TEXT_ALIGN_CENTER, /**< Align text to center*/
-    LV_TEXT_ALIGN_RIGHT, /**< Align text to right*/
+    LV_TEXT_ALIGN_RIGHT,  /**< Align text to right*/
 } lv_text_align_t;
 
 /**********************
@@ -69,7 +69,7 @@ typedef enum {
 
  * line breaks
  */
-void lv_text_get_size(lv_point_t * size_res, const char * text, const lv_font_t * font, int32_t letter_space,
+void lv_text_get_size(lv_point_t *size_res, const char *text, const lv_font_t *font, int32_t letter_space,
                       int32_t line_space, int32_t max_width, lv_text_flag_t flag);
 
 /**
@@ -81,7 +81,7 @@ void lv_text_get_size(lv_point_t * size_res, const char * text, const lv_font_t 
  * @param letter_space letter space
  * @return length of a char_num long text
  */
-int32_t lv_text_get_width(const char * txt, uint32_t length, const lv_font_t * font, int32_t letter_space);
+int32_t lv_text_get_width(const char *txt, uint32_t length, const lv_font_t *font, int32_t letter_space);
 
 /**********************
  *      MACROS

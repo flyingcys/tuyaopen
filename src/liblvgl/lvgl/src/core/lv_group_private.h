@@ -29,15 +29,15 @@ extern "C" {
  * They are NOT for laying out objects on a screen (try layouts for that).
  */
 struct lv_group_t {
-    lv_ll_t obj_ll;        /**< Linked list to store the objects in the group*/
-    lv_obj_t ** obj_focus; /**< The object in focus*/
+    lv_ll_t obj_ll;       /**< Linked list to store the objects in the group*/
+    lv_obj_t **obj_focus; /**< The object in focus*/
 
-    lv_group_focus_cb_t focus_cb;              /**< A function to call when a new object is focused (optional)*/
-    lv_group_edge_cb_t  edge_cb;               /**< A function to call when an edge is reached, no more focus
-                                                    targets are available in this direction (to allow edge feedback
-                                                    like a sound or a scroll bounce) */
+    lv_group_focus_cb_t focus_cb; /**< A function to call when a new object is focused (optional)*/
+    lv_group_edge_cb_t edge_cb;   /**< A function to call when an edge is reached, no more focus
+                                       targets are available in this direction (to allow edge feedback
+                                       like a sound or a scroll bounce) */
 
-    void * user_data;
+    void *user_data;
 
     uint8_t frozen : 1;         /**< 1: can't focus to new object*/
     uint8_t editing : 1;        /**< 1: Edit mode, 0: Navigate mode*/
@@ -46,7 +46,6 @@ struct lv_group_t {
     uint8_t wrap : 1;           /**< 1: Focus next/prev can wrap at end of list. 0: Focus next/prev stops at end
                                    of list.*/
 };
-
 
 /**********************
  * GLOBAL PROTOTYPES

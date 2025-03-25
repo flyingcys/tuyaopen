@@ -30,7 +30,6 @@
 #include "tvgMath.h"
 #include "tvgStr.h"
 
-
 /************************************************************************/
 /* Internal Class Implementation                                        */
 /************************************************************************/
@@ -40,12 +39,12 @@ static inline bool _floatExact(float a, float b)
     return memcmp(&a, &b, sizeof(float)) == 0;
 }
 
-
 /************************************************************************/
 /* External Class Implementation                                        */
 /************************************************************************/
 
-namespace tvg {
+namespace tvg
+{
 
 /*
  * https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/strtof-strtof-l-wcstof-wcstof-l?view=msvc-160
@@ -61,8 +60,10 @@ namespace tvg {
  */
 float strToFloat(const char *nPtr, char **endPtr)
 {
-    if (endPtr) *endPtr = (char *) (nPtr);
-    if (!nPtr) return 0.0f;
+    if (endPtr)
+        *endPtr = (char *)(nPtr);
+    if (!nPtr)
+        return 0.0f;
 
     auto a = nPtr;
     auto iter = nPtr;
@@ -70,10 +71,11 @@ float strToFloat(const char *nPtr, char **endPtr)
     unsigned long long integerPart = 0;
     int minus = 1;
 
-    //ignore leading whitespaces
-    while (isspace(*iter)) iter++;
+    // ignore leading whitespaces
+    while (isspace(*iter))
+        iter++;
 
-    //signed or not
+    // signed or not
     if (*iter == '-') {
         minus = -1;
         iter++;
@@ -82,31 +84,38 @@ float strToFloat(const char *nPtr, char **endPtr)
     }
 
     if (tolower(*iter) == 'i') {
-        if ((tolower(*(iter + 1)) == 'n') && (tolower(*(iter + 2)) == 'f')) iter += 3;
-        else goto error;
+        if ((tolower(*(iter + 1)) == 'n') && (tolower(*(iter + 2)) == 'f'))
+            iter += 3;
+        else
+            goto error;
 
         if (tolower(*(iter)) == 'i') {
             if ((tolower(*(iter + 1)) == 'n') && (tolower(*(iter + 2)) == 'i') && (tolower(*(iter + 3)) == 't') &&
                 (tolower(*(iter + 4)) == 'y'))
                 iter += 5;
-            else goto error;
+            else
+                goto error;
         }
-        if (endPtr) *endPtr = (char *) (iter);
+        if (endPtr)
+            *endPtr = (char *)(iter);
         return (minus == -1) ? -INFINITY : INFINITY;
     }
 
     if (tolower(*iter) == 'n') {
-        if ((tolower(*(iter + 1)) == 'a') && (tolower(*(iter + 2)) == 'n')) iter += 3;
-        else goto error;
+        if ((tolower(*(iter + 1)) == 'a') && (tolower(*(iter + 2)) == 'n'))
+            iter += 3;
+        else
+            goto error;
 
-        if (endPtr) *endPtr = (char *) (iter);
+        if (endPtr)
+            *endPtr = (char *)(iter);
         return (minus == -1) ? -NAN : NAN;
     }
 
-    //Optional: integer part before dot
+    // Optional: integer part before dot
     if (isdigit(*iter)) {
         for (; isdigit(*iter); iter++) {
-            integerPart = integerPart * 10ULL + (unsigned long long) (*iter - '0');
+            integerPart = integerPart * 10ULL + (unsigned long long)(*iter - '0');
         }
         a = iter;
     } else if (*iter != '.') {
@@ -115,7 +124,7 @@ float strToFloat(const char *nPtr, char **endPtr)
 
     val = static_cast<float>(integerPart);
 
-    //Optional: decimal part after dot
+    // Optional: decimal part after dot
     if (*iter == '.') {
         unsigned long long decimalPart = 0;
         unsigned long long pow10 = 1;
@@ -130,7 +139,7 @@ float strToFloat(const char *nPtr, char **endPtr)
                     pow10 *= 10ULL;
                 }
             }
-        } else if (isspace(*iter)) { //skip if there is a space after the dot.
+        } else if (isspace(*iter)) { // skip if there is a space after the dot.
             a = iter;
             goto success;
         }
@@ -139,18 +148,18 @@ float strToFloat(const char *nPtr, char **endPtr)
         a = iter;
     }
 
-    //Optional: exponent
+    // Optional: exponent
     if (*iter == 'e' || *iter == 'E') {
         ++iter;
 
-        //Exception: svg may have 'em' unit for fonts. ex) 5em, 10.5em
+        // Exception: svg may have 'em' unit for fonts. ex) 5em, 10.5em
         if ((*iter == 'm') || (*iter == 'M')) {
-            //TODO: We don't support font em unit now, but has to multiply val * font size later...
+            // TODO: We don't support font em unit now, but has to multiply val * font size later...
             a = iter + 1;
             goto success;
         }
 
-        //signed or not
+        // signed or not
         int minus_e = 1;
 
         if (*iter == '-') {
@@ -163,7 +172,8 @@ float strToFloat(const char *nPtr, char **endPtr)
         unsigned int exponentPart = 0;
 
         if (isdigit(*iter)) {
-            while (*iter == '0') iter++;
+            while (*iter == '0')
+                iter++;
             for (; isdigit(*iter); iter++) {
                 exponentPart = exponentPart * 10U + static_cast<unsigned int>(*iter - '0');
             }
@@ -174,9 +184,9 @@ float strToFloat(const char *nPtr, char **endPtr)
             goto success;
         }
 
-        //if ((_floatExact(val, 2.2250738585072011f)) && ((minus_e * static_cast<int>(exponentPart)) <= -308)) {
+        // if ((_floatExact(val, 2.2250738585072011f)) && ((minus_e * static_cast<int>(exponentPart)) <= -308)) {
         if ((_floatExact(val, 1.175494351f)) && ((minus_e * static_cast<int>(exponentPart)) <= -38)) {
-            //val *= 1.0e-308f;
+            // val *= 1.0e-308f;
             val *= 1.0e-38f;
             a = iter;
             goto success;
@@ -200,49 +210,53 @@ float strToFloat(const char *nPtr, char **endPtr)
     }
 
 success:
-    if (endPtr) *endPtr = (char *)(a);
-    if (!std::isfinite(val)) return 0.0f;
+    if (endPtr)
+        *endPtr = (char *)(a);
+    if (!std::isfinite(val))
+        return 0.0f;
 
     return minus * val;
 
 error:
-    if (endPtr) *endPtr = (char *)(nPtr);
+    if (endPtr)
+        *endPtr = (char *)(nPtr);
     return 0.0f;
 }
 
-
-int str2int(const char* str, size_t n)
+int str2int(const char *str, size_t n)
 {
     int ret = 0;
-    for(size_t i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         ret = ret * 10 + (str[i] - '0');
     }
     return ret;
 }
 
-char* strDuplicate(const char *str, size_t n)
+char *strDuplicate(const char *str, size_t n)
 {
     auto len = strlen(str);
-    if (len < n) n = len;
+    if (len < n)
+        n = len;
 
-    auto ret = (char *) malloc(n + 1);
-    if (!ret) return nullptr;
+    auto ret = (char *)malloc(n + 1);
+    if (!ret)
+        return nullptr;
     ret[n] = '\0';
 
-    return (char *) memcpy(ret, str, n);
+    return (char *)memcpy(ret, str, n);
 }
 
-char* strDirname(const char* path)
+char *strDirname(const char *path)
 {
     const char *ptr = strrchr(path, '/');
 #ifdef _WIN32
-    if (ptr) ptr = strrchr(ptr + 1, '\\');
+    if (ptr)
+        ptr = strrchr(ptr + 1, '\\');
 #endif
-    int len = int(ptr + 1 - path);  // +1 to include '/'
+    int len = int(ptr + 1 - path); // +1 to include '/'
     return strDuplicate(path, len);
 }
 
-}
+} // namespace tvg
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

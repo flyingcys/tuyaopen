@@ -44,7 +44,7 @@ extern "C" {
  * @retval The vglite destination buffer
  *
  */
-vg_lite_buffer_t * vglite_get_dest_buf(void);
+vg_lite_buffer_t *vglite_get_dest_buf(void);
 
 /**
  * Get vglite source buffer pointer.
@@ -52,7 +52,7 @@ vg_lite_buffer_t * vglite_get_dest_buf(void);
  * @retval The vglite source buffer
  *
  */
-vg_lite_buffer_t * vglite_get_src_buf(void);
+vg_lite_buffer_t *vglite_get_src_buf(void);
 
 /**
  * Set vglite destination buffer address only.
@@ -60,7 +60,7 @@ vg_lite_buffer_t * vglite_get_src_buf(void);
  * @param[in] buf Destination buffer address (does not require alignment for VG_LITE_LINEAR mode)
  *
  */
-void vglite_set_dest_buf_ptr(void * buf);
+void vglite_set_dest_buf_ptr(void *buf);
 
 /**
  * Set vglite source buffer address only.
@@ -68,7 +68,7 @@ void vglite_set_dest_buf_ptr(void * buf);
  * @param[in] buf Source buffer address
  *
  */
-void vglite_set_src_buf_ptr(const void * buf);
+void vglite_set_src_buf_ptr(const void *buf);
 
 /**
  * Set vglite destination buffer.
@@ -80,8 +80,7 @@ void vglite_set_src_buf_ptr(const void * buf);
  * @param[in] cf Destination buffer color format
  *
  */
-void vglite_set_dest_buf(const void * buf, uint32_t width, uint32_t height, uint32_t stride,
-                         lv_color_format_t cf);
+void vglite_set_dest_buf(const void *buf, uint32_t width, uint32_t height, uint32_t stride, lv_color_format_t cf);
 
 /**
  * Set vglite source buffer.
@@ -93,8 +92,7 @@ void vglite_set_dest_buf(const void * buf, uint32_t width, uint32_t height, uint
  * @param[in] cf Source buffer color format
  *
  */
-void vglite_set_src_buf(const void * buf, uint32_t width, uint32_t height, uint32_t stride,
-                        lv_color_format_t cf);
+void vglite_set_src_buf(const void *buf, uint32_t width, uint32_t height, uint32_t stride, lv_color_format_t cf);
 
 /**
  * Set vglite buffer.
@@ -107,8 +105,7 @@ void vglite_set_src_buf(const void * buf, uint32_t width, uint32_t height, uint3
  * @param[in] cf Buffer color format
  *
  */
-void vglite_set_buf(vg_lite_buffer_t * vgbuf, void * buf,
-                    uint32_t width, uint32_t height, uint32_t stride,
+void vglite_set_buf(vg_lite_buffer_t *vgbuf, void *buf, uint32_t width, uint32_t height, uint32_t stride,
                     lv_color_format_t cf);
 
 /**********************

@@ -31,7 +31,7 @@
 namespace tvg
 {
 
-class FrameModule: public ImageLoader
+class FrameModule : public ImageLoader
 {
 public:
     float segmentBegin = 0.0f;
@@ -40,15 +40,17 @@ public:
     FrameModule(FileType type) : ImageLoader(type) {}
     virtual ~FrameModule() {}
 
-    virtual bool frame(float no) = 0;       //set the current frame number
-    virtual float totalFrame() = 0;         //return the total frame count
-    virtual float curFrame() = 0;           //return the current frame number
-    virtual float duration() = 0;           //return the animation duration in seconds
+    virtual bool frame(float no) = 0; // set the current frame number
+    virtual float totalFrame() = 0;   // return the total frame count
+    virtual float curFrame() = 0;     // return the current frame number
+    virtual float duration() = 0;     // return the animation duration in seconds
 
-    void segment(float* begin, float* end)
+    void segment(float *begin, float *end)
     {
-        if (begin) *begin = segmentBegin;
-        if (end) *end = segmentEnd;
+        if (begin)
+            *begin = segmentBegin;
+        if (end)
+            *end = segmentEnd;
     }
 
     void segment(float begin, float end)
@@ -60,9 +62,8 @@ public:
     virtual bool animatable() override { return true; }
 };
 
-}
+} // namespace tvg
 
 #endif //_TVG_FRAME_MODULE_H_
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

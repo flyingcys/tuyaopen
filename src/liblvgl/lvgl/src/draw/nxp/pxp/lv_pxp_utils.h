@@ -36,13 +36,13 @@ extern "C" {
 #define PXP_ASSERT(expr)
 #endif
 
-#define PXP_ASSERT_MSG(expr, msg)                                    \
-    do {                                                             \
-        if(!(expr)) {                                                \
-            LV_LOG_ERROR(msg);                                       \
-            PXP_ASSERT(false);                                       \
-        }                                                            \
-    } while(0)
+#define PXP_ASSERT_MSG(expr, msg)                                                                                      \
+    do {                                                                                                               \
+        if (!(expr)) {                                                                                                 \
+            LV_LOG_ERROR(msg);                                                                                         \
+            PXP_ASSERT(false);                                                                                         \
+        }                                                                                                              \
+    } while (0)
 
 /**********************
  *      TYPEDEFS
@@ -63,7 +63,7 @@ pxp_as_pixel_format_t pxp_get_as_px_format(lv_color_format_t cf);
 #if LV_USE_DRAW_PXP
 pxp_ps_pixel_format_t pxp_get_ps_px_format(lv_color_format_t cf);
 
-bool pxp_buf_aligned(const void * buf, uint32_t stride);
+bool pxp_buf_aligned(const void *buf, uint32_t stride);
 
 /**********************
  *      MACROS

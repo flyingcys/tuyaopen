@@ -2,27 +2,27 @@
 #if LV_USE_SCALE && LV_BUILD_EXAMPLES
 
 #if LV_USE_FLOAT
-    #define my_PRIprecise "f"
+#define my_PRIprecise "f"
 #else
-    #define my_PRIprecise LV_PRId32
+#define my_PRIprecise LV_PRId32
 #endif
 
-static lv_obj_t * scale;
-static lv_obj_t * minute_hand;
-static lv_obj_t * hour_hand;
+static lv_obj_t *scale;
+static lv_obj_t *minute_hand;
+static lv_obj_t *hour_hand;
 static lv_point_precise_t minute_hand_points[2];
 static int32_t hour;
 static int32_t minute;
 
-static void timer_cb(lv_timer_t * timer)
+static void timer_cb(lv_timer_t *timer)
 {
     LV_UNUSED(timer);
 
     minute++;
-    if(minute > 59) {
+    if (minute > 59) {
         minute = 0;
         hour++;
-        if(hour > 11) {
+        if (hour > 11) {
             hour = 0;
         }
     }
@@ -36,13 +36,10 @@ static void timer_cb(lv_timer_t * timer)
     /* the scale will store the minute hand line points in `minute_hand_points` */
     lv_scale_set_line_needle_value(scale, minute_hand, 60, minute);
     /* log the points that were stored in the array */
-    LV_LOG_USER(
-        "minute hand points - "
-        "0: (%" my_PRIprecise ", %" my_PRIprecise "), "
-        "1: (%" my_PRIprecise ", %" my_PRIprecise ")",
-        minute_hand_points[0].x, minute_hand_points[0].y,
-        minute_hand_points[1].x, minute_hand_points[1].y
-    );
+    LV_LOG_USER("minute hand points - "
+                "0: (%" my_PRIprecise ", %" my_PRIprecise "), "
+                "1: (%" my_PRIprecise ", %" my_PRIprecise ")",
+                minute_hand_points[0].x, minute_hand_points[0].y, minute_hand_points[1].x, minute_hand_points[1].y);
 
     /* the scale will allocate the hour hand line points */
     lv_scale_set_line_needle_value(scale, hour_hand, 40, hour * 5 + (minute / 12));
@@ -68,7 +65,7 @@ void lv_example_scale_6(void)
     lv_scale_set_total_tick_count(scale, 61);
     lv_scale_set_major_tick_every(scale, 5);
 
-    static const char * hour_ticks[] = {"12", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", NULL};
+    static const char *hour_ticks[] = {"12", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", NULL};
     lv_scale_set_text_src(scale, hour_ticks);
 
     static lv_style_t indicator_style;
@@ -80,7 +77,7 @@ void lv_example_scale_6(void)
 
     /* Major tick properties */
     lv_style_set_line_color(&indicator_style, lv_palette_main(LV_PALETTE_YELLOW));
-    lv_style_set_length(&indicator_style, 8); /* tick length */
+    lv_style_set_length(&indicator_style, 8);     /* tick length */
     lv_style_set_line_width(&indicator_style, 2); /* tick width */
     lv_obj_add_style(scale, &indicator_style, LV_PART_INDICATOR);
 
@@ -88,7 +85,7 @@ void lv_example_scale_6(void)
     static lv_style_t minor_ticks_style;
     lv_style_init(&minor_ticks_style);
     lv_style_set_line_color(&minor_ticks_style, lv_palette_main(LV_PALETTE_YELLOW));
-    lv_style_set_length(&minor_ticks_style, 6); /* tick length */
+    lv_style_set_length(&minor_ticks_style, 6);     /* tick length */
     lv_style_set_line_width(&minor_ticks_style, 2); /* tick width */
     lv_obj_add_style(scale, &minor_ticks_style, LV_PART_ITEMS);
 
@@ -119,7 +116,7 @@ void lv_example_scale_6(void)
 
     hour = 11;
     minute = 5;
-    lv_timer_t * timer = lv_timer_create(timer_cb, 250, NULL);
+    lv_timer_t *timer = lv_timer_create(timer_cb, 250, NULL);
     lv_timer_ready(timer);
 }
 

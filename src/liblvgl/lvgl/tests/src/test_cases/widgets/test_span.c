@@ -4,8 +4,8 @@
 
 #include "unity/unity.h"
 
-static lv_obj_t * spangroup = NULL;
-static lv_obj_t * active_screen = NULL;
+static lv_obj_t *spangroup = NULL;
+static lv_obj_t *active_screen = NULL;
 
 void setUp(void)
 {
@@ -16,7 +16,7 @@ void tearDown(void)
 {
     lv_obj_delete(spangroup);
 
-    if(active_screen) {
+    if (active_screen) {
         lv_obj_clean(active_screen);
     }
 
@@ -26,14 +26,14 @@ void tearDown(void)
 
 void test_spangroup_create_returns_not_null_object(void)
 {
-    lv_obj_t * obj = lv_spangroup_create(NULL);
+    lv_obj_t *obj = lv_spangroup_create(NULL);
 
     TEST_ASSERT(NULL != obj);
 }
 
 void test_spangroup_new_span_with_null_parameter_returns_null_object(void)
 {
-    lv_span_t * span = lv_spangroup_new_span(NULL);
+    lv_span_t *span = lv_spangroup_new_span(NULL);
 
     TEST_ASSERT(NULL == span);
     TEST_ASSERT_EQUAL_INT(0, lv_spangroup_get_span_count(spangroup));
@@ -41,7 +41,7 @@ void test_spangroup_new_span_with_null_parameter_returns_null_object(void)
 
 void test_spangroup_new_span_with_valid_parameter_returns_not_null_object(void)
 {
-    lv_span_t * span = lv_spangroup_new_span(spangroup);
+    lv_span_t *span = lv_spangroup_new_span(spangroup);
 
     TEST_ASSERT(NULL != span);
     TEST_ASSERT_EQUAL_INT(1, lv_spangroup_get_span_count(spangroup));
@@ -49,7 +49,7 @@ void test_spangroup_new_span_with_valid_parameter_returns_not_null_object(void)
 
 void test_spangroup_delete_span_span_is_null(void)
 {
-    lv_span_t * span = lv_spangroup_new_span(spangroup);
+    lv_span_t *span = lv_spangroup_new_span(spangroup);
 
     lv_spangroup_delete_span(spangroup, span);
 
@@ -58,8 +58,8 @@ void test_spangroup_delete_span_span_is_null(void)
 
 void test_span_set_text(void)
 {
-    const char * test_text = "Test Text";
-    lv_span_t * span = lv_spangroup_new_span(spangroup);
+    const char *test_text = "Test Text";
+    lv_span_t *span = lv_spangroup_new_span(spangroup);
 
     lv_span_set_text(span, test_text);
 
@@ -68,8 +68,8 @@ void test_span_set_text(void)
 
 void test_span_set_text_with_bad_parameter_no_action_performed(void)
 {
-    const char * test_text = "Test Text";
-    lv_span_t * span = lv_spangroup_new_span(spangroup);
+    const char *test_text = "Test Text";
+    lv_span_t *span = lv_spangroup_new_span(spangroup);
 
     lv_span_set_text(span, test_text);
     lv_span_set_text(span, NULL);
@@ -79,9 +79,9 @@ void test_span_set_text_with_bad_parameter_no_action_performed(void)
 
 void test_span_set_text_with_previous_test_overwrites(void)
 {
-    const char * old_test_text = "Old Test Text";
-    const char * new_test_text = "New Test Text and it is longer";
-    lv_span_t * span = lv_spangroup_new_span(spangroup);
+    const char *old_test_text = "Old Test Text";
+    const char *new_test_text = "New Test Text and it is longer";
+    lv_span_t *span = lv_spangroup_new_span(spangroup);
 
     lv_span_set_text(span, old_test_text);
     lv_span_set_text(span, new_test_text);
@@ -91,8 +91,8 @@ void test_span_set_text_with_previous_test_overwrites(void)
 
 void test_span_set_text_static(void)
 {
-    const char * test_text = "Test Text";
-    lv_span_t * span = lv_spangroup_new_span(spangroup);
+    const char *test_text = "Test Text";
+    lv_span_t *span = lv_spangroup_new_span(spangroup);
 
     lv_span_set_text_static(span, test_text);
 
@@ -101,8 +101,8 @@ void test_span_set_text_static(void)
 
 void test_span_set_text_static_with_bad_parameter_no_action_performed(void)
 {
-    const char * test_text = "Test Text";
-    lv_span_t * span = lv_spangroup_new_span(spangroup);
+    const char *test_text = "Test Text";
+    lv_span_t *span = lv_spangroup_new_span(spangroup);
 
     lv_span_set_text_static(span, test_text);
     lv_span_set_text_static(span, NULL);
@@ -112,9 +112,9 @@ void test_span_set_text_static_with_bad_parameter_no_action_performed(void)
 
 void test_span_set_text_static_with_previous_text_overwrites(void)
 {
-    const char * old_test_text = "Old Test Text";
-    const char * new_test_text = "New Test Text and it is longer";
-    lv_span_t * span = lv_spangroup_new_span(spangroup);
+    const char *old_test_text = "Old Test Text";
+    const char *new_test_text = "New Test Text and it is longer";
+    lv_span_t *span = lv_spangroup_new_span(spangroup);
     lv_span_set_text_static(span, old_test_text);
     lv_span_set_text_static(span, new_test_text);
 
@@ -218,12 +218,12 @@ void test_spangroup_draw(void)
     spangroup = lv_spangroup_create(active_screen);
     lv_spangroup_set_mode(spangroup, LV_SPAN_MODE_BREAK);
     lv_obj_set_width(spangroup, 100);
-    lv_span_t * span_1 = lv_spangroup_new_span(spangroup);
+    lv_span_t *span_1 = lv_spangroup_new_span(spangroup);
     lv_span_set_text(span_1, "This text is over 100 pixels width");
 
     TEST_ASSERT_EQUAL_SCREENSHOT("widgets/span_01.png");
 
-    lv_span_t * span_2 = lv_spangroup_new_span(spangroup);
+    lv_span_t *span_2 = lv_spangroup_new_span(spangroup);
     lv_span_set_text(span_2, "This text is also over 100 pixels width");
     lv_style_set_text_decor(&span_2->style, LV_TEXT_DECOR_STRIKETHROUGH);
 
@@ -246,8 +246,8 @@ void test_spangroup_get_child(void)
 {
     const int32_t span_1_idx = 0;
     const int32_t span_2_idx = 1;
-    lv_span_t * span_1 = lv_spangroup_new_span(spangroup);
-    lv_span_t * span_2 = lv_spangroup_new_span(spangroup);
+    lv_span_t *span_1 = lv_spangroup_new_span(spangroup);
+    lv_span_t *span_2 = lv_spangroup_new_span(spangroup);
 
     TEST_ASSERT_EQUAL_PTR(span_2, lv_spangroup_get_child(spangroup, span_2_idx));
     TEST_ASSERT_EQUAL_PTR(span_1, lv_spangroup_get_child(spangroup, span_1_idx));
@@ -270,14 +270,12 @@ void test_spangroup_get_expand_width(void)
     active_screen = lv_screen_active();
 
     spangroup = lv_spangroup_create(active_screen);
-    lv_span_t * span = lv_spangroup_new_span(spangroup);
+    lv_span_t *span = lv_spangroup_new_span(spangroup);
     lv_span_set_text(span, "This text is over 100 pixels width");
 
-    TEST_ASSERT_EQUAL_INT(experimental_size,
-                          lv_spangroup_get_expand_width(spangroup, UINT32_MAX));
+    TEST_ASSERT_EQUAL_INT(experimental_size, lv_spangroup_get_expand_width(spangroup, UINT32_MAX));
 
-    TEST_ASSERT_EQUAL_INT(constrained_size,
-                          lv_spangroup_get_expand_width(spangroup, experimental_size));
+    TEST_ASSERT_EQUAL_INT(constrained_size, lv_spangroup_get_expand_width(spangroup, experimental_size));
 }
 
 void test_spangroup_newlines(void)
@@ -314,10 +312,10 @@ void test_spangroup_newlines(void)
 
 void test_spangroup_chinese_break_line(void)
 {
-    lv_font_t * font = lv_freetype_font_create("src/test_files/fonts/noto/NotoSansSC-Regular.ttf",
-                                               LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 24, LV_FREETYPE_FONT_STYLE_NORMAL);
+    lv_font_t *font = lv_freetype_font_create("src/test_files/fonts/noto/NotoSansSC-Regular.ttf",
+                                              LV_FREETYPE_FONT_RENDER_MODE_BITMAP, 24, LV_FREETYPE_FONT_STYLE_NORMAL);
 
-    if(!font) {
+    if (!font) {
         LV_LOG_ERROR("freetype font create failed.");
         TEST_FAIL();
     }
@@ -331,15 +329,15 @@ void test_spangroup_chinese_break_line(void)
     lv_obj_set_style_border_width(spangroup, 2, 0);
     lv_obj_set_width(spangroup, 250);
 
-    lv_span_t * span1 = lv_spangroup_new_span(spangroup);
+    lv_span_t *span1 = lv_spangroup_new_span(spangroup);
     lv_span_set_text(span1, "八百标兵奔北坡");
-    lv_span_t * span2 = lv_spangroup_new_span(spangroup);
+    lv_span_t *span2 = lv_spangroup_new_span(spangroup);
     lv_span_set_text(span2, "炮兵并排北边跑");
     lv_style_set_text_color(&span2->style, lv_palette_main(LV_PALETTE_RED));
-    lv_span_t * span3 = lv_spangroup_new_span(spangroup);
+    lv_span_t *span3 = lv_spangroup_new_span(spangroup);
     lv_span_set_text(span3, "中英文测试。The quick brown fox jumps over a lazy dog. ");
     lv_style_set_text_color(&span3->style, lv_palette_main(LV_PALETTE_BLUE));
-    lv_span_t * span4 = lv_spangroup_new_span(spangroup);
+    lv_span_t *span4 = lv_spangroup_new_span(spangroup);
     lv_span_set_text(span4, "abcdefghijklmn中英文测试");
     lv_style_set_text_color(&span4->style, lv_palette_main(LV_PALETTE_GREEN));
 
@@ -351,9 +349,7 @@ void test_spangroup_chinese_break_line(void)
 
 #else
 
-void test_spangroup_chinese_break_line(void)
-{
-}
+void test_spangroup_chinese_break_line(void) {}
 
 #endif
 

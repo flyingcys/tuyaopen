@@ -33,9 +33,21 @@ const char *NET_CFG_TEXT = "我已进入配网状态，你能帮我用涂鸦智�
 static TKL_QUEUE_HANDLE sg_chat_msg_queue_hdl = NULL;
 static THREAD_HANDLE sg_display_thrd_hdl = NULL;
 
+#include "lvgl.h"
 /***********************************************************
 ***********************function define**********************
 ***********************************************************/
+
+#define TY_DISPLAY_TP_HUMAN_CHAT  0
+#define TY_DISPLAY_TP_AI_CHAT     1
+#define TY_DISPLAY_TP_AI_THINKING 2
+
+#define TY_DISPLAY_TP_STAT_LISTEN 3
+#define TY_DISPLAY_TP_STAT_SPEAK  4
+#define TY_DISPLAY_TP_STAT_IDLE   5
+
+extern lv_obj_t *chat_message_label_;
+extern lv_obj_t *status_label_;
 static void __chat_display_task(void *args)
 {
     DISP_CHAT_MSG_T msg_data;
@@ -45,11 +57,27 @@ static void __chat_display_task(void *args)
     tuya_display_lv_homepage();
     tal_system_sleep(2000);
 
-    tuya_display_lv_chat_ui();
+    // tuya_display_lv_chat_ui();
+    // ui_init();
 
     while (1) {
         tkl_queue_fetch(sg_chat_msg_queue_hdl, &msg_data, TKL_QUEUE_WAIT_FROEVER);
 
+#if 0
+        if (msg_data.type == TY_DISPLAY_TP_STAT_LISTEN) {
+            lv_label_set_text(status_label_, "聆听中...");
+        } else if (msg_data.type == TY_DISPLAY_TP_STAT_SPEAK) {
+            lv_label_set_text(status_label_, "说话中...");
+        } else if (msg_data.type == TY_DISPLAY_TP_STAT_IDLE) {
+            lv_label_set_text(status_label_, "待命");
+        } else if(msg_data.type == TY_DISPLAY_TP_HUMAN_CHAT) {
+            lv_label_set_text(chat_message_label_, msg_data.data);
+        } else if(msg_data.type == TY_DISPLAY_TP_AI_THINKING) {
+            lv_label_set_text(chat_message_label_, msg_data.data);
+        } else if(msg_data.type == TY_DISPLAY_TP_AI_CHAT) {
+            lv_label_set_text(chat_message_label_, msg_data.data);
+        }
+#else
         switch (msg_data.type) {
         case TY_DISPLAY_TP_HUMAN_CHAT:
             tuya_display_lv_chat_message(msg_data.data, false);
@@ -79,6 +107,7 @@ static void __chat_display_task(void *args)
         default:
             break;
         }
+#endif
 
         if (msg_data.data) {
             tkl_system_psram_free(msg_data.data);
@@ -87,44 +116,95 @@ static void __chat_display_task(void *args)
     }
 }
 
+extern lv_obj_t *text_label;
+
+extern lv_obj_t *chat_message_label_;
+extern lv_obj_t *status_label_;
+
 OPERATE_RET tuya_display_init(void)
 {
     OPERATE_RET rt = OPRT_OK;
 
     tuya_display_lvgl_init();
 
-    TUYA_CALL_ERR_RETURN(tkl_queue_create_init(&sg_chat_msg_queue_hdl, sizeof(DISP_CHAT_MSG_T), 8));
+    // TUYA_CALL_ERR_RETURN(tkl_queue_create_init(&sg_chat_msg_queue_hdl, sizeof(DISP_CHAT_MSG_T), 8));
 
-    THREAD_CFG_T cfg = {
-        .thrdname = "chat_display",
-        .priority = THREAD_PRIO_1,
-        .stackDepth = 1024 * 2,
-    };
+    // THREAD_CFG_T cfg = {
+    //     .thrdname = "chat_display",
+    //     .priority = THREAD_PRIO_1,
+    //     .stackDepth = 1024 * 2,
+    // };
 
-    TUYA_CALL_ERR_RETURN(
-        tal_thread_create_and_start(&sg_display_thrd_hdl, NULL, NULL, __chat_display_task, NULL, &cfg));
+    // TUYA_CALL_ERR_RETURN(
+    //     tal_thread_create_and_start(&sg_display_thrd_hdl, NULL, NULL, __chat_display_task, NULL, &cfg));
 
     return OPRT_OK;
 }
 
 OPERATE_RET tuya_display_send_msg(TY_DISPLAY_TYPE_E tp, char *data, int len)
 {
-    DISP_CHAT_MSG_T chat_msg;
 
-    chat_msg.type = tp;
-    chat_msg.len = len;
-    if (len && data != NULL) {
-        chat_msg.data = (char *)tkl_system_psram_malloc(len + 1);
-        if (NULL == chat_msg.data) {
-            return OPRT_MALLOC_FAILED;
-        }
-        memcpy(chat_msg.data, data, len);
-        chat_msg.data[len] = 0; //"\0"
-    } else {
-        chat_msg.data = NULL;
+    // DISP_CHAT_MSG_T chat_msg;
+
+    // chat_msg.type = tp;
+    // chat_msg.len = len;
+    // if (len && data != NULL) {
+    //     chat_msg.data = (char *)tkl_system_psram_malloc(len + 1);
+    //     if (NULL == chat_msg.data) {
+    //         return OPRT_MALLOC_FAILED;
+    //     }
+    //     memcpy(chat_msg.data, data, len);
+    //     chat_msg.data[len] = 0; //"\0"
+    // } else {
+    //     chat_msg.data = NULL;
+    // }
+
+    // tkl_queue_post(sg_chat_msg_queue_hdl, &chat_msg, TKL_QUEUE_WAIT_FROEVER);
+#if 0
+    if (text_label && data) {
+        // static int cnt = 0;
+        // cnt ++;
+        PR_DEBUG("========================== send msg type:%d, len:%d, data:%s ==========================", tp, len, data);
+        // if (tp == 1)
+        //     lv_label_set_text(text_label, "123456");
+        // else
+        //     lv_label_set_text(text_label, "567890");
+
+        lv_label_set_text(text_label, data);
+        // if (cnt % 2 == 0) {
+        //     lv_label_set_text(text_label, "123");
+        //     PR_DEBUG("123");
+        // } else {
+        //     lv_label_set_text(text_label, "456");
+        //     PR_DEBUG("456");
+        // }
     }
+#endif
+    switch (tp) {
+    case TY_DISPLAY_TP_HUMAN_CHAT:
+        lv_label_set_text(chat_message_label_, data);
+        break;
 
-    tkl_queue_post(sg_chat_msg_queue_hdl, &chat_msg, TKL_QUEUE_WAIT_FROEVER);
+    case TY_DISPLAY_TP_AI_THINKING:
+        lv_label_set_text(chat_message_label_, data);
+        break;
+
+    case TY_DISPLAY_TP_AI_CHAT:
+        lv_label_set_text(chat_message_label_, data);
+        break;
+
+    case TY_DISPLAY_TP_STAT_LISTEN:
+        lv_label_set_text(status_label_, "聆听中...");
+        break;
+
+    case TY_DISPLAY_TP_STAT_SPEAK:
+        lv_label_set_text(status_label_, "说话中...");
+        break;
+
+    case TY_DISPLAY_TP_STAT_IDLE:
+        lv_label_set_text(status_label_, "待命");
+        break;
+    }
 
     return OPRT_OK;
 }

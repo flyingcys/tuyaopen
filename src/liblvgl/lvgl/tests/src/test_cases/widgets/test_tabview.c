@@ -24,8 +24,8 @@ void test_tabview_set_act_non_existent(void);
 void test_tabview_tab2_selected_event(void);
 void test_tabview_update_on_external_scroll(void);
 
-static lv_obj_t * active_screen = NULL;
-static lv_obj_t * tabview = NULL;
+static lv_obj_t *active_screen = NULL;
+static lv_obj_t *tabview = NULL;
 
 void setUp(void)
 {
@@ -86,7 +86,7 @@ void test_tabview_add_one_tab_empty(void)
     lv_tabview_set_tab_bar_position(tabview, LV_DIR_TOP);
     lv_tabview_set_tab_bar_size(tabview, 50);
 
-    lv_obj_t * tab1 = lv_tabview_add_tab(tabview, "Tab 1");
+    lv_obj_t *tab1 = lv_tabview_add_tab(tabview, "Tab 1");
 
     TEST_ASSERT_NOT_NULL(tab1);
 }
@@ -97,7 +97,7 @@ void test_tabview_add_one_tab_empty_hor(void)
     lv_tabview_set_tab_bar_position(tabview, LV_DIR_LEFT);
     lv_tabview_set_tab_bar_size(tabview, 50);
 
-    lv_obj_t * tab1 = lv_tabview_add_tab(tabview, "Tab 1");
+    lv_obj_t *tab1 = lv_tabview_add_tab(tabview, "Tab 1");
 
     TEST_ASSERT_NOT_NULL(tab1);
 }
@@ -108,10 +108,10 @@ void test_tabview_add_one_tab_no_scroll(void)
     lv_tabview_set_tab_bar_position(tabview, LV_DIR_TOP);
     lv_tabview_set_tab_bar_size(tabview, 50);
 
-    lv_obj_t * tab1 = lv_tabview_add_tab(tabview, "Tab 1");
+    lv_obj_t *tab1 = lv_tabview_add_tab(tabview, "Tab 1");
 
-    lv_obj_t * label = lv_label_create(tab1);
-    const char * content = "Content of the first tab\n";
+    lv_obj_t *label = lv_label_create(tab1);
+    const char *content = "Content of the first tab\n";
     lv_label_set_text(label, content);
 
     TEST_ASSERT_EQUAL_SCREENSHOT("widgets/tabview_05.png");
@@ -123,24 +123,24 @@ void test_tabview_add_one_tab_with_scroll(void)
     lv_tabview_set_tab_bar_position(tabview, LV_DIR_TOP);
     lv_tabview_set_tab_bar_size(tabview, 50);
 
-    lv_obj_t * tab1 = lv_tabview_add_tab(tabview, "Tab 1");
+    lv_obj_t *tab1 = lv_tabview_add_tab(tabview, "Tab 1");
 
-    lv_obj_t * label = lv_label_create(tab1);
+    lv_obj_t *label = lv_label_create(tab1);
     lv_label_set_text(label, "Content of the first tab\n"
-                      "If the content\n"
-                      "of a tab\n"
-                      "becomes too\n"
-                      "longer\n"
-                      "than the\n"
-                      "container\n"
-                      "then it\n"
-                      "automatically\n"
-                      "becomes\n"
-                      "scrollable.\n"
-                      "\n"
-                      "\n"
-                      "\n"
-                      "Can you see it?");
+                             "If the content\n"
+                             "of a tab\n"
+                             "becomes too\n"
+                             "longer\n"
+                             "than the\n"
+                             "container\n"
+                             "then it\n"
+                             "automatically\n"
+                             "becomes\n"
+                             "scrollable.\n"
+                             "\n"
+                             "\n"
+                             "\n"
+                             "Can you see it?");
 
     TEST_ASSERT_EQUAL_SCREENSHOT("widgets/tabview_06.png");
 }
@@ -151,11 +151,11 @@ void test_tabview_add_several_tabs_no_scroll(void)
     lv_tabview_set_tab_bar_position(tabview, LV_DIR_TOP);
     lv_tabview_set_tab_bar_size(tabview, 50);
 
-    lv_obj_t * tab1 = lv_tabview_add_tab(tabview, "Tab 1");
-    lv_obj_t * tab2 = lv_tabview_add_tab(tabview, "Tab 2");
-    lv_obj_t * tab3 = lv_tabview_add_tab(tabview, "Tab 3");
+    lv_obj_t *tab1 = lv_tabview_add_tab(tabview, "Tab 1");
+    lv_obj_t *tab2 = lv_tabview_add_tab(tabview, "Tab 2");
+    lv_obj_t *tab3 = lv_tabview_add_tab(tabview, "Tab 3");
 
-    lv_obj_t * label1 = lv_label_create(tab1);
+    lv_obj_t *label1 = lv_label_create(tab1);
     lv_label_set_text(label1, "Content of the first tab\n");
 
     /*avoid compiler error: unused variable*/
@@ -171,9 +171,9 @@ void test_tabview_rename_tab(void)
     lv_tabview_set_tab_bar_position(tabview, LV_DIR_TOP);
     lv_tabview_set_tab_bar_size(tabview, 50);
 
-    lv_obj_t * tab1 = lv_tabview_add_tab(tabview, "Tab 1");
-    lv_obj_t * tab2 = lv_tabview_add_tab(tabview, "Tab 2");
-    lv_obj_t * tab3 = lv_tabview_add_tab(tabview, "Tab 3");
+    lv_obj_t *tab1 = lv_tabview_add_tab(tabview, "Tab 1");
+    lv_obj_t *tab2 = lv_tabview_add_tab(tabview, "Tab 2");
+    lv_obj_t *tab3 = lv_tabview_add_tab(tabview, "Tab 3");
 
     /*avoid compiler error: unused variable*/
     LV_UNUSED(tab1);
@@ -192,11 +192,11 @@ void test_tabview_add_several_tabs_hor(void)
     lv_tabview_set_tab_bar_position(tabview, LV_DIR_TOP);
     lv_tabview_set_tab_bar_size(tabview, 50);
 
-    lv_obj_t * tab1 = lv_tabview_add_tab(tabview, "Tab 1");
-    lv_obj_t * tab2 = lv_tabview_add_tab(tabview, "Tab 2");
-    lv_obj_t * tab3 = lv_tabview_add_tab(tabview, "Tab 3");
+    lv_obj_t *tab1 = lv_tabview_add_tab(tabview, "Tab 1");
+    lv_obj_t *tab2 = lv_tabview_add_tab(tabview, "Tab 2");
+    lv_obj_t *tab3 = lv_tabview_add_tab(tabview, "Tab 3");
 
-    lv_obj_t * label1 = lv_label_create(tab1);
+    lv_obj_t *label1 = lv_label_create(tab1);
     lv_label_set_text(label1, "Content of the first tab\n");
 
     /*avoid compiler error: unused variable*/
@@ -210,7 +210,7 @@ void test_tabview_get_content(void)
 {
     tabview = lv_tabview_create(active_screen);
 
-    lv_obj_t * content = lv_tabview_get_content(tabview);
+    lv_obj_t *content = lv_tabview_get_content(tabview);
 
     TEST_ASSERT_NOT_NULL(content);
 }
@@ -219,7 +219,7 @@ void test_tabview_get_tab_bar(void)
 {
     tabview = lv_tabview_create(active_screen);
 
-    lv_obj_t * tab_bar = lv_tabview_get_tab_bar(tabview);
+    lv_obj_t *tab_bar = lv_tabview_get_tab_bar(tabview);
 
     TEST_ASSERT_NOT_NULL(tab_bar);
 }
@@ -239,8 +239,8 @@ void test_tabview_tab2_selected_event(void)
     lv_tabview_set_tab_bar_position(tabview, LV_DIR_TOP);
     lv_tabview_set_tab_bar_size(tabview, 50);
 
-    lv_obj_t * tab1 = lv_tabview_add_tab(tabview, "Tab 1");
-    lv_obj_t * tab2 = lv_tabview_add_tab(tabview, "Tab 2");
+    lv_obj_t *tab1 = lv_tabview_add_tab(tabview, "Tab 1");
+    lv_obj_t *tab2 = lv_tabview_add_tab(tabview, "Tab 2");
 
     /*avoid compiler error: unused variable*/
     LV_UNUSED(tab1);
@@ -257,25 +257,25 @@ void test_tabview_update_on_external_scroll(void)
     lv_tabview_set_tab_bar_position(tabview, LV_DIR_TOP);
     lv_tabview_set_tab_bar_size(tabview, 50);
 
-    lv_obj_t * tab1 = lv_tabview_add_tab(tabview, "Tab 1");
-    lv_obj_t * tab2 = lv_tabview_add_tab(tabview, "Tab 2");
-    lv_obj_t * tab3 = lv_tabview_add_tab(tabview, "Tab 3");
-    lv_obj_t * tab4 = lv_tabview_add_tab(tabview, "Tab 4");
+    lv_obj_t *tab1 = lv_tabview_add_tab(tabview, "Tab 1");
+    lv_obj_t *tab2 = lv_tabview_add_tab(tabview, "Tab 2");
+    lv_obj_t *tab3 = lv_tabview_add_tab(tabview, "Tab 3");
+    lv_obj_t *tab4 = lv_tabview_add_tab(tabview, "Tab 4");
 
     /*avoid compiler error: unused variable*/
     LV_UNUSED(tab1);
     LV_UNUSED(tab2);
     LV_UNUSED(tab4);
 
-    lv_obj_t * cont = lv_obj_create(tab3);
+    lv_obj_t *cont = lv_obj_create(tab3);
     lv_obj_set_size(cont, 200, 300);
     lv_obj_set_pos(cont, 1000, 200);
 
-    lv_obj_t * label1 = lv_label_create(cont);
+    lv_obj_t *label1 = lv_label_create(cont);
     lv_obj_set_pos(label1, 400, 400);
     lv_label_set_text(label1, "Label1");
 
-    lv_obj_t * label2 = lv_label_create(cont);
+    lv_obj_t *label2 = lv_label_create(cont);
     lv_obj_set_pos(label2, 600, 600);
     lv_label_set_text(label1, "Label2");
 

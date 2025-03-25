@@ -23,12 +23,12 @@
 #include "fsl_pxp.h"
 
 #if defined(SDK_OS_FREE_RTOS)
-    #include "FreeRTOS.h"
+#include "FreeRTOS.h"
 #endif
 
 #if defined(__ZEPHYR__)
-    #include <zephyr/kernel.h>
-    #include <zephyr/irq.h>
+#include <zephyr/kernel.h>
+#include <zephyr/irq.h>
 #endif
 
 /*********************
@@ -64,10 +64,10 @@ static void _pxp_run(void);
 static void _pxp_wait(void);
 
 #if defined(__ZEPHYR__)
-    /**
-    * Interrupt handler for Zephyr IRQ
-    */
-    static void _pxp_zephyr_irq_handler(void *);
+/**
+ * Interrupt handler for Zephyr IRQ
+ */
+static void _pxp_zephyr_irq_handler(void *);
 #endif
 
 /**********************
@@ -75,7 +75,7 @@ static void _pxp_wait(void);
  **********************/
 
 #if LV_USE_OS
-    static lv_thread_sync_t pxp_sync;
+static lv_thread_sync_t pxp_sync;
 #endif
 static volatile bool ucPXPIdle;
 
@@ -96,7 +96,7 @@ static pxp_cfg_t _pxp_default_cfg = {
 
 void PXP_IRQHandler(void)
 {
-    if(kPXP_CompleteFlag & PXP_GetStatusFlags(PXP_ID)) {
+    if (kPXP_CompleteFlag & PXP_GetStatusFlags(PXP_ID)) {
         PXP_ClearStatusFlags(PXP_ID, kPXP_CompleteFlag);
 #if LV_USE_OS
         lv_thread_sync_signal_isr(&pxp_sync);
@@ -106,7 +106,7 @@ void PXP_IRQHandler(void)
     }
 }
 
-pxp_cfg_t * pxp_get_default_cfg(void)
+pxp_cfg_t *pxp_get_default_cfg(void)
 {
     return &_pxp_default_cfg;
 }
@@ -125,7 +125,7 @@ static void _pxp_zephyr_irq_handler(void *)
 static void _pxp_interrupt_init(void)
 {
 #if LV_USE_OS
-    if(lv_thread_sync_init(&pxp_sync) != LV_RESULT_OK) {
+    if (lv_thread_sync_init(&pxp_sync) != LV_RESULT_OK) {
         PXP_ASSERT_MSG(false, "Failed to init thread_sync.");
     }
 #endif
@@ -173,13 +173,13 @@ static void _pxp_run(void)
  */
 static void _pxp_wait(void)
 {
-    if(ucPXPIdle == true)
+    if (ucPXPIdle == true)
         return;
 #if LV_USE_OS
-    if(lv_thread_sync_wait(&pxp_sync) == LV_RESULT_OK)
+    if (lv_thread_sync_wait(&pxp_sync) == LV_RESULT_OK)
         ucPXPIdle = true;
 #else
-    while(ucPXPIdle == false) {
+    while (ucPXPIdle == false) {
     }
 #endif
 }

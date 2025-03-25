@@ -34,8 +34,8 @@ struct lv_vector_path_t {
 
 struct lv_vector_gradient_t {
     lv_vector_gradient_style_t style;
-    lv_gradient_stop_t   stops[LV_GRADIENT_MAX_STOPS];  /**< A gradient stop array */
-    uint16_t             stops_count;                   /**< The number of used stops in the array */
+    lv_gradient_stop_t stops[LV_GRADIENT_MAX_STOPS]; /**< A gradient stop array */
+    uint16_t stops_count;                            /**< The number of used stops in the array */
     float x1;
     float y1;
     float x2;
@@ -79,22 +79,21 @@ struct lv_vector_draw_dsc_t {
 
 struct lv_draw_vector_task_dsc_t {
     lv_draw_dsc_base_t base;
-    lv_ll_t * task_list; /*draw task list.*/
+    lv_ll_t *task_list; /*draw task list.*/
 };
 
 struct lv_vector_dsc_t {
-    lv_layer_t * layer;
+    lv_layer_t *layer;
     lv_vector_draw_dsc_t current_dsc;
     /* private data */
     lv_draw_vector_task_dsc_t tasks;
 };
 
-
 /**********************
  * GLOBAL PROTOTYPES
  **********************/
 
-void lv_vector_for_each_destroy_tasks(lv_ll_t * task_list, vector_draw_task_cb cb, void * data);
+void lv_vector_for_each_destroy_tasks(lv_ll_t *task_list, vector_draw_task_cb cb, void *data);
 
 /**********************
  *      MACROS

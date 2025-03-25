@@ -1,7 +1,7 @@
 /**
-* @file lv_cache_lru_rb.h
-*
-*/
+ * @file lv_cache_lru_rb.h
+ *
+ */
 
 #ifndef LV_CACHE_LRU_RB_H
 #define LV_CACHE_LRU_RB_H

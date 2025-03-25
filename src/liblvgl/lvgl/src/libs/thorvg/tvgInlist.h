@@ -26,30 +26,29 @@
 #ifndef _TVG_INLIST_H_
 #define _TVG_INLIST_H_
 
-namespace tvg {
-
-//NOTE: declare this in your list item
-#define INLIST_ITEM(T) \
-    T* prev; \
-    T* next
-
-template<typename T>
-struct Inlist
+namespace tvg
 {
-    T* head = nullptr;
-    T* tail = nullptr;
+
+// NOTE: declare this in your list item
+#define INLIST_ITEM(T)                                                                                                 \
+    T *prev;                                                                                                           \
+    T *next
+
+template <typename T> struct Inlist {
+    T *head = nullptr;
+    T *tail = nullptr;
 
     void free()
     {
         while (head) {
             auto t = head;
             head = t->next;
-            delete(t);
+            delete (t);
         }
         head = tail = nullptr;
     }
 
-    void back(T* element)
+    void back(T *element)
     {
         if (tail) {
             tail->next = element;
@@ -63,7 +62,7 @@ struct Inlist
         }
     }
 
-    void front(T* element)
+    void front(T *element)
     {
         if (head) {
             head->prev = element;
@@ -77,41 +76,45 @@ struct Inlist
         }
     }
 
-    T* back()
+    T *back()
     {
-        if (!tail) return nullptr;
+        if (!tail)
+            return nullptr;
         auto t = tail;
         tail = t->prev;
-        if (!tail) head = nullptr;
+        if (!tail)
+            head = nullptr;
         return t;
     }
 
-    T* front()
+    T *front()
     {
-        if (!head) return nullptr;
+        if (!head)
+            return nullptr;
         auto t = head;
         head = t->next;
-        if (!head) tail = nullptr;
+        if (!head)
+            tail = nullptr;
         return t;
     }
 
-    void remove(T* element)
+    void remove(T *element)
     {
-        if (element->prev) element->prev->next = element->next;
-        if (element->next) element->next->prev = element->prev;
-        if (element == head) head = element->next;
-        if (element == tail) tail = element->prev;
+        if (element->prev)
+            element->prev->next = element->next;
+        if (element->next)
+            element->next->prev = element->prev;
+        if (element == head)
+            head = element->next;
+        if (element == tail)
+            tail = element->prev;
     }
 
-    bool empty()
-    {
-        return head ? false : true;
-    }
+    bool empty() { return head ? false : true; }
 };
 
-}
+} // namespace tvg
 
 #endif // _TVG_INLIST_H_
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

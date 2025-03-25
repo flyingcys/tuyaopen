@@ -28,7 +28,6 @@
 #include "tvgLottieLoader.h"
 #include "tvgAnimation.h"
 
-
 /************************************************************************/
 /* Internal Class Implementation                                        */
 /************************************************************************/
@@ -37,57 +36,55 @@
 /* External Class Implementation                                        */
 /************************************************************************/
 
-LottieAnimation::~LottieAnimation()
+LottieAnimation::~LottieAnimation() {}
+
+Result LottieAnimation::override(const char *slot) noexcept
 {
-}
+    if (!pImpl->picture->pImpl->loader)
+        return Result::InsufficientCondition;
 
-
-Result LottieAnimation::override(const char* slot) noexcept
-{
-    if (!pImpl->picture->pImpl->loader) return Result::InsufficientCondition;
-
-    if (static_cast<LottieLoader*>(pImpl->picture->pImpl->loader)->override(slot)) {
+    if (static_cast<LottieLoader *>(pImpl->picture->pImpl->loader)->override(slot)) {
         return Result::Success;
     }
 
     return Result::InvalidArguments;
 }
 
-
-Result LottieAnimation::segment(const char* marker) noexcept
+Result LottieAnimation::segment(const char *marker) noexcept
 {
     auto loader = pImpl->picture->pImpl->loader;
-    if (!loader) return Result::InsufficientCondition;
-    if (!loader->animatable()) return Result::NonSupport;
+    if (!loader)
+        return Result::InsufficientCondition;
+    if (!loader->animatable())
+        return Result::NonSupport;
 
     if (!marker) {
-        static_cast<FrameModule*>(loader)->segment(0.0f, 1.0f);
+        static_cast<FrameModule *>(loader)->segment(0.0f, 1.0f);
         return Result::Success;
     }
-    
+
     float begin, end;
-    if (!static_cast<LottieLoader*>(loader)->segment(marker, begin, end)) {
+    if (!static_cast<LottieLoader *>(loader)->segment(marker, begin, end)) {
         return Result::InvalidArguments;
     }
-    return static_cast<Animation*>(this)->segment(begin, end);
+    return static_cast<Animation *>(this)->segment(begin, end);
 }
-
 
 uint32_t LottieAnimation::markersCnt() noexcept
 {
     auto loader = pImpl->picture->pImpl->loader;
-    if (!loader || !loader->animatable()) return 0;
-    return static_cast<LottieLoader*>(loader)->markersCnt();
+    if (!loader || !loader->animatable())
+        return 0;
+    return static_cast<LottieLoader *>(loader)->markersCnt();
 }
 
-
-const char* LottieAnimation::marker(uint32_t idx) noexcept
+const char *LottieAnimation::marker(uint32_t idx) noexcept
 {
     auto loader = pImpl->picture->pImpl->loader;
-    if (!loader || !loader->animatable()) return nullptr;
-    return static_cast<LottieLoader*>(loader)->markers(idx);
+    if (!loader || !loader->animatable())
+        return nullptr;
+    return static_cast<LottieLoader *>(loader)->markers(idx);
 }
-
 
 unique_ptr<LottieAnimation> LottieAnimation::gen() noexcept
 {
@@ -95,4 +92,3 @@ unique_ptr<LottieAnimation> LottieAnimation::gen() noexcept
 }
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

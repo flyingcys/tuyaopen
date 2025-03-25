@@ -29,10 +29,11 @@
 /* Internal Class Implementation                                        */
 /************************************************************************/
 
-Fill* RadialGradient::Impl::duplicate()
+Fill *RadialGradient::Impl::duplicate()
 {
     auto ret = RadialGradient::gen();
-    if (!ret) return nullptr;
+    if (!ret)
+        return nullptr;
 
     ret->pImpl->cx = cx;
     ret->pImpl->cy = cy;
@@ -44,10 +45,10 @@ Fill* RadialGradient::Impl::duplicate()
     return ret.release();
 }
 
-
 Result RadialGradient::Impl::radial(float cx, float cy, float r, float fx, float fy, float fr)
 {
-    if (r < 0 || fr < 0) return Result::InvalidArguments;
+    if (r < 0 || fr < 0)
+        return Result::InvalidArguments;
 
     this->cx = cx;
     this->cy = cy;
@@ -59,11 +60,11 @@ Result RadialGradient::Impl::radial(float cx, float cy, float r, float fx, float
     return Result::Success;
 };
 
-
-Fill* LinearGradient::Impl::duplicate()
+Fill *LinearGradient::Impl::duplicate()
 {
     auto ret = LinearGradient::gen();
-    if (!ret) return nullptr;
+    if (!ret)
+        return nullptr;
 
     ret->pImpl->x1 = x1;
     ret->pImpl->y1 = y1;
@@ -73,25 +74,21 @@ Fill* LinearGradient::Impl::duplicate()
     return ret.release();
 };
 
-
 /************************************************************************/
 /* External Class Implementation                                        */
 /************************************************************************/
 
-Fill::Fill():pImpl(new Impl())
-{
-}
-
+Fill::Fill() : pImpl(new Impl()) {}
 
 Fill::~Fill()
 {
-    delete(pImpl);
+    delete (pImpl);
 }
 
-
-Result Fill::colorStops(const ColorStop* colorStops, uint32_t cnt) noexcept
+Result Fill::colorStops(const ColorStop *colorStops, uint32_t cnt) noexcept
 {
-    if ((!colorStops && cnt > 0) || (colorStops && cnt == 0)) return Result::InvalidArguments;
+    if ((!colorStops && cnt > 0) || (colorStops && cnt == 0))
+        return Result::InvalidArguments;
 
     if (cnt == 0) {
         if (pImpl->colorStops) {
@@ -103,7 +100,7 @@ Result Fill::colorStops(const ColorStop* colorStops, uint32_t cnt) noexcept
     }
 
     if (pImpl->cnt != cnt) {
-        pImpl->colorStops = static_cast<ColorStop*>(realloc(pImpl->colorStops, cnt * sizeof(ColorStop)));
+        pImpl->colorStops = static_cast<ColorStop *>(realloc(pImpl->colorStops, cnt * sizeof(ColorStop)));
     }
 
     pImpl->cnt = cnt;
@@ -112,14 +109,13 @@ Result Fill::colorStops(const ColorStop* colorStops, uint32_t cnt) noexcept
     return Result::Success;
 }
 
-
-uint32_t Fill::colorStops(const ColorStop** colorStops) const noexcept
+uint32_t Fill::colorStops(const ColorStop **colorStops) const noexcept
 {
-    if (colorStops) *colorStops = pImpl->colorStops;
+    if (colorStops)
+        *colorStops = pImpl->colorStops;
 
     return pImpl->cnt;
 }
-
 
 Result Fill::spread(FillSpread s) noexcept
 {
@@ -128,95 +124,85 @@ Result Fill::spread(FillSpread s) noexcept
     return Result::Success;
 }
 
-
 FillSpread Fill::spread() const noexcept
 {
     return pImpl->spread;
 }
 
-
-Result Fill::transform(const Matrix& m) noexcept
+Result Fill::transform(const Matrix &m) noexcept
 {
     if (!pImpl->transform) {
-        pImpl->transform = static_cast<Matrix*>(malloc(sizeof(Matrix)));
+        pImpl->transform = static_cast<Matrix *>(malloc(sizeof(Matrix)));
     }
     *pImpl->transform = m;
     return Result::Success;
 }
 
-
 Matrix Fill::transform() const noexcept
 {
-    if (pImpl->transform) return *pImpl->transform;
+    if (pImpl->transform)
+        return *pImpl->transform;
     return {1, 0, 0, 0, 1, 0, 0, 0, 1};
 }
 
-
-Fill* Fill::duplicate() const noexcept
+Fill *Fill::duplicate() const noexcept
 {
     return pImpl->duplicate();
 }
-
 
 uint32_t Fill::identifier() const noexcept
 {
     return pImpl->id;
 }
 
-
-RadialGradient::RadialGradient():pImpl(new Impl())
+RadialGradient::RadialGradient() : pImpl(new Impl())
 {
     Fill::pImpl->id = TVG_CLASS_ID_RADIAL;
     Fill::pImpl->method(new FillDup<RadialGradient::Impl>(pImpl));
 }
 
-
 RadialGradient::~RadialGradient()
 {
-    delete(pImpl);
+    delete (pImpl);
 }
-
 
 Result RadialGradient::radial(float cx, float cy, float r) noexcept
 {
     return pImpl->radial(cx, cy, r, cx, cy, 0.0f);
 }
 
-
-Result RadialGradient::radial(float* cx, float* cy, float* r) const noexcept
+Result RadialGradient::radial(float *cx, float *cy, float *r) const noexcept
 {
-    if (cx) *cx = pImpl->cx;
-    if (cy) *cy = pImpl->cy;
-    if (r) *r = pImpl->r;
+    if (cx)
+        *cx = pImpl->cx;
+    if (cy)
+        *cy = pImpl->cy;
+    if (r)
+        *r = pImpl->r;
 
     return Result::Success;
 }
-
 
 unique_ptr<RadialGradient> RadialGradient::gen() noexcept
 {
     return unique_ptr<RadialGradient>(new RadialGradient);
 }
 
-
 uint32_t RadialGradient::identifier() noexcept
 {
     return TVG_CLASS_ID_RADIAL;
 }
 
-
-LinearGradient::LinearGradient():pImpl(new Impl())
+LinearGradient::LinearGradient() : pImpl(new Impl())
 {
     Fill::pImpl->id = TVG_CLASS_ID_LINEAR;
     Fill::pImpl->method(new FillDup<LinearGradient::Impl>(pImpl));
 }
 
-
 LinearGradient::~LinearGradient()
 {
-    delete(pImpl);
+    delete (pImpl);
 }
-
 
 Result LinearGradient::linear(float x1, float y1, float x2, float y2) noexcept
 {
@@ -228,29 +214,28 @@ Result LinearGradient::linear(float x1, float y1, float x2, float y2) noexcept
     return Result::Success;
 }
 
-
-Result LinearGradient::linear(float* x1, float* y1, float* x2, float* y2) const noexcept
+Result LinearGradient::linear(float *x1, float *y1, float *x2, float *y2) const noexcept
 {
-    if (x1) *x1 = pImpl->x1;
-    if (x2) *x2 = pImpl->x2;
-    if (y1) *y1 = pImpl->y1;
-    if (y2) *y2 = pImpl->y2;
+    if (x1)
+        *x1 = pImpl->x1;
+    if (x2)
+        *x2 = pImpl->x2;
+    if (y1)
+        *y1 = pImpl->y1;
+    if (y2)
+        *y2 = pImpl->y2;
 
     return Result::Success;
 }
-
 
 unique_ptr<LinearGradient> LinearGradient::gen() noexcept
 {
     return unique_ptr<LinearGradient>(new LinearGradient);
 }
 
-
 uint32_t LinearGradient::identifier() noexcept
 {
     return TVG_CLASS_ID_LINEAR;
 }
 
-
 #endif /* LV_USE_THORVG_INTERNAL */
-

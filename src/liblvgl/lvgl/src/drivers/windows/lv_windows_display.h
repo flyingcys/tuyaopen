@@ -50,21 +50,16 @@ extern "C" {
  * @param simulator_mode Create simulator mode display if true, or create
  *                       application mode display.
  * @return The created LVGL display object.
-*/
-lv_display_t * lv_windows_create_display(
-    const wchar_t * title,
-    int32_t hor_res,
-    int32_t ver_res,
-    int32_t zoom_level,
-    bool allow_dpi_override,
-    bool simulator_mode);
+ */
+lv_display_t *lv_windows_create_display(const wchar_t *title, int32_t hor_res, int32_t ver_res, int32_t zoom_level,
+                                        bool allow_dpi_override, bool simulator_mode);
 
 /**
  * @brief Get the window handle from specific LVGL display object.
  * @param display The specific LVGL display object.
  * @return The window handle from specific LVGL display object.
-*/
-HWND lv_windows_get_display_window_handle(lv_display_t * display);
+ */
+HWND lv_windows_get_display_window_handle(lv_display_t *display);
 
 /**
  * @brief Get logical pixel value from physical pixel value taken account
@@ -75,7 +70,7 @@ HWND lv_windows_get_display_window_handle(lv_display_t * display);
  * @remark It uses the same calculation style as Windows OS implementation.
  *         It will be useful for integrate LVGL Windows backend to other
  *         Windows applications.
-*/
+ */
 int32_t lv_windows_zoom_to_logical(int32_t physical, int32_t zoom_level);
 
 /**
@@ -87,7 +82,7 @@ int32_t lv_windows_zoom_to_logical(int32_t physical, int32_t zoom_level);
  * @remark It uses the same calculation style as Windows OS implementation.
  *         It will be useful for integrate LVGL Windows backend to other
  *         Windows applications.
-*/
+ */
 int32_t lv_windows_zoom_to_physical(int32_t logical, int32_t zoom_level);
 
 /**
@@ -99,7 +94,7 @@ int32_t lv_windows_zoom_to_physical(int32_t logical, int32_t zoom_level);
  * @remark It uses the same calculation style as Windows OS implementation.
  *         It will be useful for integrate LVGL Windows backend to other
  *         Windows applications.
-*/
+ */
 int32_t lv_windows_dpi_to_logical(int32_t physical, int32_t dpi);
 
 /**
@@ -111,7 +106,7 @@ int32_t lv_windows_dpi_to_logical(int32_t physical, int32_t dpi);
  * @remark It uses the same calculation style as Windows OS implementation.
  *         It will be useful for integrate LVGL Windows backend to other
  *         Windows applications.
-*/
+ */
 int32_t lv_windows_dpi_to_physical(int32_t logical, int32_t dpi);
 
 /**********************

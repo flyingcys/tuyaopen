@@ -40,28 +40,28 @@ LV_ATTRIBUTE_EXTERN_DATA extern const lv_obj_class_t lv_qrcode_class;
  * @param parent point to an object where to create the QR code
  * @return pointer to the created QR code object
  */
-lv_obj_t * lv_qrcode_create(lv_obj_t * parent);
+lv_obj_t *lv_qrcode_create(lv_obj_t *parent);
 
 /**
  * Set QR code size.
  * @param obj pointer to a QR code object
  * @param size width and height of the QR code
  */
-void lv_qrcode_set_size(lv_obj_t * obj, int32_t size);
+void lv_qrcode_set_size(lv_obj_t *obj, int32_t size);
 
 /**
  * Set QR code dark color.
  * @param obj pointer to a QR code object
  * @param color dark color of the QR code
  */
-void lv_qrcode_set_dark_color(lv_obj_t * obj, lv_color_t color);
+void lv_qrcode_set_dark_color(lv_obj_t *obj, lv_color_t color);
 
 /**
  * Set QR code light color.
  * @param obj pointer to a QR code object
  * @param color light color of the QR code
  */
-void lv_qrcode_set_light_color(lv_obj_t * obj, lv_color_t color);
+void lv_qrcode_set_light_color(lv_obj_t *obj, lv_color_t color);
 
 /**
  * Set the data of a QR code object
@@ -70,7 +70,7 @@ void lv_qrcode_set_light_color(lv_obj_t * obj, lv_color_t color);
  * @param data_len length of data in bytes
  * @return LV_RESULT_OK: if no error; LV_RESULT_INVALID: on error
  */
-lv_result_t lv_qrcode_update(lv_obj_t * obj, const void * data, uint32_t data_len);
+lv_result_t lv_qrcode_update(lv_obj_t *obj, const void *data, uint32_t data_len);
 
 /**********************
  *      MACROS

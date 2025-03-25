@@ -36,7 +36,6 @@ struct lv_switch_t {
     int32_t anim_state;
 };
 
-
 /**********************
  * GLOBAL PROTOTYPES
  **********************/

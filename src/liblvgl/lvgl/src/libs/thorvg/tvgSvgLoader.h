@@ -34,24 +34,24 @@ class SvgLoader : public ImageLoader, public Task
 public:
     string filePath;
     string svgPath = "";
-    char* content = nullptr;
+    char *content = nullptr;
     uint32_t size = 0;
 
     SvgLoaderData loaderData;
-    Scene* root = nullptr;
+    Scene *root = nullptr;
 
     bool copy = false;
 
     SvgLoader();
     ~SvgLoader();
 
-    bool open(const string& path) override;
-    bool open(const char* data, uint32_t size, bool copy) override;
-    bool resize(Paint* paint, float w, float h) override;
+    bool open(const string &path) override;
+    bool open(const char *data, uint32_t size, bool copy) override;
+    bool resize(Paint *paint, float w, float h) override;
     bool read() override;
     bool close() override;
 
-    Paint* paint() override;
+    Paint *paint() override;
 
 private:
     SvgViewFlag viewFlag = SvgViewFlag::None;
@@ -67,8 +67,6 @@ private:
     void run(unsigned tid) override;
 };
 
-
 #endif //_TVG_SVG_LOADER_H_
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

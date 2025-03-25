@@ -19,8 +19,8 @@ static void create_images(void)
 {
     lv_obj_clean(lv_screen_active());
 
-    lv_obj_t * img;
-    lv_obj_t * label;
+    lv_obj_t *img;
+    lv_obj_t *label;
 
     /* PNG array */
     LV_IMAGE_DECLARE(test_img_lvgl_logo_png);
@@ -61,7 +61,7 @@ void test_libpng_1(void)
     TEST_ASSERT_EQUAL_SCREENSHOT("libs/png_2.png");
 
     size_t mem_before = lv_test_get_free_mem();
-    for(uint32_t i = 0; i < 20; i++) {
+    for (uint32_t i = 0; i < 20; i++) {
         create_images();
 
         lv_obj_invalidate(lv_screen_active());

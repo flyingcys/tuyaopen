@@ -18,9 +18,11 @@
 #include "../rapidjson.h"
 
 RAPIDJSON_NAMESPACE_BEGIN
-namespace internal {
+namespace internal
+{
 
-class Double {
+class Double
+{
 public:
     Double() {}
     Double(double d) : d_(d) {}
@@ -29,7 +31,8 @@ public:
     double Value() const { return d_; }
     uint64_t Uint64Value() const { return u_; }
 
-    double NextPositiveDouble() const {
+    double NextPositiveDouble() const
+    {
         RAPIDJSON_ASSERT(!Sign());
         return Double(u_ + 1).Value();
     }
@@ -48,7 +51,8 @@ public:
     int IntegerExponent() const { return (IsNormal() ? Exponent() : kDenormalExponent) - kSignificandSize; }
     uint64_t ToBias() const { return (u_ & kSignMask) ? ~u_ + 1 : u_ | kSignMask; }
 
-    static int EffectiveSignificandSize(int order) {
+    static int EffectiveSignificandSize(int order)
+    {
         if (order >= -1021)
             return 53;
         else if (order <= -1074)

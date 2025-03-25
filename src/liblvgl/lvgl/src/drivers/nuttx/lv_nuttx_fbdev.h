@@ -33,14 +33,14 @@ extern "C" {
 /**
  * Create a new display with NuttX backend.
  */
-lv_display_t * lv_nuttx_fbdev_create(void);
+lv_display_t *lv_nuttx_fbdev_create(void);
 
 /**
  * Initialize display with specified framebuffer device
  * @param disp      pointer to display with NuttX backend
  * @param file      the name of framebuffer device
  */
-int lv_nuttx_fbdev_set_file(lv_display_t * disp, const char * file);
+int lv_nuttx_fbdev_set_file(lv_display_t *disp, const char *file);
 
 /**********************
  *      MACROS

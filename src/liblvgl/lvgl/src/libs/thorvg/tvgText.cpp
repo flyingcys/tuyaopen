@@ -23,88 +23,80 @@
 #include "../../lv_conf_internal.h"
 #if LV_USE_THORVG_INTERNAL
 
-
 #include "tvgText.h"
-
 
 /************************************************************************/
 /* Internal Class Implementation                                        */
 /************************************************************************/
 
-
-
 /************************************************************************/
 /* External Class Implementation                                        */
 /************************************************************************/
-
 
 Text::Text() : pImpl(new Impl)
 {
     Paint::pImpl->id = TVG_CLASS_ID_TEXT;
 }
 
-
 Text::~Text()
 {
-    delete(pImpl);
+    delete (pImpl);
 }
 
-
-Result Text::text(const char* text) noexcept
+Result Text::text(const char *text) noexcept
 {
     return pImpl->text(text);
 }
 
-
-Result Text::font(const char* name, float size, const char* style) noexcept
+Result Text::font(const char *name, float size, const char *style) noexcept
 {
     return pImpl->font(name, size, style);
 }
 
-
-Result Text::load(const std::string& path) noexcept
+Result Text::load(const std::string &path) noexcept
 {
-    bool invalid; //invalid path
+    bool invalid; // invalid path
     if (!LoaderMgr::loader(path, &invalid)) {
-        if (invalid) return Result::InvalidArguments;
-        else return Result::NonSupport;
+        if (invalid)
+            return Result::InvalidArguments;
+        else
+            return Result::NonSupport;
     }
 
     return Result::Success;
 }
 
-
-Result Text::unload(const std::string& path) noexcept
+Result Text::unload(const std::string &path) noexcept
 {
-    if (LoaderMgr::retrieve(path)) return Result::Success;
+    if (LoaderMgr::retrieve(path))
+        return Result::Success;
     return Result::InsufficientCondition;
 }
 
-
 Result Text::fill(uint8_t r, uint8_t g, uint8_t b) noexcept
 {
-    if (!pImpl->paint) return Result::InsufficientCondition;
+    if (!pImpl->paint)
+        return Result::InsufficientCondition;
 
     return pImpl->fill(r, g, b);
 }
 
-
 Result Text::fill(unique_ptr<Fill> f) noexcept
 {
-    if (!pImpl->paint) return Result::InsufficientCondition;
+    if (!pImpl->paint)
+        return Result::InsufficientCondition;
 
     auto p = f.release();
-    if (!p) return Result::MemoryCorruption;
+    if (!p)
+        return Result::MemoryCorruption;
 
     return pImpl->fill(p);
 }
-
 
 unique_ptr<Text> Text::gen() noexcept
 {
     return unique_ptr<Text>(new Text);
 }
-
 
 uint32_t Text::identifier() noexcept
 {
@@ -112,4 +104,3 @@ uint32_t Text::identifier() noexcept
 }
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

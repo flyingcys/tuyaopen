@@ -51,12 +51,9 @@
 #include "rapidjson/document.h"
 #include "tvgCommon.h"
 
-
 using namespace rapidjson;
 
-
-struct LookaheadParserHandler
-{
+struct LookaheadParserHandler {
     enum LookaheadParsingState {
         kInit = 0,
         kError,
@@ -71,15 +68,12 @@ struct LookaheadParserHandler
         kExitingArray
     };
 
-    Value                   val;
-    LookaheadParsingState   state = kInit;
-    Reader                  reader;
-    InsituStringStream      iss;
+    Value val;
+    LookaheadParsingState state = kInit;
+    Reader reader;
+    InsituStringStream iss;
 
-    LookaheadParserHandler(const char *str) : iss((char*)str)
-    {
-        reader.IterativeParseInit();
-    }
+    LookaheadParserHandler(const char *str) : iss((char *)str) { reader.IterativeParseInit(); }
 
     bool Null()
     {
@@ -130,10 +124,7 @@ struct LookaheadParserHandler
         return true;
     }
 
-    bool RawNumber(const char *, SizeType, TVG_UNUSED bool)
-    { 
-        return false;
-    }
+    bool RawNumber(const char *, SizeType, TVG_UNUSED bool) { return false; }
 
     bool String(const char *str, SizeType length, TVG_UNUSED bool)
     {
@@ -179,23 +170,20 @@ struct LookaheadParserHandler
         state = kError;
     }
 
-    bool Invalid()
-    {
-        return state == kError;
-    }
+    bool Invalid() { return state == kError; }
 
     bool enterObject();
     bool enterArray();
     bool nextArrayValue();
     int getInt();
     float getFloat();
-    const char* getString();
-    char* getStringCopy();
+    const char *getString();
+    char *getStringCopy();
     bool getBool();
     void getNull();
     bool parseNext();
-    const char* nextObjectKey();
-    void skip(const char* key);
+    const char *nextObjectKey();
+    void skip(const char *key);
     void skipOut(int depth);
     int peekType();
 };
@@ -203,4 +191,3 @@ struct LookaheadParserHandler
 #endif //_TVG_LOTTIE_PARSER_HANDLER_H_
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

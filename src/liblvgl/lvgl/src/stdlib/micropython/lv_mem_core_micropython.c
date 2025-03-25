@@ -42,10 +42,9 @@ void lv_mem_init(void)
 void lv_mem_deinit(void)
 {
     return; /*Nothing to deinit*/
-
 }
 
-lv_mem_pool_t lv_mem_add_pool(void * mem, size_t bytes)
+lv_mem_pool_t lv_mem_add_pool(void *mem, size_t bytes)
 {
     /*Not supported*/
     LV_UNUSED(mem);
@@ -60,7 +59,7 @@ void lv_mem_remove_pool(lv_mem_pool_t pool)
     return;
 }
 
-void * lv_malloc_core(size_t size)
+void *lv_malloc_core(size_t size)
 {
 #if MICROPY_MALLOC_USES_ALLOCATED_SIZE
     return gc_alloc(size, true);
@@ -69,7 +68,7 @@ void * lv_malloc_core(size_t size)
 #endif
 }
 
-void * lv_realloc_core(void * p, size_t new_size)
+void *lv_realloc_core(void *p, size_t new_size)
 {
 
 #if MICROPY_MALLOC_USES_ALLOCATED_SIZE
@@ -79,7 +78,7 @@ void * lv_realloc_core(void * p, size_t new_size)
 #endif
 }
 
-void lv_free_core(void * p)
+void lv_free_core(void *p)
 {
 
 #if MICROPY_MALLOC_USES_ALLOCATED_SIZE
@@ -90,7 +89,7 @@ void lv_free_core(void * p)
 #endif
 }
 
-void lv_mem_monitor_core(lv_mem_monitor_t * mon_p)
+void lv_mem_monitor_core(lv_mem_monitor_t *mon_p)
 {
     /*Not supported*/
     LV_UNUSED(mon_p);

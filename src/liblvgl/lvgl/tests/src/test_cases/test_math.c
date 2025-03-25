@@ -4,8 +4,8 @@
 
 #include "unity/unity.h"
 
-#define ERROR_THRESHOLD         5 /*5 in 1024, 0.5% max error allowed*/
-#define NEWTON_ITERATIONS       8
+#define ERROR_THRESHOLD   5 /*5 in 1024, 0.5% max error allowed*/
+#define NEWTON_ITERATIONS 8
 
 static float do_cubic_bezier_f(float t, float a, float b, float c)
 {
@@ -25,11 +25,12 @@ static float do_cubic_bezier_f(float t, float a, float b, float c)
 static float lv_cubic_bezier_f(float x, float x1, float y1, float x2, float y2)
 {
     float ax, bx, cx, ay, by, cy;
-    float tl, tr, t;  /*t in cubic-bezier function, used for bisection */
-    float xs;  /*x sampled on curve */
-    float d; /*slope value at specified t*/
+    float tl, tr, t; /*t in cubic-bezier function, used for bisection */
+    float xs;        /*x sampled on curve */
+    float d;         /*slope value at specified t*/
 
-    if(x == 0 || x == 1) return x;
+    if (x == 0 || x == 1)
+        return x;
 
     cx = 3.f * x1;
     bx = 3.f * (x2 - x1) - cx;
@@ -41,32 +42,35 @@ static float lv_cubic_bezier_f(float x, float x1, float y1, float x2, float y2)
 
     /*Try Newton's method firstly */
     t = x; /*Make a guess*/
-    for(int i = 0; i < NEWTON_ITERATIONS; i++) {
+    for (int i = 0; i < NEWTON_ITERATIONS; i++) {
         xs = do_cubic_bezier_f(t, ax, bx, cx);
         xs -= x;
-        if(LV_ABS(xs) < 1e-6f) goto found;
+        if (LV_ABS(xs) < 1e-6f)
+            goto found;
 
         d = (3.f * ax * t + 2.f * bx) * t + cx;
-        if(LV_ABS(d) < 1e-6f) break;
+        if (LV_ABS(d) < 1e-6f)
+            break;
         t -= xs / d;
     }
 
     /*Fallback to bisection method for reliability*/
     tl = 0.f, tr = 1.f, t = x;
 
-    if(t < tl) {
+    if (t < tl) {
         t = tl;
         goto found;
     }
 
-    if(t > tr) {
+    if (t > tr) {
         t = tr;
         goto found;
     }
 
-    while(tl < tr) {
+    while (tl < tr) {
         xs = do_cubic_bezier_f(t, ax, bx, cx);
-        if(LV_ABS(xs - x) < 1e-6f) goto found;
+        if (LV_ABS(xs - x) < 1e-6f)
+            goto found;
         x > xs ? (tl = t) : (tr = t);
         t = (tr - tl) * .5f + tl;
     }
@@ -86,10 +90,10 @@ static int test_cubic_bezier_ease_functions(float fx1, float fy1, float fx2, flo
     x2 = LV_BEZIER_VAL_FLOAT(fx2);
     y2 = LV_BEZIER_VAL_FLOAT(fy2);
 
-    for(t = 0; t <= 1; t += t_step) {
+    for (t = 0; t <= 1; t += t_step) {
         fy = lv_cubic_bezier_f(t, fx1, fy1, fx2, fy2);
         y = lv_cubic_bezier(LV_BEZIER_VAL_FLOAT(t), x1, y1, x2, y2);
-        if(LV_ABS(LV_BEZIER_VAL_FLOAT(fy) - y) >= ERROR_THRESHOLD) {
+        if (LV_ABS(LV_BEZIER_VAL_FLOAT(fy) - y) >= ERROR_THRESHOLD) {
             return 0;
         }
     }
@@ -99,11 +103,11 @@ static int test_cubic_bezier_ease_functions(float fx1, float fy1, float fx2, flo
 
 static uint32_t lv_bezier3_legacy(uint32_t t, uint32_t u0, uint32_t u1, uint32_t u2, uint32_t u3)
 {
-    uint32_t t_rem  = 1024 - t;
+    uint32_t t_rem = 1024 - t;
     uint32_t t_rem2 = (t_rem * t_rem) >> 10;
     uint32_t t_rem3 = (t_rem2 * t_rem) >> 10;
-    uint32_t t2     = (t * t) >> 10;
-    uint32_t t3     = (t2 * t) >> 10;
+    uint32_t t2 = (t * t) >> 10;
+    uint32_t t3 = (t2 * t) >> 10;
 
     uint32_t v1 = (t_rem3 * u0) >> 10;
     uint32_t v2 = (3 * t_rem2 * t * u1) >> 20;
@@ -128,7 +132,7 @@ void test_math_cubic_bezier_result_should_be_precise(void)
     TEST_ASSERT_TRUE(test_cubic_bezier_ease_functions(.25f, .1f, .25f, 1));
 
     int32_t u0 = 0, u1 = 50, u2 = 952, u3 = LV_BEZIER_VAL_MAX;
-    for(int32_t i = 0; i <= 1024; i++) {
+    for (int32_t i = 0; i <= 1024; i++) {
         int32_t legacy = lv_bezier3_legacy(i, u0, u1, u2, u3);
         int32_t cubic_bezier = lv_bezier3(i, u0, u1, u2, u3);
 

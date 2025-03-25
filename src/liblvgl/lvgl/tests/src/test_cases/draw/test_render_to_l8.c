@@ -25,19 +25,19 @@ void test_render_to_l8(void)
 
     lv_opa_t opa_values[2] = {0xff, 0x80};
     uint32_t opa;
-    for(opa = 0; opa < 2; opa++) {
+    for (opa = 0; opa < 2; opa++) {
         uint32_t i;
-        for(i = 0; i < LV_DEMO_RENDER_SCENE_NUM; i++) {
+        for (i = 0; i < LV_DEMO_RENDER_SCENE_NUM; i++) {
             lv_demo_render(i, opa_values[opa]);
 
             /*Skip test with transformed indexed images if they are not loaded to RAM*/
-            if(LV_BIN_DECODER_RAM_LOAD == 0 &&
-               (i == LV_DEMO_RENDER_SCENE_IMAGE_NORMAL_2 ||
-                i == LV_DEMO_RENDER_SCENE_IMAGE_RECOLOR_2)) continue;
+            if (LV_BIN_DECODER_RAM_LOAD == 0 &&
+                (i == LV_DEMO_RENDER_SCENE_IMAGE_NORMAL_2 || i == LV_DEMO_RENDER_SCENE_IMAGE_RECOLOR_2))
+                continue;
 
             char buf[128];
-            lv_snprintf(buf, sizeof(buf), "draw/render/l8/demo_render_%s_opa_%d.png",
-                        lv_demo_render_get_scene_name(i), opa_values[opa]);
+            lv_snprintf(buf, sizeof(buf), "draw/render/l8/demo_render_%s_opa_%d.png", lv_demo_render_get_scene_name(i),
+                        opa_values[opa]);
             TEST_ASSERT_EQUAL_SCREENSHOT(buf);
         }
     }

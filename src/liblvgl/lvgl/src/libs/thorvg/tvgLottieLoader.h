@@ -36,41 +36,41 @@ struct LottieBuilder;
 class LottieLoader : public FrameModule, public Task
 {
 public:
-    const char* content = nullptr;      //lottie file data
-    uint32_t size = 0;                  //lottie data size
-    float frameNo = 0.0f;               //current frame number
+    const char *content = nullptr; // lottie file data
+    uint32_t size = 0;             // lottie data size
+    float frameNo = 0.0f;          // current frame number
     float frameCnt = 0.0f;
     float frameDuration = 0.0f;
 
-    LottieBuilder* builder;
-    LottieComposition* comp = nullptr;
+    LottieBuilder *builder;
+    LottieComposition *comp = nullptr;
 
-    char* dirName = nullptr;            //base resource directory
-    bool copy = false;                  //"content" is owned by this loader
-    bool overridden = false;             //overridden properties with slots
-    bool rebuild = false;               //require building the lottie scene
+    char *dirName = nullptr; // base resource directory
+    bool copy = false;       //"content" is owned by this loader
+    bool overridden = false; // overridden properties with slots
+    bool rebuild = false;    // require building the lottie scene
 
     LottieLoader();
     ~LottieLoader();
 
-    bool open(const string& path) override;
-    bool open(const char* data, uint32_t size, bool copy) override;
-    bool resize(Paint* paint, float w, float h) override;
+    bool open(const string &path) override;
+    bool open(const char *data, uint32_t size, bool copy) override;
+    bool resize(Paint *paint, float w, float h) override;
     bool read() override;
-    Paint* paint() override;
-    bool override(const char* slot);
+    Paint *paint() override;
+    bool override(const char *slot);
 
-    //Frame Controls
+    // Frame Controls
     bool frame(float no) override;
     float totalFrame() override;
     float curFrame() override;
     float duration() override;
     void sync() override;
 
-    //Marker Supports
+    // Marker Supports
     uint32_t markersCnt();
-    const char* markers(uint32_t index);
-    bool segment(const char* marker, float& begin, float& end);
+    const char *markers(uint32_t index);
+    bool segment(const char *marker, float &begin, float &end);
 
 private:
     bool header();
@@ -79,8 +79,6 @@ private:
     void run(unsigned tid) override;
 };
 
-
 #endif //_TVG_LOTTIELOADER_H_
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

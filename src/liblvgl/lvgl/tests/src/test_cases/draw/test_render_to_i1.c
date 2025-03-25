@@ -22,14 +22,14 @@ void test_render_to_i1(void)
 
     lv_opa_t opa_values[2] = {0xff, 0xc0};
     uint32_t opa;
-    for(opa = 0; opa < 2; opa++) {
+    for (opa = 0; opa < 2; opa++) {
         uint32_t i;
-        for(i = 0; i < LV_DEMO_RENDER_SCENE_NUM; i++) {
+        for (i = 0; i < LV_DEMO_RENDER_SCENE_NUM; i++) {
             lv_demo_render(i, opa_values[opa]);
 
             char buf[128];
-            lv_snprintf(buf, sizeof(buf), "draw/render/i1/demo_render_%s_opa_%d.png",
-                        lv_demo_render_get_scene_name(i), opa_values[opa]);
+            lv_snprintf(buf, sizeof(buf), "draw/render/i1/demo_render_%s_opa_%d.png", lv_demo_render_get_scene_name(i),
+                        opa_values[opa]);
             TEST_ASSERT_EQUAL_SCREENSHOT(buf);
         }
     }

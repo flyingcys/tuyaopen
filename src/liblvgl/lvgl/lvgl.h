@@ -161,7 +161,8 @@ extern "C" {
  * #endif
  *
  */
-#define LV_VERSION_CHECK(x,y,z) (x == LVGL_VERSION_MAJOR && (y < LVGL_VERSION_MINOR || (y == LVGL_VERSION_MINOR && z <= LVGL_VERSION_PATCH)))
+#define LV_VERSION_CHECK(x, y, z)                                                                                      \
+    (x == LVGL_VERSION_MAJOR && (y < LVGL_VERSION_MINOR || (y == LVGL_VERSION_MINOR && z <= LVGL_VERSION_PATCH)))
 
 /**
  * Wrapper functions for VERSION macros
@@ -182,7 +183,7 @@ static inline int lv_version_patch(void)
     return LVGL_VERSION_PATCH;
 }
 
-static inline const char * lv_version_info(void)
+static inline const char *lv_version_info(void)
 {
     return LVGL_VERSION_INFO;
 }

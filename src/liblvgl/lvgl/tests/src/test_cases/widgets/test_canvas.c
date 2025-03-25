@@ -4,7 +4,7 @@
 
 #include "unity/unity.h"
 
-static lv_obj_t * g_screen_active;
+static lv_obj_t *g_screen_active;
 
 void setUp(void)
 {
@@ -16,14 +16,14 @@ void tearDown(void)
     lv_obj_clean(g_screen_active);
 }
 
-static void draw_event_cb(lv_event_t * e)
+static void draw_event_cb(lv_event_t *e)
 {
-    int * draw_counter = lv_event_get_user_data(e);
+    int *draw_counter = lv_event_get_user_data(e);
     (*draw_counter)++;
 }
 void test_canvas_functions_invalidate(void)
 {
-    lv_obj_t * canvas = lv_canvas_create(g_screen_active);
+    lv_obj_t *canvas = lv_canvas_create(g_screen_active);
     int draw_counter = 0;
     lv_obj_add_event_cb(canvas, draw_event_cb, LV_EVENT_DRAW_MAIN, &draw_counter);
     lv_refr_now(NULL);
@@ -64,7 +64,7 @@ void test_canvas_functions_invalidate(void)
 
 void test_canvas_fill_and_set_px(void)
 {
-    lv_obj_t * canvas = lv_canvas_create(lv_screen_active());
+    lv_obj_t *canvas = lv_canvas_create(lv_screen_active());
     lv_obj_center(canvas);
 
     LV_DRAW_BUF_DEFINE_STATIC(buf_i1, 10, 10, LV_COLOR_FORMAT_I1);

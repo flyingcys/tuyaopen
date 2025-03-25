@@ -32,7 +32,7 @@ typedef lv_color_t (*lv_color_filter_cb_t)(const struct lv_color_filter_dsc_t *,
 
 struct lv_color_filter_dsc_t {
     lv_color_filter_cb_t filter_cb;
-    void * user_data;
+    void *user_data;
 };
 
 /**********************
@@ -65,7 +65,7 @@ lv_color32_t lv_color_mix32(lv_color32_t fg, lv_color32_t bg);
  */
 uint8_t lv_color_brightness(lv_color_t c);
 
-void lv_color_filter_dsc_init(lv_color_filter_dsc_t * dsc, lv_color_filter_cb_t cb);
+void lv_color_filter_dsc_init(lv_color_filter_dsc_t *dsc, lv_color_filter_cb_t cb);
 
 /**********************
  *  PREDEFINED COLORS

@@ -42,7 +42,7 @@ extern "C" {
  * GLOBAL PROTOTYPES
  **********************/
 
-vg_lite_matrix_t * vglite_get_matrix(void);
+vg_lite_matrix_t *vglite_get_matrix(void);
 
 /**
  * Creates matrix that translates to origin of given destination area.
@@ -50,7 +50,7 @@ vg_lite_matrix_t * vglite_get_matrix(void);
  * @param[in] dest_area Area with relative coordinates of destination buffer
  *
  */
-void vglite_set_translation_matrix(const lv_area_t * dest_area);
+void vglite_set_translation_matrix(const lv_area_t *dest_area);
 
 /**
  * Creates matrix that translates to origin of given destination area with transformation (scale or rotate).
@@ -59,7 +59,7 @@ void vglite_set_translation_matrix(const lv_area_t * dest_area);
  * @param[in] dsc Image descriptor
  *
  */
-void vglite_set_transformation_matrix(const lv_area_t * dest_area, const lv_draw_image_dsc_t * dsc);
+void vglite_set_transformation_matrix(const lv_area_t *dest_area, const lv_draw_image_dsc_t *dsc);
 
 /**********************
  *      MACROS

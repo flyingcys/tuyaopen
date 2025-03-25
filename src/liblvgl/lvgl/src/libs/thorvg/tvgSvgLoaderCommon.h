@@ -32,9 +32,8 @@
 struct SvgNode;
 struct SvgStyleGradient;
 
-//NOTE: Please update simpleXmlNodeTypeToString() as well.
-enum class SvgNodeType
-{
+// NOTE: Please update simpleXmlNodeTypeToString() as well.
+enum class SvgNodeType {
     Doc,
     G,
     Defs,
@@ -74,27 +73,19 @@ enum class SvgLengthType
 };
 */
 
-enum class SvgFillFlags
-{
-    Paint = 0x01,
-    Opacity = 0x02,
-    Gradient = 0x04,
-    FillRule = 0x08,
-    ClipPath = 0x16
-};
+enum class SvgFillFlags { Paint = 0x01, Opacity = 0x02, Gradient = 0x04, FillRule = 0x08, ClipPath = 0x16 };
 
-constexpr bool operator &(SvgFillFlags a, SvgFillFlags b)
+constexpr bool operator&(SvgFillFlags a, SvgFillFlags b)
 {
     return int(a) & int(b);
 }
 
-constexpr SvgFillFlags operator |(SvgFillFlags a, SvgFillFlags b)
+constexpr SvgFillFlags operator|(SvgFillFlags a, SvgFillFlags b)
 {
     return SvgFillFlags(int(a) | int(b));
 }
 
-enum class SvgStrokeFlags
-{
+enum class SvgStrokeFlags {
     Paint = 0x1,
     Opacity = 0x2,
     Gradient = 0x4,
@@ -107,25 +98,19 @@ enum class SvgStrokeFlags
     DashOffset = 0x200
 };
 
-constexpr bool operator &(SvgStrokeFlags a, SvgStrokeFlags b)
+constexpr bool operator&(SvgStrokeFlags a, SvgStrokeFlags b)
 {
     return int(a) & int(b);
 }
 
-constexpr SvgStrokeFlags operator |(SvgStrokeFlags a, SvgStrokeFlags b)
+constexpr SvgStrokeFlags operator|(SvgStrokeFlags a, SvgStrokeFlags b)
 {
     return SvgStrokeFlags(int(a) | int(b));
 }
 
+enum class SvgGradientType { Linear, Radial };
 
-enum class SvgGradientType
-{
-    Linear,
-    Radial
-};
-
-enum class SvgStyleFlags
-{
+enum class SvgStyleFlags {
     Color = 0x01,
     Fill = 0x02,
     FillRule = 0x04,
@@ -147,35 +132,29 @@ enum class SvgStyleFlags
     StrokeDashOffset = 0x40000,
 };
 
-constexpr bool operator &(SvgStyleFlags a, SvgStyleFlags b)
+constexpr bool operator&(SvgStyleFlags a, SvgStyleFlags b)
 {
     return int(a) & int(b);
 }
 
-constexpr SvgStyleFlags operator |(SvgStyleFlags a, SvgStyleFlags b)
+constexpr SvgStyleFlags operator|(SvgStyleFlags a, SvgStyleFlags b)
 {
     return SvgStyleFlags(int(a) | int(b));
 }
 
-enum class SvgStopStyleFlags
-{
-    StopDefault = 0x0,
-    StopOpacity = 0x01,
-    StopColor = 0x02
-};
+enum class SvgStopStyleFlags { StopDefault = 0x0, StopOpacity = 0x01, StopColor = 0x02 };
 
-constexpr bool operator &(SvgStopStyleFlags a, SvgStopStyleFlags b)
+constexpr bool operator&(SvgStopStyleFlags a, SvgStopStyleFlags b)
 {
     return int(a) & int(b);
 }
 
-constexpr SvgStopStyleFlags operator |(SvgStopStyleFlags a, SvgStopStyleFlags b)
+constexpr SvgStopStyleFlags operator|(SvgStopStyleFlags a, SvgStopStyleFlags b)
 {
     return SvgStopStyleFlags(int(a) | int(b));
 }
 
-enum class SvgGradientFlags
-{
+enum class SvgGradientFlags {
     None = 0x0,
     GradientUnits = 0x1,
     SpreadMethod = 0x2,
@@ -191,64 +170,53 @@ enum class SvgGradientFlags
     Fr = 0x800
 };
 
-constexpr bool operator &(SvgGradientFlags a, SvgGradientFlags b)
+constexpr bool operator&(SvgGradientFlags a, SvgGradientFlags b)
 {
     return int(a) & int(b);
 }
 
-constexpr SvgGradientFlags operator |(SvgGradientFlags a, SvgGradientFlags b)
+constexpr SvgGradientFlags operator|(SvgGradientFlags a, SvgGradientFlags b)
 {
     return SvgGradientFlags(int(a) | int(b));
 }
 
-enum class SvgFillRule
-{
-    Winding = 0,
-    OddEven = 1
-};
+enum class SvgFillRule { Winding = 0, OddEven = 1 };
 
-enum class SvgMaskType
-{
-    Luminance = 0,
-    Alpha
-};
+enum class SvgMaskType { Luminance = 0, Alpha };
 
-//Length type to recalculate %, pt, pc, mm, cm etc
-enum class SvgParserLengthType
-{
+// Length type to recalculate %, pt, pc, mm, cm etc
+enum class SvgParserLengthType {
     Vertical,
     Horizontal,
-    //In case of, for example, radius of radial gradient
+    // In case of, for example, radius of radial gradient
     Other
 };
 
-enum class SvgViewFlag
-{
+enum class SvgViewFlag {
     None = 0x0,
-    Width = 0x01,   //viewPort width
-    Height = 0x02,  //viewPort height
-    Viewbox = 0x04,  //viewBox x,y,w,h - used only if all 4 are correctly set
+    Width = 0x01,   // viewPort width
+    Height = 0x02,  // viewPort height
+    Viewbox = 0x04, // viewBox x,y,w,h - used only if all 4 are correctly set
     WidthInPercent = 0x08,
     HeightInPercent = 0x10
 };
 
-constexpr bool operator &(SvgViewFlag a, SvgViewFlag b)
+constexpr bool operator&(SvgViewFlag a, SvgViewFlag b)
 {
     return static_cast<int>(a) & static_cast<int>(b);
 }
 
-constexpr SvgViewFlag operator |(SvgViewFlag a, SvgViewFlag b)
+constexpr SvgViewFlag operator|(SvgViewFlag a, SvgViewFlag b)
 {
     return SvgViewFlag(int(a) | int(b));
 }
 
-constexpr SvgViewFlag operator ^(SvgViewFlag a, SvgViewFlag b)
+constexpr SvgViewFlag operator^(SvgViewFlag a, SvgViewFlag b)
 {
     return SvgViewFlag(int(a) ^ int(b));
 }
 
-enum class AspectRatioAlign
-{
+enum class AspectRatioAlign {
     None,
     XMinYMin,
     XMidYMin,
@@ -261,38 +229,30 @@ enum class AspectRatioAlign
     XMaxYMax
 };
 
-enum class AspectRatioMeetOrSlice
-{
-    Meet,
-    Slice
-};
+enum class AspectRatioMeetOrSlice { Meet, Slice };
 
-struct SvgDocNode
-{
-    float w;       //unit: point or in percentage see: SvgViewFlag
-    float h;       //unit: point or in percentage see: SvgViewFlag
+struct SvgDocNode {
+    float w; // unit: point or in percentage see: SvgViewFlag
+    float h; // unit: point or in percentage see: SvgViewFlag
     float vx;
     float vy;
     float vw;
     float vh;
     SvgViewFlag viewFlag;
-    SvgNode* defs;
-    SvgNode* style;
+    SvgNode *defs;
+    SvgNode *style;
     AspectRatioAlign align;
     AspectRatioMeetOrSlice meetOrSlice;
 };
 
-struct SvgGNode
-{
+struct SvgGNode {
 };
 
-struct SvgDefsNode
-{
-    Array<SvgStyleGradient*> gradients;
+struct SvgDefsNode {
+    Array<SvgStyleGradient *> gradients;
 };
 
-struct SvgSymbolNode
-{
+struct SvgSymbolNode {
     float w, h;
     float vx, vy, vw, vh;
     AspectRatioAlign align;
@@ -303,31 +263,27 @@ struct SvgSymbolNode
     bool hasHeight;
 };
 
-struct SvgUseNode
-{
+struct SvgUseNode {
     float x, y, w, h;
     bool isWidthSet;
     bool isHeightSet;
-    SvgNode* symbol;
+    SvgNode *symbol;
 };
 
-struct SvgEllipseNode
-{
+struct SvgEllipseNode {
     float cx;
     float cy;
     float rx;
     float ry;
 };
 
-struct SvgCircleNode
-{
+struct SvgCircleNode {
     float cx;
     float cy;
     float r;
 };
 
-struct SvgRectNode
-{
+struct SvgRectNode {
     float x;
     float y;
     float w;
@@ -338,47 +294,39 @@ struct SvgRectNode
     bool hasRy;
 };
 
-struct SvgLineNode
-{
+struct SvgLineNode {
     float x1;
     float y1;
     float x2;
     float y2;
 };
 
-struct SvgImageNode
-{
+struct SvgImageNode {
     float x, y, w, h;
-    char* href;
+    char *href;
 };
 
-struct SvgPathNode
-{
-    char* path;
+struct SvgPathNode {
+    char *path;
 };
 
-struct SvgPolygonNode
-{
+struct SvgPolygonNode {
     Array<float> pts;
 };
 
-struct SvgClipNode
-{
+struct SvgClipNode {
     bool userSpace;
 };
 
-struct SvgMaskNode
-{
+struct SvgMaskNode {
     SvgMaskType type;
     bool userSpace;
 };
 
-struct SvgCssStyleNode
-{
+struct SvgCssStyleNode {
 };
 
-struct SvgLinearGradient
-{
+struct SvgLinearGradient {
     float x1;
     float y1;
     float x2;
@@ -389,8 +337,7 @@ struct SvgLinearGradient
     bool isY2Percentage;
 };
 
-struct SvgRadialGradient
-{
+struct SvgRadialGradient {
     float cx;
     float cy;
     float fx;
@@ -405,44 +352,39 @@ struct SvgRadialGradient
     bool isFrPercentage;
 };
 
-struct SvgComposite
-{
+struct SvgComposite {
     char *url;
-    SvgNode* node;
-    bool applying;              //flag for checking circular dependency.
+    SvgNode *node;
+    bool applying; // flag for checking circular dependency.
 };
 
-struct SvgColor
-{
+struct SvgColor {
     uint8_t r;
     uint8_t g;
     uint8_t b;
 };
 
-struct SvgPaint
-{
-    SvgStyleGradient* gradient;
+struct SvgPaint {
+    SvgStyleGradient *gradient;
     char *url;
     SvgColor color;
     bool none;
     bool curColor;
 };
 
-struct SvgDash
-{
+struct SvgDash {
     Array<float> array;
     float offset;
 };
 
-struct SvgStyleGradient
-{
+struct SvgStyleGradient {
     SvgGradientType type;
-    char* id;
-    char* ref;
+    char *id;
+    char *ref;
     FillSpread spread;
-    SvgRadialGradient* radial;
-    SvgLinearGradient* linear;
-    Matrix* transform;
+    SvgRadialGradient *radial;
+    SvgLinearGradient *linear;
+    Matrix *transform;
     Array<Fill::ColorStop> stops;
     SvgGradientFlags flags;
     bool userSpace;
@@ -458,16 +400,14 @@ struct SvgStyleGradient
     }
 };
 
-struct SvgStyleFill
-{
+struct SvgStyleFill {
     SvgFillFlags flags;
     SvgPaint paint;
     int opacity;
     FillRule fillRule;
 };
 
-struct SvgStyleStroke
-{
+struct SvgStyleStroke {
     SvgStrokeFlags flags;
     SvgPaint paint;
     int opacity;
@@ -480,30 +420,29 @@ struct SvgStyleStroke
     SvgDash dash;
 };
 
-struct SvgStyleProperty
-{
+struct SvgStyleProperty {
     SvgStyleFill fill;
     SvgStyleStroke stroke;
     SvgComposite clipPath;
     SvgComposite mask;
     int opacity;
     SvgColor color;
-    char* cssClass;
+    char *cssClass;
     SvgStyleFlags flags;
-    SvgStyleFlags flagsImportance; //indicates the importance of the flag - if set, higher priority is applied (https://drafts.csswg.org/css-cascade-4/#importance)
+    SvgStyleFlags flagsImportance; // indicates the importance of the flag - if set, higher priority is applied
+                                   // (https://drafts.csswg.org/css-cascade-4/#importance)
     bool curColorSet;
-    bool paintOrder; //true if default (fill, stroke), false otherwise
+    bool paintOrder; // true if default (fill, stroke), false otherwise
     bool display;
 };
 
-struct SvgNode
-{
+struct SvgNode {
     SvgNodeType type;
-    SvgNode* parent;
-    Array<SvgNode*> child;
+    SvgNode *parent;
+    Array<SvgNode *> child;
     char *id;
     SvgStyleProperty *style;
-    Matrix* transform;
+    Matrix *transform;
     union {
         SvgGNode g;
         SvgDocNode doc;
@@ -525,53 +464,46 @@ struct SvgNode
     ~SvgNode();
 };
 
-struct SvgParser
-{
-    SvgNode* node;
-    SvgStyleGradient* styleGrad;
+struct SvgParser {
+    SvgNode *node;
+    SvgStyleGradient *styleGrad;
     Fill::ColorStop gradStop;
     SvgStopStyleFlags flags;
-    struct
-    {
+    struct {
         float x, y, w, h;
     } global;
-    struct
-    {
+    struct {
         bool parsedFx;
         bool parsedFy;
     } gradient;
 };
 
-struct SvgNodeIdPair
-{
-    SvgNode* node;
+struct SvgNodeIdPair {
+    SvgNode *node;
     char *id;
 };
 
-struct SvgLoaderData
-{
-    Array<SvgNode*> stack;
-    SvgNode* doc = nullptr;
-    SvgNode* def = nullptr;
-    SvgNode* cssStyle = nullptr;
-    Array<SvgStyleGradient*> gradients;
-    SvgStyleGradient* latestGradient = nullptr; //For stops
-    SvgParser* svgParse = nullptr;
+struct SvgLoaderData {
+    Array<SvgNode *> stack;
+    SvgNode *doc = nullptr;
+    SvgNode *def = nullptr;
+    SvgNode *cssStyle = nullptr;
+    Array<SvgStyleGradient *> gradients;
+    SvgStyleGradient *latestGradient = nullptr; // For stops
+    SvgParser *svgParse = nullptr;
     Array<SvgNodeIdPair> cloneNodes;
     Array<SvgNodeIdPair> nodesToStyle;
-    Array<char*> images;        //embedded images
+    Array<char *> images; // embedded images
     int level = 0;
     bool result = false;
     bool style = false;
-    SvgNode* currentGraphicsNode = nullptr;
+    SvgNode *currentGraphicsNode = nullptr;
 };
 
-struct Box
-{
+struct Box {
     float x, y, w, h;
 };
 
 #endif
 
 #endif /* LV_USE_THORVG_INTERNAL */
-

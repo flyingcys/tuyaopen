@@ -42,22 +42,21 @@ extern "C" {
  **********************/
 
 typedef struct {
-    void (*pvStartRoutine)(void *);       /**< Application thread function. */
-    void * pTaskArg;                      /**< Arguments for application thread function. */
-    TaskHandle_t xTaskHandle;             /**< FreeRTOS task handle. */
+    void (*pvStartRoutine)(void *); /**< Application thread function. */
+    void *pTaskArg;                 /**< Arguments for application thread function. */
+    TaskHandle_t xTaskHandle;       /**< FreeRTOS task handle. */
 } lv_thread_t;
 
 typedef struct {
-    BaseType_t xIsInitialized;            /**< Set to pdTRUE if this mutex is initialized, pdFALSE otherwise. */
-    SemaphoreHandle_t xMutex;             /**< FreeRTOS mutex. */
+    BaseType_t xIsInitialized; /**< Set to pdTRUE if this mutex is initialized, pdFALSE otherwise. */
+    SemaphoreHandle_t xMutex;  /**< FreeRTOS mutex. */
 } lv_mutex_t;
 
 typedef struct {
-    BaseType_t
-    xIsInitialized;                       /**< Set to pdTRUE if this condition variable is initialized, pdFALSE otherwise. */
-    BaseType_t xSyncSignal;               /**< Set to pdTRUE if the thread is signaled, pdFALSE otherwise. */
+    BaseType_t xIsInitialized; /**< Set to pdTRUE if this condition variable is initialized, pdFALSE otherwise. */
+    BaseType_t xSyncSignal;    /**< Set to pdTRUE if the thread is signaled, pdFALSE otherwise. */
 #if LV_USE_FREERTOS_TASK_NOTIFY
-    TaskHandle_t xTaskToNotify;           /**< The task waiting to be signalled. NULL if nothing is waiting. */
+    TaskHandle_t xTaskToNotify; /**< The task waiting to be signalled. NULL if nothing is waiting. */
 #else
     SemaphoreHandle_t xCondWaitSemaphore; /**< Threads block on this semaphore in lv_thread_sync_wait. */
     uint32_t ulWaitingThreads;            /**< The number of threads currently waiting on this condition variable. */
@@ -75,7 +74,7 @@ typedef struct {
  * to save the start time stamp of a task
  * @param name      the name of the which is switched in
  */
-void lv_freertos_task_switch_in(const char * name);
+void lv_freertos_task_switch_in(const char *name);
 
 /**
  * Set it for `traceTASK_SWITCHED_OUT()` as

@@ -46,7 +46,7 @@ LV_ATTRIBUTE_EXTERN_DATA extern const lv_obj_class_t lv_slider_class;
  * @param parent    pointer to an object, it will be the parent of the new slider.
  * @return          pointer to the created slider
  */
-lv_obj_t * lv_slider_create(lv_obj_t * parent);
+lv_obj_t *lv_slider_create(lv_obj_t *parent);
 
 /*=====================
  * Setter functions
@@ -58,7 +58,7 @@ lv_obj_t * lv_slider_create(lv_obj_t * parent);
  * @param value     the new value
  * @param anim      LV_ANIM_ON: set the value with an animation; LV_ANIM_OFF: change the value immediately
  */
-void lv_slider_set_value(lv_obj_t * obj, int32_t value, lv_anim_enable_t anim);
+void lv_slider_set_value(lv_obj_t *obj, int32_t value, lv_anim_enable_t anim);
 
 /**
  * Set a new value for the left knob of a slider
@@ -66,7 +66,7 @@ void lv_slider_set_value(lv_obj_t * obj, int32_t value, lv_anim_enable_t anim);
  * @param value     new value
  * @param anim      LV_ANIM_ON: set the value with an animation; LV_ANIM_OFF: change the value immediately
  */
-void lv_slider_set_left_value(lv_obj_t * obj, int32_t value, lv_anim_enable_t anim);
+void lv_slider_set_left_value(lv_obj_t *obj, int32_t value, lv_anim_enable_t anim);
 
 /**
  * Set minimum and the maximum values of a bar
@@ -74,14 +74,14 @@ void lv_slider_set_left_value(lv_obj_t * obj, int32_t value, lv_anim_enable_t an
  * @param min       minimum value
  * @param max       maximum value
  */
-void lv_slider_set_range(lv_obj_t * obj, int32_t min, int32_t max);
+void lv_slider_set_range(lv_obj_t *obj, int32_t min, int32_t max);
 
 /**
  * Set the mode of slider.
  * @param obj       pointer to a slider object
  * @param mode      the mode of the slider. See ::lv_slider_mode_t
  */
-void lv_slider_set_mode(lv_obj_t * obj, lv_slider_mode_t mode);
+void lv_slider_set_mode(lv_obj_t *obj, lv_slider_mode_t mode);
 
 /*=====================
  * Getter functions
@@ -92,49 +92,49 @@ void lv_slider_set_mode(lv_obj_t * obj, lv_slider_mode_t mode);
  * @param obj       pointer to a slider object
  * @return          the value of the main knob of the slider
  */
-int32_t lv_slider_get_value(const lv_obj_t * obj);
+int32_t lv_slider_get_value(const lv_obj_t *obj);
 
 /**
  * Get the value of the left knob of a slider
  * @param obj       pointer to a slider object
  * @return          the value of the left knob of the slider
  */
-int32_t lv_slider_get_left_value(const lv_obj_t * obj);
+int32_t lv_slider_get_left_value(const lv_obj_t *obj);
 
 /**
  * Get the minimum value of a slider
  * @param obj       pointer to a slider object
  * @return          the minimum value of the slider
  */
-int32_t lv_slider_get_min_value(const lv_obj_t * obj);
+int32_t lv_slider_get_min_value(const lv_obj_t *obj);
 
 /**
  * Get the maximum value of a slider
  * @param obj       pointer to a slider object
  * @return          the maximum value of the slider
  */
-int32_t lv_slider_get_max_value(const lv_obj_t * obj);
+int32_t lv_slider_get_max_value(const lv_obj_t *obj);
 
 /**
  * Give the slider is being dragged or not
  * @param obj       pointer to a slider object
  * @return          true: drag in progress false: not dragged
  */
-bool lv_slider_is_dragged(const lv_obj_t * obj);
+bool lv_slider_is_dragged(const lv_obj_t *obj);
 
 /**
  * Get the mode of the slider.
  * @param slider       pointer to a slider object
  * @return          see ::lv_slider_mode_t
  */
-lv_slider_mode_t lv_slider_get_mode(lv_obj_t * slider);
+lv_slider_mode_t lv_slider_get_mode(lv_obj_t *slider);
 
 /**
  * Give the slider is in symmetrical mode or not
  * @param obj       pointer to slider object
  * @return          true: in symmetrical mode false : not in
-*/
-bool lv_slider_is_symmetrical(lv_obj_t * obj);
+ */
+bool lv_slider_is_symmetrical(lv_obj_t *obj);
 
 /**********************
  *      MACROS
