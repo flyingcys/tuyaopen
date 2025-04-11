@@ -31,7 +31,7 @@ $ export PATH=$PATH:$PWD
 
 TuyaOpen 通过 tos 命令进行编译、调试等操作，tos 命令会根据环境变量中设置的路径查找 TuyaOpen 仓库，并执行对应操作。
 
-tos 命令的详细使用方法，请参考 [tos 命令](./docs/zh/tos_guide.md)。
+tos 命令的详细使用方法，请参考 [tos 命令](./docs/zh_CN/tos_guide.md)。
 
 ### step2. 选择待编译项目
 - 方式1：编译 example

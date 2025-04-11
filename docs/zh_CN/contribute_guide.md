@@ -1,6 +1,6 @@
 # 贡献指南
 
-欢迎通过 github 的 Fork 和 [Push Requests](https://docs.github.com/zh/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests) 流程为 [TuyaOpen](https://github.com/tuya/TuyaOpen) 贡献内容，包括修复功能代码、文档错误，新增功能和文档等。
+欢迎通过 github 的 Fork 和 [Push Requests](https://docs.github.com/zh_CN/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests) 流程为 [TuyaOpen](https://github.com/tuya/TuyaOpen) 贡献内容，包括修复功能代码、文档错误，新增功能和文档等。
 
 ## 修改内容
 1. 在本地 PC 中安装 git 工具。

@@ -1,6 +1,6 @@
 # Contribution Guide
 
-Welcome to contribute to [TuyaOpen](https://github.com/tuya/TuyaOpen) through the Fork and [Push Requests](https://docs.github.com/zh/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests) process on GitHub, including fixing functional code and documentation errors, adding new features and documentation, etc.
+Welcome to contribute to [TuyaOpen](https://github.com/tuya/TuyaOpen) through the Fork and [Push Requests](https://docs.github.com/zh_CN/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests) process on GitHub, including fixing functional code and documentation errors, adding new features and documentation, etc.
 
 ## Changes
 1. Install the git tool on your local PC.

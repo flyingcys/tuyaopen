@@ -72,4 +72,4 @@ To allow developers to freely experience the Tuyaopen Framework, you can now sta
 
 Limited to 500 units, first come, first served. Hurry and scan the QR code to join the group👇:
 
-![qq_qrcode](../../docs/images/zh/qq_qrcode.png)
+![qq_qrcode](../../docs/images/zh_CN/qq_qrcode.png)

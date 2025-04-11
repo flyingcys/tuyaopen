@@ -7,7 +7,7 @@ TuyaOpen 开发指南
 ===============================
 
 
-.. figure:: images/TuyaOpen.png
+.. figure:: ../images/TuyaOpen.png
 
 `[English] <https://github.com/tuya/TuyaOpen/blob/master/README.md>`_
 
@@ -26,24 +26,24 @@ TuyaOpen 是一款跨芯片平台、操作系统的 AI+IoT 开发框架。它基
 ============
 TuyaOpen 相关链接
 ============
-- C 版 TuyaOpen：`https://github.com/tuya/TuyaOpen <https://github.com/tuya/TuyaOpen>`_
-- Arduino 版 TuyaOpen：`https://github.com/tuya/arduino-TuyaOpen <https://github.com/tuya/arduino-TuyaOpen>`_
-- Luanode 版 TuyaOpen：`https://github.com/tuya/luanode-TuyaOpen <https://github.com/tuya/luanode-TuyaOpen>`_
+- C 版 TuyaOpen: `https://github.com/tuya/TuyaOpen <https://github.com/tuya/TuyaOpen>`_
+- Arduino 版 TuyaOpen: `https://github.com/tuya/arduino-TuyaOpen <https://github.com/tuya/arduino-TuyaOpen>`_
+- Luanode 版 TuyaOpen: `https://github.com/tuya/luanode-TuyaOpen <https://github.com/tuya/luanode-TuyaOpen>`_
 
 ------------
 gitee 镜像
 ------------
-- C 版 TuyaOpen：`https://gitee.com/tuya-open/TuyaOpen <https://gitee.com/tuya-open/TuyaOpen>`_
-- Arduino 版 TuyaOpen：`https://gitee.com/tuya-open/arduino-TuyaOpen <https://gitee.com/tuya-open/arduino-TuyaOpen>`_
-- Luanode 版 TuyaOpen：`https://gitee.com/tuya-open/luanode-TuyaOpen <https://gitee.com/tuya-open/luanode-TuyaOpen>`_
+- C 版 TuyaOpen: `https://gitee.com/tuya-open/TuyaOpen <https://gitee.com/tuya-open/TuyaOpen>`_
+- Arduino 版 TuyaOpen: `https://gitee.com/tuya-open/arduino-TuyaOpen <https://gitee.com/tuya-open/arduino-TuyaOpen>`_
+- Luanode 版 TuyaOpen: `https://gitee.com/tuya-open/luanode-TuyaOpen <https://gitee.com/tuya-open/luanode-TuyaOpen>`_
 
 .. toctree::
    :maxdepth: 1
    :glob:
 
-   zh/quick_start.md
-   zh/tos_guide.md
-   zh/new_platform.md
-   zh/new_board.md
-   zh/contribute_guide.md
-   zh/code_style_guide.md
+   quick_start.md
+   tos_guide.md
+   new_platform.md
+   new_board.md
+   contribute_guide.md
+   code_style_guide.md
