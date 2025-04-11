@@ -273,6 +273,9 @@ TuyaOpen provides a wealth of cloud connectivity application examples, which can
 
 TuyaOpen supports adding and adapting new platforms. For specific operations, please refer to [Adding and Adapting New Platforms](./docs/en/new_platform.md).
 
+## Adding and Adapting New Boards
+TuyaOpen supports adding and adapting new boards. For specific operations, please refer to [Adding and Adapting New Boards](./docs/en/new_board.md).
+
 ## FAQ
 1. The supported platform for TuyaOpen are dynamically downloaded through subrepositories. Updating the TuyaOpen repository itself will not automatically update the subrepositories. If you encounter any issues with compilation, please navigate to the corresponding directory in the "platform" folder and use the `git pull` command to update, or delete the corresponding directory in the "platform" folder and download it again.
 

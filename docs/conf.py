@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'TuyaOpen 编程指南'
+project = 'TuyaOpen 开发指南'
 copyright = '2024, Tuya'
 author = 'Tuya'
 release = '1.1.0'
