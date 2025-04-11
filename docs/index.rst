@@ -39,7 +39,7 @@ gitee 镜像
 
 .. toctree::
    :maxdepth: 1
-   :caption: 目录
+   :glob:
 
    zh/quick_start.md
    zh/tos_guide.md
