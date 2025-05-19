@@ -30,6 +30,22 @@ extensions = [
 	]
 
 templates_path = ['_templates']
+html_context = {
+    # GitHub 仓库设置（必需）
+    "display_github": True,  # 启用 GitHub 链接
+    "github_user": "tuya",   # 组织/用户名
+    "github_repo": "TuyaOpen",  # 仓库名
+    "github_version": "master",  # 默认分支（如 main/master）
+    
+    # 页面路径配置（自动生成编辑链接）
+    "conf_py_path": "/docs/zh/",  # 配置文件的仓库相对路径
+    
+    # 版本选择器配置
+    "versions": [
+        {"name": "master", "url": "/zh/latest/"},
+        {"name": "release", "url": "/zh/stable/"}
+    ]
+}
 exclude_patterns = []
 source_suffix = ['.rst', '.md']
 
@@ -42,6 +58,7 @@ html_logo = '../images/TuyaOpen.png'
 
 def setup(app):
     app.add_css_file('css/custom.css')
+    # 版本选择器不需要额外CSS/JS，已在模板中内联
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -82,4 +99,3 @@ html_context = {
 
 highlight_language = 'c'  # 默认高亮C语言代码
 primary_domain = 'c'      # 主文档域为C语言
-

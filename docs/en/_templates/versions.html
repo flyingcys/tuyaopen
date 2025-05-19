@@ -1,0 +1,66 @@
+{# 独立版本选择器组件，不依赖模板继承 #}
+<div class="version-selector-wrapper">
+  <select id="version-select" class="version-select">
+    <option value="/en/latest/" selected>master</option>
+    <option value="/en/stable/">v1.0.0</option>
+  </select>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // 获取logo和搜索框元素
+  const logo = document.querySelector('.wy-side-nav-search .logo');
+  const searchBox = document.querySelector('.wy-side-nav-search .wy-form');
+  
+  if (logo && searchBox) {
+    const selector = document.querySelector('.version-selector-wrapper');
+    // 在logo之后、搜索框之前插入
+    searchBox.parentNode.insertBefore(selector, searchBox);
+  }
+  
+  // 设置当前选中项
+  const path = window.location.pathname;
+  const select = document.getElementById('version-select');
+  if (path.includes('/master/')) {
+    select.value = '/en/master/';
+  } else if (path.includes('/v1.0.0/')) {
+    select.value = '/en/v1.0.0/';
+  }
+  
+  // 切换版本
+  select.addEventListener('change', function() {
+    if (this.value) {
+      window.location.href = this.value;
+    }
+  });
+});
+</script>
+
+<style>
+.version-selector-wrapper {
+  padding: 10px 15px;
+  background: #f8f8f8;
+  border-bottom: 1px solid #e7e7e7;
+}
+
+.version-select {
+  width: auto;
+  min-width: 120px;
+  max-width: 180px;
+  margin: 0 auto;
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #d1d1d1;
+  background: white;
+  color: #333;
+  font-size: 13px;
+  display: block;
+}
+
+/* 响应式调整 */
+@media screen and (max-width: 768px) {
+  .version-selector-wrapper {
+    padding: 8px 10px;
+  }
+}
+</style>

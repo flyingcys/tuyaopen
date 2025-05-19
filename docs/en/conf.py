@@ -1,3 +1,6 @@
+import os
+import sphinx_rtd_theme
+
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -29,7 +32,28 @@ extensions = [
     'sphinx_sitemap',
 ]
 
-templates_path = ['_templates']
+# 确保主题模板路径优先
+templates_path = [
+    '_templates',
+    os.path.join(os.path.dirname(sphinx_rtd_theme.__file__), 'layout.html'),
+    os.path.join(os.path.dirname(sphinx_rtd_theme.__file__), 'includes')
+]
+html_context = {
+    # GitHub 仓库设置（必需）
+    "display_github": True,  # 启用 GitHub 链接
+    "github_user": "tuya",   # 组织/用户名
+    "github_repo": "TuyaOpen",  # 仓库名
+    "github_version": "master",  # 默认分支（如 main/master）
+    
+    # 页面路径配置（自动生成编辑链接）
+    "conf_py_path": "/docs/en/",  # 配置文件的仓库相对路径
+    
+    # 版本选择器配置
+    "versions": [
+        {"name": "master", "url": "/en/master/"},
+        {"name": "v1.0.0", "url": "/en/v1.0.0/"}
+    ]
+}
 exclude_patterns = []
 source_suffix = ['.rst', '.md']
 
