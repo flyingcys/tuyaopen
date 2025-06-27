@@ -203,9 +203,22 @@ int tuya_ota_start(cJSON *upgrade)
 
     ota->channel = cJSON_GetObjectItem(upgrade, "type")->valueint;
     ota->msg.file_size = atol(cJSON_GetObjectItem(upgrade, "size")->valuestring);
-    strcpy(ota->msg.fw_url, cJSON_GetObjectItem(upgrade, "httpsUrl")->valuestring);
-    strcpy(ota->msg.fw_hmac, cJSON_GetObjectItem(upgrade, "hmac")->valuestring);
-    strcpy(ota->msg.fw_md5, cJSON_GetObjectItem(upgrade, "md5")->valuestring);
+    char *httpsUrl = cJSON_GetObjectItem(upgrade, "httpsUrl")->valuestring;
+    char *hmac = cJSON_GetObjectItem(upgrade, "hmac")->valuestring;
+    char *md5 = cJSON_GetObjectItem(upgrade, "md5")->valuestring;
+
+    if (strlen(httpsUrl) < FW_URL_LEN) {
+        strncpy(ota->msg.fw_url, httpsUrl, FW_URL_LEN - 1);
+        ota->msg.fw_url[FW_URL_LEN - 1] = '\0';
+    }
+    if (strlen(hmac) < FW_HMAC_LEN) {
+        strncpy(ota->msg.fw_hmac, hmac, FW_HMAC_LEN - 1);
+        ota->msg.fw_hmac[FW_HMAC_LEN - 1] = '\0';
+    }
+    if (strlen(md5) < SW_MD5_LEN) {
+        strncpy(ota->msg.fw_md5, md5, SW_MD5_LEN - 1);
+        ota->msg.fw_md5[SW_MD5_LEN - 1] = '\0';
+    }
 
     THREAD_CFG_T thrd_param;
     thrd_param.priority = THREAD_PRIO_3;

@@ -80,11 +80,13 @@ int tuya_http_cert_save(char *host, uint16_t port, uint8_t *cacert, uint16_t cac
         tal_free(cache->cacert);
         cache->cacert = NULL;
     }
-    cache->host = tal_calloc(1, strlen(host));
+    size_t host_len = strlen(host) + 1;
+    cache->host = tal_calloc(1, host_len);
     if (NULL == cache->host) {
         return OPRT_MALLOC_FAILED;
     }
-    strcpy(cache->host, host);
+    strncpy(cache->host, host, host_len - 1);
+    cache->host[host_len - 1] = '\0';
     cache->port = port;
     cache->cacert = cacert;
     cache->cacert_len = cacert_len;

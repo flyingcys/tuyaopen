@@ -138,7 +138,10 @@ int tuya_mqtt_subscribe_message_callback_register(tuya_mqtt_context_t *context, 
 
     newtarget->topic_length = strlen(topic);
     newtarget->topic = tal_calloc(1, newtarget->topic_length + 1); // strdup
-    strcpy(newtarget->topic, topic);
+    if (newtarget->topic) {
+        strncpy(newtarget->topic, topic, newtarget->topic_length);
+        newtarget->topic[newtarget->topic_length] = '\0';
+    }
 
     if (cb) {
         newtarget->cb = cb;

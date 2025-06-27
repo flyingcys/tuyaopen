@@ -229,8 +229,10 @@ int tuya_endpoint_region_regist_set(const char *region, const char *regist_key)
         return OPRT_KVS_WR_FAIL;
     }
 
-    strcpy(endpoint_mgr.region, region);
-    strcpy(endpoint_mgr.regist_key, regist_key);
+    strncpy(endpoint_mgr.region, region, sizeof(endpoint_mgr.region) - 1);
+    endpoint_mgr.region[sizeof(endpoint_mgr.region) - 1] = '\0';
+    strncpy(endpoint_mgr.regist_key, regist_key, sizeof(endpoint_mgr.regist_key) - 1);
+    endpoint_mgr.regist_key[sizeof(endpoint_mgr.regist_key) - 1] = '\0';
     return OPRT_OK;
 }
 
@@ -272,7 +274,8 @@ int tuya_endpoint_init(void)
 
     /* Default online environment */
     if (endpoint_mgr.regist_key[0] == 0) {
-        strcpy(endpoint_mgr.regist_key, "pro");
+        strncpy(endpoint_mgr.regist_key, "pro", sizeof(endpoint_mgr.regist_key) - 1);
+        endpoint_mgr.regist_key[sizeof(endpoint_mgr.regist_key) - 1] = '\0';
     }
 
     return ret;

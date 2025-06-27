@@ -214,12 +214,14 @@ OPERATE_RET tal_log_add_output_term(const char *name, const TAL_LOG_OUTPUT_CB te
     if (!output_node) {
         return OPRT_MALLOC_FAILED;
     }
-    output_node->name = tal_malloc(strlen(name) + 1);
+    size_t name_len = strlen(name);
+    output_node->name = tal_malloc(name_len + 1);
     if (!output_node->name) {
         tal_free(output_node);
         return OPRT_MALLOC_FAILED;
     }
-    strcpy(output_node->name, name);
+    strncpy(output_node->name, name, name_len);
+    output_node->name[name_len] = '\0';
     output_node->out_term = term;
     tuya_list_add(&(output_node->node), &(pLogManage->log_list));
 
@@ -404,7 +406,7 @@ OPERATE_RET PrintLogV(LOG_LEVEL logLevel, char *pFile, uint32_t line, const char
                        pLogManage->log_color.style[logLevel].display_mode,
                        pLogManage->log_color.style[logLevel].font_color,
                        pLogManage->log_color.style[logLevel].background_color);
-        if (cnt <= 0) {
+        if (cnt <= 0 || cnt >= pLogManage->log_buf_len) {
             goto ERR_EXIT;
         }
         len += cnt;
@@ -413,27 +415,42 @@ OPERATE_RET PrintLogV(LOG_LEVEL logLevel, char *pFile, uint32_t line, const char
     POSIX_TM_S tm;
     memset(&tm, 0, sizeof(tm));
 
+    size_t remaining = pLogManage->log_buf_len - len;
+    if (remaining <= 1) {
+        goto ERR_EXIT;
+    }
+
     if (pLogManage->ms_level == FALSE) {
         tal_time_get_local_time_custom(0, &tm);
-        cnt = snprintf(pLogManage->log_buf + len, pLogManage->log_buf_len - len,
-                       "[%02d-%02d %02d:%02d:%02d %s %s][%s:%" PRIu32 "] ", tm.tm_mon + 1, tm.tm_mday, tm.tm_hour,
-                       tm.tm_min, tm.tm_sec, pTmpModuleName, sLevelStr[logLevel], pTmpFilename, line);
+        cnt = snprintf(pLogManage->log_buf + len, remaining, "[%02d-%02d %02d:%02d:%02d %s %s][%s:%" PRIu32 "] ",
+                       tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, pTmpModuleName, sLevelStr[logLevel],
+                       pTmpFilename, line);
     } else {
         SYS_TICK_T time_ms = tal_time_get_posix_ms();
         TIME_T sec = (TIME_T)(time_ms / 1000);
         uint32_t ms = (uint32_t)(time_ms % 1000);
         tal_time_get_local_time_custom(sec, &tm);
-        cnt = snprintf(pLogManage->log_buf + len, pLogManage->log_buf_len - len,
+        cnt = snprintf(pLogManage->log_buf + len, remaining,
                        "[%02d-%02d %02d:%02d:%02d:%" PRIu32 " %s %s][%s:%" PRIu32 "] ", tm.tm_mon + 1, tm.tm_mday,
                        tm.tm_hour, tm.tm_min, tm.tm_sec, ms, pTmpModuleName, sLevelStr[logLevel], pTmpFilename, line);
     }
-    if (cnt <= 0) {
+    if (cnt <= 0 || cnt >= remaining) {
         goto ERR_EXIT;
     }
     len += cnt;
-    cnt = vsnprintf(pLogManage->log_buf + len, pLogManage->log_buf_len - len, pFmt, ap);
+
+    remaining = pLogManage->log_buf_len - len;
+    if (remaining <= 1) {
+        goto ERR_EXIT;
+    }
+
+    cnt = vsnprintf(pLogManage->log_buf + len, remaining, pFmt, ap);
     if (cnt <= 0) {
         goto ERR_EXIT;
+    }
+    if (cnt >= remaining) {
+        cnt = remaining - 1;
+        pLogManage->log_buf[len + cnt] = '\0';
     }
     len += cnt;
 

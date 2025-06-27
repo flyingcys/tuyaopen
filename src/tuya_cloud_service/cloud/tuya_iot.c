@@ -85,14 +85,19 @@ static int activate_json_string_parse(const char *str, tuya_activated_data_t *ou
         goto __exit;
     }
 
-    strcpy(out->devid, cJSON_GetObjectItem(root, "devId")->valuestring);
-    strcpy(out->seckey, cJSON_GetObjectItem(root, "secKey")->valuestring);
-    strcpy(out->localkey, cJSON_GetObjectItem(root, "localKey")->valuestring);
-    strcpy(out->schemaId, cJSON_GetObjectItem(root, "schemaId")->valuestring);
+    strncpy(out->devid, cJSON_GetObjectItem(root, "devId")->valuestring, sizeof(out->devid) - 1);
+    out->devid[sizeof(out->devid) - 1] = '\0';
+    strncpy(out->seckey, cJSON_GetObjectItem(root, "secKey")->valuestring, sizeof(out->seckey) - 1);
+    out->seckey[sizeof(out->seckey) - 1] = '\0';
+    strncpy(out->localkey, cJSON_GetObjectItem(root, "localKey")->valuestring, sizeof(out->localkey) - 1);
+    out->localkey[sizeof(out->localkey) - 1] = '\0';
+    strncpy(out->schemaId, cJSON_GetObjectItem(root, "schemaId")->valuestring, sizeof(out->schemaId) - 1);
+    out->schemaId[sizeof(out->schemaId) - 1] = '\0';
 
     cJSON *stdTimeZone = cJSON_GetObjectItem(root, "stdTimeZone");
     if (stdTimeZone) {
-        strcpy(out->timezone, stdTimeZone->valuestring);
+        strncpy(out->timezone, stdTimeZone->valuestring, sizeof(out->timezone) - 1);
+        out->timezone[sizeof(out->timezone) - 1] = '\0';
     }
 
 __exit:

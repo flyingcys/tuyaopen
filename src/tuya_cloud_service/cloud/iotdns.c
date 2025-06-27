@@ -213,7 +213,8 @@ int iotdns_cloud_endpoint_get(const char *region, const char *env, tuya_endpoint
     /* Decoded response data */
     rt = iotdns_response_decode(http_response.body, http_response.body_length, endpoint);
     if (region) {
-        strcpy(endpoint->region, region);
+        strncpy(endpoint->region, region, sizeof(endpoint->region) - 1);
+        endpoint->region[sizeof(endpoint->region) - 1] = '\0';
     }
     http_client_free(&http_response);
 
@@ -317,11 +318,13 @@ int tuya_iotdns_query_host_certs(char *host, uint16_t port, uint8_t **cacert, ui
  */
 int tuya_iotdns_query_domain_certs(char *url, uint8_t **cacert, uint16_t *cacert_len)
 {
-    char *p_tmp_url = tal_malloc(strlen(url) + 128);
+    size_t url_len = strlen(url);
+    char *p_tmp_url = tal_malloc(url_len + 128);
     if (p_tmp_url == NULL) {
         return OPRT_MALLOC_FAILED;
     }
-    strcpy(p_tmp_url, url);
+    strncpy(p_tmp_url, url, url_len);
+    p_tmp_url[url_len] = '\0';
 
     char *p_search_head = p_tmp_url;
     char *p_tmp = strstr(p_search_head, "://");

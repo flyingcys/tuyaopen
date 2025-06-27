@@ -118,9 +118,18 @@ static void mqtt_bind_activate_token_on(tuya_protocol_event_t *ev)
     tuya_binding_info_t binding;
 
     memset(&binding, 0, sizeof(tuya_binding_info_t));
-    strcpy(binding.token, token);
-    strcpy(binding.region, region);
-    strcpy(binding.regist_key, regist_key);
+    if (strlen(token) < MAX_LENGTH_TOKEN + 1) {
+        strncpy(binding.token, token, MAX_LENGTH_TOKEN);
+        binding.token[MAX_LENGTH_TOKEN] = '\0';
+    }
+    if (strlen(region) < MAX_LENGTH_REGION + 1) {
+        strncpy(binding.region, region, MAX_LENGTH_REGION);
+        binding.region[MAX_LENGTH_REGION] = '\0';
+    }
+    if (strlen(regist_key) < MAX_LENGTH_REGIST + 1) {
+        strncpy(binding.regist_key, regist_key, MAX_LENGTH_REGIST);
+        binding.regist_key[MAX_LENGTH_REGIST] = '\0';
+    }
 
     tal_event_unsubscribe(EVENT_LINK_ACTIVATE, "mqbind", __mqbind_link_activete_cb);
     tal_event_publish(EVENT_LINK_ACTIVATE, &binding);

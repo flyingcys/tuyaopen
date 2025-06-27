@@ -426,9 +426,21 @@ int tuya_iot_dp_raw_report(tuya_iot_client_t *client, const char *devid, dp_raw_
         return OPRT_MALLOC_FAILED;
     }
 
-    uint32_t offset = sprintf(dpout.dpsjson, "{\"%d\":\"", dp->id);
+    uint32_t offset = snprintf(dpout.dpsjson, encode_len, "{\"%d\":\"", dp->id);
+    if (offset >= encode_len) {
+        tal_free(dpout.dpsjson);
+        return OPRT_INVALID_PARM;
+    }
+
     tuya_base64_encode(dp->data, dpout.dpsjson + offset, dp->len);
-    strcpy(dpout.dpsjson + strlen(dpout.dpsjson), "\"}");
+
+    size_t current_len = strlen(dpout.dpsjson);
+    if (current_len + 3 < encode_len) {
+        strncat(dpout.dpsjson, "\"}", encode_len - current_len - 1);
+    } else {
+        tal_free(dpout.dpsjson);
+        return OPRT_INVALID_PARM;
+    }
 
     if (tuya_lan_is_connected()) {
         char *out = NULL;

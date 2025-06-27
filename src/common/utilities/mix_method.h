@@ -1,15 +1,15 @@
 /**
  * @file mix_method.h
  * @brief Header file for miscellaneous utility methods.
- * 
+ *
  * This file contains declarations for various utility functions including
  * bit manipulation macros and string comparison functions. These utilities
  * are designed to assist in common operations that are frequently required
  * across different modules of the application, thereby promoting code reuse
  * and reducing redundancy.
- * 
+ *
  * @copyright Copyright (c) 2021-2024 Tuya Inc. All Rights Reserved.
- * 
+ *
  */
 
 #ifndef _MIX_METHOD_H
@@ -70,6 +70,16 @@ void ascs2hex(unsigned char *hex, unsigned char *ascs, int srclen);
 void hex2str(unsigned char *pbDest, unsigned char *pbSrc, int nLen);
 
 /**
+ * @brief Safe version of hex2str with buffer size checking
+ *
+ * @param[out] pbDest the out string array
+ * @param[in] dest_size the size of destination buffer
+ * @param[in] pbSrc the input hex array
+ * @param[in] nLen the length of input hex array
+ */
+void hex2str_safe(unsigned char *pbDest, size_t dest_size, unsigned char *pbSrc, int nLen);
+
+/**
  * @brief Converts an array of bytes to a string representation.
  *
  * This function takes an array of bytes `pbSrc` and converts it to a string representation
@@ -88,8 +98,18 @@ void hex2str(unsigned char *pbDest, unsigned char *pbSrc, int nLen);
  *
  * @return None.
  */
-void byte2str(unsigned char *pbDest, unsigned char *pbSrc, int nLen,
-              bool_t upper);
+void byte2str(unsigned char *pbDest, unsigned char *pbSrc, int nLen, bool_t upper);
+
+/**
+ * @brief Safe version of byte2str with buffer size checking
+ *
+ * @param pbDest Pointer to the destination array where the resulting string will be stored.
+ * @param dest_size Size of the destination buffer
+ * @param pbSrc Pointer to the source array of bytes to be converted.
+ * @param nLen Length of the source array.
+ * @param upper Flag indicating whether to use uppercase or lowercase characters in the resulting string.
+ */
+void byte2str_safe(unsigned char *pbDest, size_t dest_size, unsigned char *pbSrc, int nLen, bool_t upper);
 
 /**
  * @brief find <ch> in <str>, start find in index <revr_index>, find in reverse
@@ -141,6 +161,16 @@ int is_valid_version(char *ver);
 int string2mac(const char *str, char mac[6]);
 
 /**
+ * @brief convert the input string array to hex array (safe version)
+ *
+ * @param[out] pbDest the out hex array
+ * @param[in] dest_size the size of destination buffer
+ * @param[in] pbSrc the input string array
+ * @param[in] nLen the length of input string array / 2
+ */
+void str2hex_safe(unsigned char *pbDest, size_t dest_size, unsigned char *pbSrc, int nLen);
+
+/**
  * @brief convert version string to integer
  *
  * @param[in] versionString the input version string
@@ -166,7 +196,8 @@ int tuya_isalpha(int c);
  * @brief Converts an uppercase character to lowercase.
  *
  * @param c The character to be converted.
- * @return The lowercase equivalent of the input character if it is an uppercase character, otherwise the input character itself.
+ * @return The lowercase equivalent of the input character if it is an uppercase character, otherwise the input
+ * character itself.
  */
 int tuya_tolower(int c);
 
@@ -189,8 +220,7 @@ int tuya_toupper(int c);
  * @param binlength The length of the binary data.
  * @return A pointer to the base64 encoded data.
  */
-char *tuya_base64_encode(const unsigned char *bindata, char *base64,
-                         int binlength);
+char *tuya_base64_encode(const unsigned char *bindata, char *base64, int binlength);
 
 /**
  * @brief Decodes a base64 encoded string.
@@ -201,7 +231,7 @@ char *tuya_base64_encode(const unsigned char *bindata, char *base64,
  * @param bindata The buffer to store the decoded data.
  * @return The length of the decoded data.
  */
-int tuya_base64_decode(const char * base64, unsigned char * bindata);
+int tuya_base64_decode(const char *base64, unsigned char *bindata);
 
 #ifdef __cplusplus
 }

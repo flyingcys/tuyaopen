@@ -125,23 +125,52 @@ void ascs2hex(unsigned char *hex, unsigned char *ascs, int srclen)
  */
 void hex2str(unsigned char *pbDest, unsigned char *pbSrc, int nLen)
 {
+    if (!pbDest || !pbSrc || nLen < 0) {
+        return;
+    }
+
     char ddl, ddh;
     int i;
 
     for (i = 0; i < nLen; i++) {
         ddh = 48 + pbSrc[i] / 16;
         ddl = 48 + pbSrc[i] % 16;
-        if (ddh > 57) {
+        if (ddh > 57)
             ddh = ddh + 7;
-        }
-        if (ddl > 57) {
+        if (ddl > 57)
             ddl = ddl + 7;
-        }
         pbDest[i * 2] = ddh;
         pbDest[i * 2 + 1] = ddl;
     }
 
     pbDest[nLen * 2] = '\0';
+}
+
+// Safe version with buffer size checking
+void hex2str_safe(unsigned char *pbDest, size_t dest_size, unsigned char *pbSrc, int nLen)
+{
+    if (!pbDest || !pbSrc || nLen < 0 || dest_size < (size_t)(nLen * 2 + 1)) {
+        return;
+    }
+
+    char ddl, ddh;
+    int i;
+    size_t dest_idx = 0;
+
+    for (i = 0; i < nLen && dest_idx < dest_size - 1; i++) {
+        ddh = 48 + pbSrc[i] / 16;
+        ddl = 48 + pbSrc[i] % 16;
+        if (ddh > 57)
+            ddh = ddh + 7;
+        if (ddl > 57)
+            ddl = ddl + 7;
+
+        if (dest_idx + 1 < dest_size - 1) {
+            pbDest[dest_idx++] = ddh;
+            pbDest[dest_idx++] = ddl;
+        }
+    }
+    pbDest[dest_idx] = '\0';
 }
 
 /**
@@ -168,6 +197,32 @@ void hex2str(unsigned char *pbDest, unsigned char *pbSrc, int nLen)
  */
 void byte2str(unsigned char *pbDest, unsigned char *pbSrc, int nLen, bool_t upper)
 {
+    if (!pbDest || !pbSrc || nLen < 0) {
+        return;
+    }
+
+    char to_lower[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+    char to_upper[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+
+    char *tmp = upper ? to_upper : to_lower;
+
+    int i;
+    for (i = 0; i < nLen; i++) {
+        pbDest[i * 2] = tmp[((pbSrc[i] & 0xF0) >> 4)];
+        pbDest[i * 2 + 1] = tmp[(pbSrc[i] & 0x0F)];
+    }
+
+    pbDest[nLen * 2] = '\0';
+    return;
+}
+
+// Safe version with buffer size checking
+void byte2str_safe(unsigned char *pbDest, size_t dest_size, unsigned char *pbSrc, int nLen, bool_t upper)
+{
+    if (!pbDest || !pbSrc || nLen < 0 || dest_size < (size_t)(nLen * 2 + 1)) {
+        return;
+    }
+
     char to_lower[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
     char to_upper[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
@@ -243,6 +298,74 @@ void byte_sort(unsigned char is_ascend, unsigned char *buf, int buf_cnt)
                 }
             }
         }
+    }
+}
+
+/**
+ * @brief Converts a string representation of hexadecimal to binary data.
+ *
+ * This function takes a string representation of hexadecimal characters and
+ * converts it to binary data. Each pair of hex characters is converted to
+ * one byte.
+ *
+ * @param pbDest The destination buffer to store the binary data.
+ * @param pbSrc The source string containing hexadecimal characters.
+ * @param nLen The number of bytes to convert (half the length of hex string).
+ */
+void str2hex(unsigned char *pbDest, unsigned char *pbSrc, int nLen)
+{
+    if (!pbDest || !pbSrc || nLen < 0) {
+        return;
+    }
+
+    char h1, h2;
+    unsigned char s1, s2;
+    int i;
+
+    for (i = 0; i < nLen; i++) {
+        h1 = pbSrc[2 * i];
+        h2 = pbSrc[2 * i + 1];
+
+        s1 = tuya_toupper(h1) - 0x30;
+        if (s1 > 9) {
+            s1 -= 7;
+        }
+
+        s2 = tuya_toupper(h2) - 0x30;
+        if (s2 > 9) {
+            s2 -= 7;
+        }
+
+        pbDest[i] = s1 * 16 + s2;
+    }
+}
+
+// Safe version with buffer size checking
+void str2hex_safe(unsigned char *pbDest, size_t dest_size, unsigned char *pbSrc, int nLen)
+{
+    if (!pbDest || !pbSrc || nLen < 0 || dest_size < (size_t)nLen) {
+        return;
+    }
+
+    char h1, h2;
+    unsigned char s1, s2;
+    int i;
+
+    for (i = 0; i < nLen && i < (int)dest_size; i++) {
+        h1 = pbSrc[2 * i];
+        h2 = pbSrc[2 * i + 1];
+
+        s1 = tuya_toupper(h1) - 0x30;
+        if (s1 > 9) {
+            s1 -= 7;
+        }
+
+        s2 = tuya_toupper(h2) - 0x30;
+        if (s2 > 9) {
+            s2 -= 7;
+        }
+
+        pbDest[i] = s1 * 16 + s2;
     }
 }
 

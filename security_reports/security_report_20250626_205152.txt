@@ -1,0 +1,310 @@
+TuyaOpen 安全代码检查报告
+生成时间: 2025年 06月 26日 星期四 20:51:52 CST
+源码目录: src
+
+=== 检查摘要 ===
+\n=== 不安全函数使用检查 ===
+\n发现不安全函数 strcpy:
+src/liblwip/lwip-2.1.2/src/netif/ppp/eap.c:1365:				strcpy(rhostname, SRP_PSEUDO_ID);
+src/liblwip/lwip-2.1.2/src/netif/ppp/auth.c:2437:	    strcpy(ap->word, word);
+src/liblwip/lwip-2.1.2/src/netif/ppp/ipv6cp.c:1375:    strcpy(strlocal, llv6_ntoa(ipv6cp_gotoptions[0].ourid));
+src/liblwip/lwip-2.1.2/src/netif/ppp/ipv6cp.c:1376:    strcpy(strremote, llv6_ntoa(ipv6cp_hisoptions[0].hisid));
+src/liblwip/lwip-2.1.2/src/netif/ppp/utils.c:92:	    strcpy(dest, src);
+src/liblwip/lwip-2.1.2/src/netif/ppp/demand.c:400:		strcpy(ipstr,inet_ntoa(*( (struct in_addr *) (pkt->data+16))));
+src/liblwip/lwip-2.1.2/src/apps/http/makefsdata/makefsdata.c:188:  strcpy(targetfile, "fsdata.c");
+src/liblwip/lwip-2.1.2/src/apps/http/makefsdata/makefsdata.c:199:  strcpy(path, "fs");
+src/liblwip/lwip-2.1.2/src/apps/http/makefsdata/makefsdata.c:715:  strcpy(new_name, qualifiedName);
+src/liblwip/lwip-2.1.2/src/apps/http/makefsdata/makefsdata.c:737:  strcpy(qualifiedName, new_name);
+src/liblwip/lwip-2.1.2/src/apps/http/makefsdata/makefsdata.c:925:  strcpy(varname, qualifiedName);
+src/liblwip/lwip-2.1.2/src/apps/http/makefsdata/makefsdata.c:1012:  strcpy(lastFileVar, varname);
+src/liblwip/lwip-2.1.2/src/apps/http/makefsdata/makefsdata.c:1138:    strcpy(modbuf, "Last-Modified: ");
+src/liblwip/lwip-2.1.2/src/apps/smtp/smtp.c:433:    strcpy(smtp_username, username);
+src/liblwip/lwip-2.1.2/src/apps/smtp/smtp.c:437:    strcpy(smtp_pass, pass);
+src/tuya_cloud_service/schema/tuya_iot_dp.c:431:    strcpy(dpout.dpsjson + strlen(dpout.dpsjson), "\"}");
+src/tuya_cloud_service/schema/dp_schema.c:573:                        strcpy(dpnode->prop.prop_str.value, dp->value.dp_str);
+src/tuya_cloud_service/schema/dp_schema.c:582:                    strcpy(dpnode->prop.prop_str.value, dp->value.dp_str);
+src/tuya_cloud_service/netmgr/netmgr.c:270:                strcpy(wifi_info.ssid, argv[3]);
+src/tuya_cloud_service/netmgr/netmgr.c:271:                strcpy(wifi_info.pswd, argv[4]);
+src/tuya_cloud_service/netmgr/netconn_wifi.c:196:    strcpy(info->ssid, s->valuestring);
+src/tuya_cloud_service/netmgr/netconn_wifi.c:197:    strcpy(info->pswd, p->valuestring);
+src/tuya_cloud_service/netcfg/ap_netcfg.c:457:        strcpy(buffer + strlen(buffer), "}");
+src/tuya_cloud_service/netcfg/ap_netcfg.c:755:    strcpy(ap_cfg.ip.ip, "192.168.176.1");
+src/tuya_cloud_service/netcfg/ap_netcfg.c:756:    strcpy(ap_cfg.ip.gw, "192.168.176.1");
+src/tuya_cloud_service/netcfg/ap_netcfg.c:757:    strcpy(ap_cfg.ip.mask, "255.255.255.0");
+src/tuya_cloud_service/cloud/tuya_endpoint.c:232:    strcpy(endpoint_mgr.region, region);
+src/tuya_cloud_service/cloud/tuya_endpoint.c:233:    strcpy(endpoint_mgr.regist_key, regist_key);
+src/tuya_cloud_service/cloud/tuya_endpoint.c:275:        strcpy(endpoint_mgr.regist_key, "pro");
+src/tuya_cloud_service/cloud/tuya_iot.c:88:    strcpy(out->devid, cJSON_GetObjectItem(root, "devId")->valuestring);
+src/tuya_cloud_service/cloud/tuya_iot.c:89:    strcpy(out->seckey, cJSON_GetObjectItem(root, "secKey")->valuestring);
+src/tuya_cloud_service/cloud/tuya_iot.c:90:    strcpy(out->localkey, cJSON_GetObjectItem(root, "localKey")->valuestring);
+src/tuya_cloud_service/cloud/tuya_iot.c:91:    strcpy(out->schemaId, cJSON_GetObjectItem(root, "schemaId")->valuestring);
+src/tuya_cloud_service/cloud/tuya_iot.c:95:        strcpy(out->timezone, stdTimeZone->valuestring);
+src/tuya_cloud_service/cloud/mqtt_service.c:141:    strcpy(newtarget->topic, topic);
+src/tuya_cloud_service/cloud/tuya_http.c:87:    strcpy(cache->host, host);
+src/tuya_cloud_service/cloud/tuya_ota.c:206:    strcpy(ota->msg.fw_url, cJSON_GetObjectItem(upgrade, "httpsUrl")->valuestring);
+src/tuya_cloud_service/cloud/tuya_ota.c:207:    strcpy(ota->msg.fw_hmac, cJSON_GetObjectItem(upgrade, "hmac")->valuestring);
+src/tuya_cloud_service/cloud/tuya_ota.c:208:    strcpy(ota->msg.fw_md5, cJSON_GetObjectItem(upgrade, "md5")->valuestring);
+src/tuya_cloud_service/cloud/mqtt_bind.c:121:    strcpy(binding.token, token);
+src/tuya_cloud_service/cloud/mqtt_bind.c:122:    strcpy(binding.region, region);
+src/tuya_cloud_service/cloud/mqtt_bind.c:123:    strcpy(binding.regist_key, regist_key);
+src/tuya_cloud_service/cloud/iotdns.c:216:        strcpy(endpoint->region, region);
+src/tuya_cloud_service/cloud/iotdns.c:324:    strcpy(p_tmp_url, url);
+src/tal_cli/src/tal_cli.c:285:        strcpy(cli->buffer, match_cmd->name);
+src/tal_cli/src/tal_cli.c:555:        strcpy(cli->buffer, (char *)history_data);
+src/tal_cli/src/tal_cli.c:579:        strcpy(cli->buffer, (char *)history_data);
+src/libcjson/cJSON/tests/unity/extras/fixture/test/unity_fixture_Test.c:80:    strcpy((char*)m1, "123456789");
+src/libcjson/cJSON/tests/unity/test/tests/testunity.c:4538:    if(strcmp(expected, "-nan") == 0) strcpy(expected, "nan");
+src/libcjson/cJSON/tests/unity/test/tests/testunity.c:4544:    if (isfinite(lower)) sprintf(expected_lower, "%.6g", lower); else strcpy(expected_lower, expected);
+src/libcjson/cJSON/tests/unity/test/tests/testunity.c:4545:    if (isfinite(higher)) sprintf(expected_higher, "%.6g", higher); else strcpy(expected_higher, expected);
+src/libcjson/cJSON/tests/minify_tests.c:50:    strcpy(minified, to_minify);
+src/libcjson/cJSON/tests/minify_tests.c:64:    strcpy(minified, to_minify);
+src/libcjson/cJSON/tests/minify_tests.c:78:    strcpy(minified, to_minify);
+src/libcjson/cJSON/tests/minify_tests.c:92:    strcpy(minified, to_minify);
+src/libcjson/cJSON/tests/minify_tests.c:147:    strcpy(buffer, to_minify);
+src/libcjson/cJSON/cJSON.c:415:        strcpy(object->valuestring, valuestring);
+src/libcjson/cJSON/cJSON.c:929:        strcpy((char*)output, "\"\"");
+src/libcjson/cJSON/cJSON.c:1389:            strcpy((char*)output, "null");
+src/libcjson/cJSON/cJSON.c:1398:            strcpy((char*)output, "false");
+src/libcjson/cJSON/cJSON.c:1407:            strcpy((char*)output, "true");
+src/liblvgl/lvgl/src/drivers/libinput/lv_libinput.c:226:        strcpy(path, "/dev/input/");
+src/liblvgl/lvgl/src/widgets/table/lv_table.c:1034:    strcpy(dst->txt, txt);
+src/liblvgl/lvgl/src/stdlib/clib/lv_string_clib.c:70:    return strcpy(dst, src);
+src/liblvgl/lvgl/tests/unity/unity_support.c:194:        strcpy(fn_ref_no_ext, fn_ref);
+src/liblvgl/lvgl/tests/src/test_cases/test_txt.c:13:    strcpy(target, msg);
+src/liblvgl/lvgl/tests/src/test_cases/test_txt.c:26:    strcpy(target, msg);
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_2.c:23:            strcpy(file_info, cur_path);
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_2.c:85:    strcpy(home_dir, "A:");
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_2.c:91:    strcpy(video_dir, home_dir);
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_2.c:95:    strcpy(picture_dir, home_dir);
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_2.c:99:    strcpy(music_dir, home_dir);
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_2.c:103:    strcpy(document_dir, home_dir);
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_1.c:23:            strcpy(file_info, cur_path);
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_1.c:55:    strcpy(home_dir, "A:");
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_1.c:61:    strcpy(video_dir, home_dir);
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_1.c:65:    strcpy(picture_dir, home_dir);
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_1.c:69:    strcpy(music_dir, home_dir);
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_1.c:73:    strcpy(document_dir, home_dir);
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_3.c:59:            strcpy(file_info, cur_path);
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_3.c:97:    strcpy(home_dir, "A:");
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_3.c:103:    strcpy(video_dir, home_dir);
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_3.c:107:    strcpy(picture_dir, home_dir);
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_3.c:111:    strcpy(music_dir, home_dir);
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_3.c:115:    strcpy(document_dir, home_dir);
+src/tal_bluetooth/nimble/host/ble_gatts_lcl.c:72:    strcpy(buf, "[");
+src/tal_kv/littlefs/lfs.c:1381:        strcpy(info->name, "/");
+src/tal_kv/littlefs/lfs.c:2722:        strcpy(info->name, ".");
+src/tal_kv/littlefs/lfs.c:2727:        strcpy(info->name, "..");
+src/tal_system/src/tal_log.c:222:    strcpy(output_node->name, name);
+\n发现不安全函数 strcat:
+src/liblwip/lwip-2.1.2/src/apps/http/makefsdata/makefsdata.c:1122:    strcat(intbuf, "\r\n");
+src/liblwip/lwip-2.1.2/src/apps/http/makefsdata/makefsdata.c:1158:    strcat(modbuf, "\r\n");
+src/libcjson/cJSON/cJSON_Utils.c:245:                strcat((char*)full_pointer, (char*)target_pointer);
+src/liblvgl/lvgl/src/drivers/libinput/lv_libinput.c:227:        strcat(path, ent->d_name);
+src/liblvgl/lvgl/src/drivers/sdl/lv_sdl_keyboard.c:146:                    strcat(dsc->buf, event->text.text);
+src/liblvgl/lvgl/src/widgets/dropdown/lv_dropdown.c:249:    if(pos < dropdown->option_cnt) strcat(ins_buf, "\n");
+src/liblvgl/lvgl/src/others/ime/lv_ime_pinyin.c:630:                strcat(pinyin_ime->input_char, txt);
+src/liblvgl/lvgl/src/others/ime/lv_ime_pinyin.c:709:            strcat(pinyin_ime->input_char, txt);
+src/liblvgl/lvgl/tests/unity/unity_support.c:435:        strcat(current_path, token);
+src/liblvgl/lvgl/tests/unity/unity_support.c:436:        strcat(current_path, "/");
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_2.c:24:            strcat(file_info, sel_fn);
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_2.c:87:    strcat(home_dir, getenv(envvar));
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_2.c:92:    strcat(video_dir, "/Videos");
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_2.c:96:    strcat(picture_dir, "/Pictures");
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_2.c:100:    strcat(music_dir, "/Music");
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_2.c:104:    strcat(document_dir, "/Documents");
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_1.c:24:            strcat(file_info, sel_fn);
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_1.c:57:    strcat(home_dir, getenv(envvar));
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_1.c:62:    strcat(video_dir, "/Videos");
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_1.c:66:    strcat(picture_dir, "/Pictures");
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_1.c:70:    strcat(music_dir, "/Music");
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_1.c:74:    strcat(document_dir, "/Documents");
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_3.c:60:            strcat(file_info, sel_fn);
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_3.c:99:    strcat(home_dir, getenv(envvar));
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_3.c:104:    strcat(video_dir, "/Videos");
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_3.c:108:    strcat(picture_dir, "/Pictures");
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_3.c:112:    strcat(music_dir, "/Music");
+src/liblvgl/lvgl/examples/others/file_explorer/lv_example_file_explorer_3.c:116:    strcat(document_dir, "/Documents");
+src/tal_bluetooth/nimble/host/ble_gatts_lcl.c:81:                strcat(buf, "|");
+src/tal_bluetooth/nimble/host/ble_gatts_lcl.c:84:            strcat(buf, names[bit]);
+src/tal_bluetooth/nimble/host/ble_gatts_lcl.c:88:    strcat(buf, "]");
+\n发现不安全函数 sprintf:
+src/liblwip/lwip-2.1.2/src/netif/ppp/ipv6cp.c:417:    sprintf(b, "fe80::%02x%02x:%02x%02x:%02x%02x:%02x%02x",
+src/liblwip/lwip-2.1.2/src/netif/ppp/ipv6cp.c:1374:    sprintf(strspeed, "%d", baud_rate);
+src/liblwip/lwip-2.1.2/src/netif/ppp/chap_ms.c:686:	sprintf((char *)&authResponse[i * 2], "%02X", Digest[i]);
+src/liblwip/lwip-2.1.2/src/netif/ppp/eui64.c:50:    sprintf(buf, "%02x%02x:%02x%02x:%02x%02x:%02x%02x",
+src/liblwip/lwip-2.1.2/src/netif/ppp/mppe.c:148:			sprintf(mkey + i * 2, "%02x", state->master_key[i]);
+src/liblwip/lwip-2.1.2/src/netif/ppp/mppe.c:150:			sprintf(skey + i * 2, "%02x", state->session_key[i]);
+src/liblwip/lwip-2.1.2/src/apps/http/makefsdata/makefsdata.c:330:  sprintf(lastFileVar, "NULL");
+src/liblwip/lwip-2.1.2/src/apps/http/makefsdata/makefsdata.c:637:    sprintf(&file_buffer_c[off], "0x%02x,", file_data[i]);
+src/liblwip/lwip-2.1.2/src/apps/http/makefsdata/makefsdata.c:728:        sprintf(&new_name[len], "%d", cnt);
+src/liblwip/lwip-2.1.2/src/apps/http/makefsdata/makefsdata.c:923:  sprintf(qualifiedName, "%s/%s", curSubdir, filename);
+src/liblwip/lwip-2.1.2/src/apps/http/makefsdata/makefsdata.c:1243:    sprintf(&buf[idx], "0x%02x,", cur);
+src/liblwip/lwip-2.1.2/src/apps/http/makefsdata/makefsdata.c:1246:      sprintf(&buf[idx], NEWLINE);
+src/liblwip/lwip-2.1.2/src/apps/smtp/smtp.c:40:    sprintf(bdh->buffer,"Line #%2d\r\n",bdh->state);
+src/tuya_cloud_service/lan/tuya_lan.c:575:    offset += sprintf(json_buf + offset, "{\"ip\":\"%s\",\"gwId\":\"%s\",\"uuid\":\"%s\"", ip.ip, id,
+src/tuya_cloud_service/lan/tuya_lan.c:577:    offset += sprintf(json_buf + offset, ",\"active\":%d,\"ablilty\":0", lan->iot_client->is_activated ? 2 : 0);
+src/tuya_cloud_service/lan/tuya_lan.c:578:    offset += sprintf(json_buf + offset, ",\"encrypt\":true");
+src/tuya_cloud_service/lan/tuya_lan.c:579:    offset += sprintf(json_buf + offset, ",\"productKey\":\"%s\"", lan->iot_client->config.productkey);
+src/tuya_cloud_service/lan/tuya_lan.c:580:    offset += sprintf(json_buf + offset, ",\"version\":\"%s\"", TUYA_LPV35);
+src/tuya_cloud_service/lan/tuya_lan.c:581:    offset += sprintf(json_buf + offset, ",\"sl\":%d", TUYA_SECURITY_LEVEL);
+src/tuya_cloud_service/schema/tuya_iot_dp.c:429:    uint32_t offset = sprintf(dpout.dpsjson, "{\"%d\":\"", dp->id);
+src/tuya_cloud_service/schema/dp_schema.c:79:    offset += sprintf(tmp + offset, "{\"dps\":%s,\"devId\":\"%s\"", data, schema->devid);
+src/tuya_cloud_service/schema/dp_schema.c:84:        offset += sprintf(tmp + offset, ",\"t\":%s", time);
+src/tuya_cloud_service/schema/dp_schema.c:90:        offset += sprintf(tmp + offset, ",\"seq\":\"%u\"", rept_seq);
+src/tuya_cloud_service/schema/dp_schema.c:96:        offset += sprintf(tmp + offset, ",\"type\":\"%s\"", type);
+src/tuya_cloud_service/schema/dp_schema.c:896:                offset += sprintf(dpstr + offset, "\"%d\":true,", dp->id);
+src/tuya_cloud_service/schema/dp_schema.c:898:                offset += sprintf(dpstr + offset, "\"%d\":false,", dp->id);
+src/tuya_cloud_service/schema/dp_schema.c:904:            offset += sprintf(dpstr + offset, "\"%d\":%d,", dp->id, dp->value.dp_value);
+src/tuya_cloud_service/schema/dp_schema.c:909:            offset += sprintf(dpstr + offset, "\"%d\":%" PRIu32 ",", dp->id, dp->value.dp_bitmap);
+src/tuya_cloud_service/schema/dp_schema.c:917:                offset += sprintf(dpstr + offset, "\"%d\":%s,", dp->id, tmp_data);
+src/tuya_cloud_service/schema/dp_schema.c:926:                sprintf(dpstr + offset, "\"%d\":\"%s\",", dp->id, dpnode->prop.prop_enum.pp_enum[dp->value.dp_enum]);
+src/tuya_cloud_service/schema/dp_schema.c:931:            time_offset += sprintf(dptimestr + time_offset, "\"%d\":%u,", dp->id, dp->time_stamp);
+src/tuya_cloud_service/netmgr/netconn_wifi.c:172:    sprintf(netinfo, "{\"s\":\"%s\",\"p\":\"%s\"}", info->ssid, info->pswd);
+src/tuya_cloud_service/netcfg/ap_netcfg.c:130:    offset += sprintf(json_buf + offset, "{\"ip\":\"%s\", \"uuid\":\"%s\", \"active\":0", ip.ip, ap->netcfg_args.uuid);
+src/tuya_cloud_service/netcfg/ap_netcfg.c:131:    offset += sprintf(json_buf + offset, ",\"version\":\"%s\"", TUYA_LPV35);
+src/tuya_cloud_service/netcfg/ap_netcfg.c:132:    offset += sprintf(json_buf + offset, ",\"sl\":%d", TUYA_SECURITY_LEVEL);
+src/tuya_cloud_service/netcfg/ap_netcfg.c:133:    offset += sprintf(json_buf + offset, ",\"apConfigType\":1");
+src/tuya_cloud_service/netcfg/ap_netcfg.c:134:    offset += sprintf(json_buf + offset, ",\"CombosFlag\":%d", (1 << 3));
+src/tuya_cloud_service/netcfg/ap_netcfg.c:386:        sprintf(wifi_list + offset, "{\"wifi_list\":[]}");
+src/tuya_cloud_service/netcfg/ap_netcfg.c:391:    offset += sprintf(wifi_list + offset, "{\"wifi_list\":[");
+src/tuya_cloud_service/netcfg/ap_netcfg.c:401:            offset += sprintf(wifi_list + offset, ",");
+src/tuya_cloud_service/netcfg/ap_netcfg.c:403:        offset += sprintf(wifi_list + offset, "{\"ssid\":\"%s\",\"rssi\":%d,\"sec\":%u}", ap_if[loop].ssid,
+src/tuya_cloud_service/netcfg/ap_netcfg.c:407:    offset += sprintf(wifi_list + offset, "]}");
+src/tuya_cloud_service/netcfg/ap_netcfg.c:442:        sprintf(buffer, "{\"reqType\":\"query_dev_rpt\",\"data\":%s}", data);
+src/tuya_cloud_service/netcfg/ap_netcfg.c:455:        uint16_t offset = sprintf(buffer, "{\"reqType\":\"wifi_list_rpt\",\"data\":");
+src/tuya_cloud_service/netcfg/ap_netcfg.c:461:        sprintf(buffer, "{\"reqType\":\"netcfg_stat_rpt\",\"data\":%s}", out);
+src/tuya_cloud_service/netcfg/ap_netcfg.c:759:    sprintf((char *)ap_cfg.ssid, "%s-%02X%02X", TUYA_AP_SSID_DEFAULT, mac.mac[4], mac.mac[5]);
+src/tuya_cloud_service/cloud/tuya_iot.c:1036:        printlen = sprintf(buffer, "{\"devId\":\"%s\",\"dps\":%s,\"t\":%s}", client->activate.devid, dps, time);
+src/tuya_cloud_service/cloud/tuya_iot.c:1040:        printlen = sprintf(buffer, "{\"devId\":\"%s\",\"dps\":%s}", client->activate.devid, dps);
+src/tuya_cloud_service/cloud/tuya_iot.c:1202:        version_len += sprintf(version_buffer + version_len, "%s", client->config.modules);
+src/tuya_cloud_service/cloud/tuya_iot.c:1204:        version_len += sprintf(version_buffer + version_len, ",");
+src/tuya_cloud_service/cloud/tuya_iot.c:1206:        version_len += sprintf(version_buffer + version_len, "[");
+src/tuya_cloud_service/cloud/tuya_iot.c:1210:    version_len += sprintf(version_buffer + version_len,
+src/tuya_cloud_service/cloud/tuya_iot.c:1215:    version_len += sprintf(version_buffer + version_len, "]");
+src/tuya_cloud_service/cloud/mqtt_service.c:62:        sprintf(signout->clientid, "%s", input->devid);
+src/tuya_cloud_service/cloud/mqtt_service.c:63:        sprintf(signout->username, "%s", input->devid);
+src/tuya_cloud_service/cloud/mqtt_service.c:66:            sprintf(&signout->password[i * 2], "%02x", (unsigned char)digest[i + 4]);
+src/tuya_cloud_service/cloud/mqtt_service.c:70:        sprintf(signout->topic_in, "smart/device/in/%s", input->devid);
+src/tuya_cloud_service/cloud/mqtt_service.c:71:        sprintf(signout->topic_out, "smart/device/out/%s", input->devid);
+src/tuya_cloud_service/cloud/mqtt_service.c:76:        sprintf(signout->clientid, "acon_%s", input->uuid);
+src/tuya_cloud_service/cloud/mqtt_service.c:77:        sprintf(signout->username, "acon_%s|pv=%s", input->uuid, TUYA_PV23);
+src/tuya_cloud_service/cloud/mqtt_service.c:80:            sprintf(&signout->password[i * 2], "%02x", (unsigned char)digest[i + 4]);
+src/tuya_cloud_service/cloud/mqtt_service.c:84:        sprintf(signout->topic_in, "d/ai/%s", input->uuid);
+src/tuya_cloud_service/cloud/mqtt_service.c:85:        sprintf(signout->topic_out, "%s",
+src/tuya_cloud_service/cloud/mqtt_service.c:950:    int buffer_size = sprintf((char *)data_buf, "{\"progress\":\"%d\",\"firmwareType\":%d}", percent, channel);
+src/tuya_cloud_service/cloud/atop_service.c:90:    offset = sprintf(buffer,
+src/tuya_cloud_service/cloud/atop_service.c:96:    offset += sprintf(buffer + offset, ",\"options\": \"%s", "{\\\"otaChannel\\\":0, ");
+src/tuya_cloud_service/cloud/atop_service.c:98:        offset += sprintf(buffer + offset, "\\\"isFK\\\":true");
+src/tuya_cloud_service/cloud/atop_service.c:100:        offset += sprintf(buffer + offset, "\\\"isFK\\\":false");
+src/tuya_cloud_service/cloud/atop_service.c:102:    offset += sprintf(buffer + offset, "}\"");
+src/tuya_cloud_service/cloud/atop_service.c:106:        offset += sprintf(buffer + offset, ",\"productKeyStr\":\"%s\"", request->firmware_key);
+src/tuya_cloud_service/cloud/atop_service.c:111:        offset += sprintf(buffer + offset, ",\"devId\":\"%s\"", request->devid);
+src/tuya_cloud_service/cloud/atop_service.c:116:        offset += sprintf(buffer + offset, ",\"modules\":\"%s\"", request->modules);
+src/tuya_cloud_service/cloud/atop_service.c:121:        offset += sprintf(buffer + offset, ",\"feature\":\"%s\"", request->feature);
+src/tuya_cloud_service/cloud/atop_service.c:126:        offset += sprintf(buffer + offset, ",\"skillParam\":\"%s\"", request->skill_param);
+src/tuya_cloud_service/cloud/atop_service.c:130:    offset += sprintf(buffer + offset, ",\"devAttribute\":%u", 1 << ATTRIBUTE_OTA);
+src/tuya_cloud_service/cloud/atop_service.c:133:        sprintf(buffer + offset, ",\"cadVer\":\"%s\",\"cdVer\":\"%s\",\"t\":%" PRIu32 "}", CAD_VER, CD_VER, timestamp);
+src/tuya_cloud_service/cloud/matop_service.c:194:    sprintf(topic_buffer, "rpc/rsp/%s", config->devid);
+src/tuya_cloud_service/cloud/matop_service.c:202:    sprintf(topic_buffer, "rpc/file/%s", config->devid);
+src/tuya_cloud_service/cloud/matop_service.c:210:    sprintf(context->resquest_topic, "rpc/req/%s", config->devid);
+src/tuya_cloud_service/cloud/matop_service.c:269:    sprintf(topic_buffer, "rpc/rsp/%s", context->config.devid);
+src/tuya_cloud_service/cloud/matop_service.c:273:    sprintf(topic_buffer, "rpc/file/%s", context->config.devid);
+src/tuya_cloud_service/cloud/atop_base.c:59:        printlen += sprintf(buffer + printlen, "%s=%s||", params[i].key, params[i].value);
+src/tuya_cloud_service/cloud/atop_base.c:61:    printlen += sprintf(buffer + printlen, "%s", (char *)key);
+src/tuya_cloud_service/cloud/atop_base.c:69:        *olen += sprintf((char *)out + i * 2, "%02x", digest[i]);
+src/tuya_cloud_service/cloud/atop_base.c:84:        printlen += sprintf(buffer + printlen, "%s=%s&", params[i].key, params[i].value);
+src/tuya_cloud_service/cloud/atop_base.c:88:    printlen += sprintf(buffer + printlen, "sign=");
+src/tuya_cloud_service/cloud/atop_base.c:138:    printlen = sprintf((char *)output, "%s", "data=");
+src/tuya_cloud_service/cloud/atop_base.c:140:        printlen += sprintf((char *)output + printlen, "%02X", (uint8_t)(encrypted_buffer[i]));
+src/tuya_cloud_service/cloud/atop_base.c:333:    sprintf(ts_str, "%" PRIu32, request->timestamp);
+src/tuya_cloud_service/cloud/atop_base.c:355:    int path_buffer_len = sprintf(path_buffer, "%s?", (char *)request->path);
+src/tuya_cloud_service/cloud/iotdns.c:170:        body_length = sprintf(body_buffer, IOTDNS_REQUEST_FMT, region, env);
+src/tuya_cloud_service/cloud/iotdns.c:172:        body_length = sprintf(body_buffer, IOTDNS_REQUEST_FMT_NOREGION, env);
+src/tuya_cloud_service/cloud/iotdns.c:288:    sprintf(body_buffer, "[{\"host\":\"%s\", \"port\":%d, \"need_ca\":true}]", host, port);
+src/tuya_cloud_service/protocol/tuya_protocol.c:237:    // offset += sprintf(out + offset, "{\"protocol\":%d,\"t\":%d,\"data\":%s", pro, (uint32_t)tal_time_get_posix(),
+src/tuya_cloud_service/protocol/tuya_protocol.c:239:    offset += sprintf(out + offset, "{\"protocol\":%" PRIu32 ",\"t\":%" PRIu32 ",\"data\":%s", pro,
+src/tuya_cloud_service/protocol/tuya_protocol.c:316:    // offset += sprintf(out + offset, "{\"protocol\":%d,\"t\":%d,\"data\":%s", pro, (uint32_t)tal_time_get_posix(),
+src/tuya_cloud_service/protocol/tuya_protocol.c:318:    offset += sprintf(out + offset, "{\"protocol\":%" PRIu32 ",\"t\":%" PRIu32 ",\"data\":%s", pro,
+src/libcjson/cJSON/cJSON_Utils.c:234:                sprintf((char*)full_pointer, "/%lu%s", (unsigned long)child_index, target_pointer); /* /<array_index><path> */
+src/libcjson/cJSON/cJSON_Utils.c:1122:        sprintf((char*)full_path, "%s/", (const char*)path);
+src/libcjson/cJSON/cJSON_Utils.c:1188:                sprintf((char*)new_path, "%s/%lu", path, (unsigned long)index); /* path of the current array element */
+src/libcjson/cJSON/cJSON_Utils.c:1203:                sprintf((char*)new_path, "%lu", (unsigned long)index);
+src/libcjson/cJSON/cJSON_Utils.c:1248:                    sprintf((char*)new_path, "%s/", path);
+src/libcjson/cJSON/tests/unity/test/tests/testunity.c:4535:    sprintf(expected, "%.6g", f);
+src/libcjson/cJSON/tests/unity/test/tests/testunity.c:4544:    if (isfinite(lower)) sprintf(expected_lower, "%.6g", lower); else strcpy(expected_lower, expected);
+src/libcjson/cJSON/tests/unity/test/tests/testunity.c:4545:    if (isfinite(higher)) sprintf(expected_higher, "%.6g", higher); else strcpy(expected_higher, expected);
+src/libcjson/cJSON/tests/parse_hex4.c:39:        TEST_ASSERT_EQUAL_INT_MESSAGE(4, sprintf((char*)digits_lower, "%.4x", number), "sprintf failed.");
+src/libcjson/cJSON/tests/parse_hex4.c:40:        TEST_ASSERT_EQUAL_INT_MESSAGE(4, sprintf((char*)digits_upper, "%.4X", number), "sprintf failed.");
+src/libcjson/cJSON/tests/parse_examples.c:68:    sprintf(test_path, TEST_DIR_PATH"%s", test_name);
+src/libcjson/cJSON/tests/parse_examples.c:69:    sprintf(expected_path, TEST_DIR_PATH"%s.expected", test_name);
+src/libcjson/cJSON/cJSON.c:127:    sprintf(version, "%i.%i.%i", CJSON_VERSION_MAJOR, CJSON_VERSION_MINOR, CJSON_VERSION_PATCH);
+src/libcjson/cJSON/cJSON.c:568:        length = sprintf((char*)number_buffer, "null");
+src/libcjson/cJSON/cJSON.c:572:		length = sprintf((char*)number_buffer, "%d", item->valueint);
+src/libcjson/cJSON/cJSON.c:577:        length = sprintf((char*)number_buffer, "%1.15g", d);
+src/libcjson/cJSON/cJSON.c:583:            length = sprintf((char*)number_buffer, "%1.17g", d);
+src/libcjson/cJSON/cJSON.c:1016:                    sprintf((char*)output_pointer, "u%04x", *input_pointer);
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_server2.c:3654:    len = sprintf( (char *) buf, HTTP_RESPONSE,
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_pthread_server.c:212:    len = sprintf( (char *) buf, HTTP_RESPONSE,
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_fork_server.c:365:        len = sprintf( (char *) buf, HTTP_RESPONSE,
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_server.c:327:    len = sprintf( (char *) buf, HTTP_RESPONSE,
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_client1.c:236:    len = sprintf( (char *) buf, GET_REQUEST );
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_mail_client.c:665:        len = sprintf( (char *) buf, "EHLO %s\r\n", hostname );
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_mail_client.c:691:        len = sprintf( (char *) buf, "EHLO %s\r\n", hostname );
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_mail_client.c:705:        len = sprintf( (char *) buf, "STARTTLS\r\n" );
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_mail_client.c:725:        len = sprintf( (char *) buf, "AUTH LOGIN\r\n" );
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_mail_client.c:745:        len = sprintf( (char *) buf, "%s\r\n", base );
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_mail_client.c:765:        len = sprintf( (char *) buf, "%s\r\n", base );
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_mail_client.c:780:    len = sprintf( (char *) buf, "MAIL FROM:<%s>\r\n", opt.mail_from );
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_mail_client.c:793:    len = sprintf( (char *) buf, "RCPT TO:<%s>\r\n", opt.mail_to );
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_mail_client.c:806:    len = sprintf( (char *) buf, "DATA\r\n" );
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_mail_client.c:819:    len = sprintf( (char *) buf, "From: %s\r\nSubject: mbed TLS Test mail\r\n\r\n"
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_mail_client.c:826:    len = sprintf( (char *) buf, "\r\n.\r\n");
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_test_common_source.c:70:    len += sprintf( nss_keylog_line + len,
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_test_common_source.c:75:        len += sprintf( nss_keylog_line + len,
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_test_common_source.c:79:    len += sprintf( nss_keylog_line + len, " " );
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_test_common_source.c:83:        len += sprintf( nss_keylog_line + len,
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_test_common_source.c:87:    len += sprintf( nss_keylog_line + len, "\n" );
+src/libtls/mbedtls-3.1.0/programs/hash/generic_sum.c:137:            sprintf( buf + i * 2, "%02x", sum[i] );
+src/tal_bluetooth/nimble/host/ble_uuid.c:117:        sprintf(dst, "0x%04" PRIx16, BLE_UUID16(uuid)->value);
+src/tal_bluetooth/nimble/host/ble_uuid.c:120:        sprintf(dst, "0x%08" PRIx32, BLE_UUID32(uuid)->value);
+src/tal_bluetooth/nimble/host/ble_uuid.c:125:        sprintf(dst, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-"
+src/tal_kv/src/kv_serialize.c:76:    offset = sprintf(buf, "{");
+src/tal_kv/src/kv_serialize.c:80:        offset += sprintf(buf + offset, "\"%s\":", db[i].key);
+src/tal_kv/src/kv_serialize.c:85:            offset += sprintf(buf + offset, "%d", *((char *)(db[i].val)));
+src/tal_kv/src/kv_serialize.c:88:            offset += sprintf(buf + offset, "%d", *((uint8_t *)(db[i].val)));
+src/tal_kv/src/kv_serialize.c:91:            offset += sprintf(buf + offset, "%d", *((int16_t *)(db[i].val)));
+src/tal_kv/src/kv_serialize.c:94:            offset += sprintf(buf + offset, "%d", *((uint16_t *)(db[i].val)));
+src/tal_kv/src/kv_serialize.c:97:            offset += sprintf(buf + offset, "%" PRId32, *((int32_t *)(db[i].val)));
+src/tal_kv/src/kv_serialize.c:101:                offset += sprintf(buf + offset, "false");
+src/tal_kv/src/kv_serialize.c:103:                offset += sprintf(buf + offset, "true");
+src/tal_kv/src/kv_serialize.c:110:                offset += sprintf(buf + offset, "null");
+src/tal_kv/src/kv_serialize.c:112:                offset += sprintf(buf + offset, "\"%s\"", (char *)db[i].val);
+src/tal_kv/src/kv_serialize.c:118:                offset += sprintf(buf + offset, "null");
+src/tal_kv/src/kv_serialize.c:120:                offset += sprintf(buf + offset, "\"");
+src/tal_kv/src/kv_serialize.c:135:        offset += sprintf(buf + offset, ",");
+src/tal_kv/src/storage_wrapper.c:58:    sprintf(name, "%s/%s", tuya_db_path, key);
+src/tal_kv/src/storage_wrapper.c:105:    sprintf(name, "%s/%s", tuya_db_path, key);
+src/tal_kv/src/storage_wrapper.c:141:    sprintf(name, "%s/%s", tuya_db_path, key);
+src/tal_kv/littlefs/runners/test_runner.c:835:    sprintf(perm_buf, "%zu/%zu", perms.filtered, perms.total);
+src/tal_kv/littlefs/runners/test_runner.c:837:    sprintf(flag_buf, "%s%s",
+src/tal_kv/littlefs/runners/test_runner.c:896:            sprintf(perm_buf, "%zu/%zu", perms.filtered, perms.total);
+src/tal_kv/littlefs/runners/test_runner.c:898:            sprintf(flag_buf, "%s%s",
+src/tal_kv/littlefs/runners/test_runner.c:951:                sprintf(perm_buf, "%zu/%zu", perms.filtered, perms.total);
+src/tal_kv/littlefs/runners/test_runner.c:953:                sprintf(flag_buf, "%s%s",
+src/tal_kv/littlefs/runners/bench_runner.c:806:    sprintf(perm_buf, "%zu/%zu", perms.filtered, perms.total);
+src/tal_kv/littlefs/runners/bench_runner.c:808:    sprintf(flag_buf, "%s%s",
+src/tal_kv/littlefs/runners/bench_runner.c:865:            sprintf(perm_buf, "%zu/%zu", perms.filtered, perms.total);
+src/tal_kv/littlefs/runners/bench_runner.c:867:            sprintf(flag_buf, "%s%s",
+src/tal_kv/littlefs/runners/bench_runner.c:918:                sprintf(perm_buf, "%zu/%zu", perms.filtered, perms.total);
+src/tal_kv/littlefs/runners/bench_runner.c:920:                sprintf(flag_buf, "%s%s",
+\n发现不安全函数 sscanf:
+src/tuya_cloud_service/cloud/iotdns.c:61:    sscanf(httpsSelfUrl, "https://%64[^/]%16[^\n]", endport->atop.host, endport->atop.path);
+src/tuya_cloud_service/cloud/iotdns.c:68:    sscanf(mqttsSelfUrl, "%64[^:]:%5d[^\n]", endport->mqtt.host, &port);
+src/libcjson/cJSON/cJSON.c:580:        if ((sscanf((char*)number_buffer, "%lg", &test) != 1) || !compare_double((double)test, d))
+src/libtls/mbedtls-3.1.0/programs/ssl/ssl_server2.c:1760:            if( sscanf( q, "%" SCNu64, &opt.renego_period ) != 1 )
+src/libtls/mbedtls-3.1.0/programs/aes/crypt_and_hash.c:217:            while( sscanf( p, "%02X", (unsigned int*) &n ) > 0 &&
+src/tal_system/src/tal_time_serivce.c:205:    num = sscanf(time_zone + offset, "%d:%d", &buf[0], &buf[1]);
+\n发现不安全函数 fscanf:
+src/libtls/mbedtls-3.1.0/programs/pkey/rsa_decrypt.c:157:    while( fscanf( f, "%02X", (unsigned int*) &c ) > 0 &&
+src/libtls/mbedtls-3.1.0/programs/pkey/rsa_verify.c:112:    while( fscanf( f, "%02X", (unsigned int*) &c ) > 0 &&
+src/libtls/mbedtls-3.1.0/programs/pkey/pk_decrypt.c:123:    while( fscanf( f, "%02X", (unsigned int*) &c ) > 0 &&

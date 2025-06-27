@@ -193,8 +193,10 @@ OPERATE_RET __netconn_wifi_info_get(netconn_wifi_info_t *info)
     cJSON *p = cJSON_GetObjectItem(json, "p");
     TUYA_CHECK_NULL_GOTO(p, err_exit);
 
-    strcpy(info->ssid, s->valuestring);
-    strcpy(info->pswd, p->valuestring);
+    strncpy(info->ssid, s->valuestring, sizeof(info->ssid) - 1);
+    info->ssid[sizeof(info->ssid) - 1] = '\0';
+    strncpy(info->pswd, p->valuestring, sizeof(info->pswd) - 1);
+    info->pswd[sizeof(info->pswd) - 1] = '\0';
     cJSON_Delete(json);
     tal_kv_free(netinfo);
     return OPRT_OK;

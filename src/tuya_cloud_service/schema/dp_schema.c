@@ -570,7 +570,7 @@ static bool dp_rept_update(dp_rept_type_t rept_type, dp_obj_t *dp, dp_node_t *dp
                     dpnode->prop.prop_str.cur_len = strlen(dp->value.dp_str);
                     dpnode->prop.prop_str.value = tal_malloc(dpnode->prop.prop_str.cur_len + 1);
                     if (dpnode->prop.prop_str.value) {
-                        strcpy(dpnode->prop.prop_str.value, dp->value.dp_str);
+                        strncpy(dpnode->prop.prop_str.value, dp->value.dp_str, dpnode->prop.prop_str.cur_len);
                         dpnode->prop.prop_str.value[dpnode->prop.prop_str.cur_len] = '\0';
                     } else {
                         PR_ERR("dp str malloc err, cache loss");
@@ -579,7 +579,8 @@ static bool dp_rept_update(dp_rept_type_t rept_type, dp_obj_t *dp, dp_node_t *dp
                         // dpnode->pv_stat = PV_STAT_LOCAL;
                     }
                 } else {
-                    strcpy(dpnode->prop.prop_str.value, dp->value.dp_str);
+                    strncpy(dpnode->prop.prop_str.value, dp->value.dp_str, dpnode->prop.prop_str.cur_len);
+                    dpnode->prop.prop_str.value[dpnode->prop.prop_str.cur_len] = '\0';
                 }
 
                 // Statistical type DP Indicates the record time stamp

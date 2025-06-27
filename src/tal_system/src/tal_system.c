@@ -45,16 +45,18 @@
  */
 void *tal_malloc(size_t size)
 {
-    if (0 == size) {
+    if (0 == size || size > (SIZE_MAX / 2)) {
         return NULL;
     }
 
-    void *ptr = NULL;
-    ptr = tkl_system_malloc(size);
+    void *ptr = tkl_system_malloc(size);
     if (NULL == ptr) {
-        PR_ERR("0x%x malloc failed:0x%x free:0x%x", __builtin_return_address(0), size, tal_system_get_free_heap_size());
+        PR_ERR("malloc failed: size=0x%x, free=0x%x", size, tal_system_get_free_heap_size());
+        return NULL;
     }
 
+    // Initialize allocated memory to prevent use of uninitialized data
+    memset(ptr, 0, size);
     return ptr;
 }
 
@@ -76,6 +78,15 @@ void tal_free(void *ptr)
     tkl_system_free(ptr);
 }
 
+// Safe free function that sets pointer to NULL
+void tal_free_safe(void **ptr)
+{
+    if (ptr && *ptr) {
+        tkl_system_free(*ptr);
+        *ptr = NULL;
+    }
+}
+
 /**
  * Allocates memory for an array of elements, initialized to zero.
  *
@@ -88,7 +99,23 @@ void tal_free(void *ptr)
  */
 void *tal_calloc(size_t nitems, size_t size)
 {
-    return tkl_system_calloc(nitems, size);
+    if (0 == nitems || 0 == size) {
+        return NULL;
+    }
+
+    // Check for overflow in multiplication
+    if (nitems > 0 && size > SIZE_MAX / nitems) {
+        PR_ERR("calloc overflow: nitems=0x%x, size=0x%x", nitems, size);
+        return NULL;
+    }
+
+    void *ptr = tkl_system_calloc(nitems, size);
+    if (NULL == ptr) {
+        PR_ERR("calloc failed: nitems=0x%x, size=0x%x, free=0x%x", nitems, size, tal_system_get_free_heap_size());
+        return NULL;
+    }
+
+    return ptr;
 }
 
 /**

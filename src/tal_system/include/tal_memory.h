@@ -103,6 +103,15 @@ void *tal_realloc(void *ptr, size_t size);
  */
 int tal_system_get_free_heap_size(void);
 
+/**
+ * @brief Safe free function that sets pointer to NULL after freeing
+ *
+ * @param[in] ptr: pointer to the memory pointer to be freed
+ *
+ * @return none
+ */
+void tal_free_safe(void **ptr);
+
 #ifdef __cplusplus
 }
 #endif

@@ -454,7 +454,11 @@ static int ap_ext_cmd_parse(ap_netcfg_t *ap, char *data)
         }
         uint16_t offset = sprintf(buffer, "{\"reqType\":\"wifi_list_rpt\",\"data\":");
         TUYA_CALL_ERR_GOTO(ap_get_wifi_list(buffer + offset, buffer_size - offset, item->valueint), __exit);
-        strcpy(buffer + strlen(buffer), "}");
+        size_t current_len = strlen(buffer);
+        if (current_len + 1 < buffer_size) {
+            strncpy(buffer + current_len, "}", buffer_size - current_len - 1);
+            buffer[buffer_size - 1] = '\0';
+        }
     } else if (0 == strcmp(reqtype->valuestring,
                            "query_netcfg_stat")) { //  query_netcfg_stat
         char *out = "{\"type\":1,\"stage\":2,\"status\":0}";
@@ -752,11 +756,15 @@ static int ap_mode_start(ap_netcfg_t *ap)
         return op_ret;
     }
     //! default ip info
-    strcpy(ap_cfg.ip.ip, "192.168.176.1");
-    strcpy(ap_cfg.ip.gw, "192.168.176.1");
-    strcpy(ap_cfg.ip.mask, "255.255.255.0");
+    strncpy(ap_cfg.ip.ip, "192.168.176.1", sizeof(ap_cfg.ip.ip) - 1);
+    ap_cfg.ip.ip[sizeof(ap_cfg.ip.ip) - 1] = '\0';
+    strncpy(ap_cfg.ip.gw, "192.168.176.1", sizeof(ap_cfg.ip.gw) - 1);
+    ap_cfg.ip.gw[sizeof(ap_cfg.ip.gw) - 1] = '\0';
+    strncpy(ap_cfg.ip.mask, "255.255.255.0", sizeof(ap_cfg.ip.mask) - 1);
+    ap_cfg.ip.mask[sizeof(ap_cfg.ip.mask) - 1] = '\0';
     //! default ssid
-    sprintf((char *)ap_cfg.ssid, "%s-%02X%02X", TUYA_AP_SSID_DEFAULT, mac.mac[4], mac.mac[5]);
+    snprintf((char *)ap_cfg.ssid, sizeof(ap_cfg.ssid), "%s-%02X%02X", TUYA_AP_SSID_DEFAULT, mac.mac[4], mac.mac[5]);
+    ap_cfg.ssid[sizeof(ap_cfg.ssid) - 1] = '\0';
     ap_cfg.s_len = strlen((char *)ap_cfg.ssid);
     ap_cfg.md = WAAM_OPEN;
     ap_cfg.chan = 6;

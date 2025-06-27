@@ -282,7 +282,10 @@ static int cli_table_key(cli_t *cli)
             }
         }
     } else if (count) { //! print one
-        strcpy(cli->buffer, match_cmd->name);
+        if (strlen(match_cmd->name) < CLI_BUFFER_SIZE) {
+            strncpy(cli->buffer, match_cmd->name, CLI_BUFFER_SIZE);
+            cli->buffer[CLI_BUFFER_SIZE] = '\0';
+        }
         cli->index = strlen(cli->buffer);
         cli->insert = cli->index;
     } else {
@@ -376,7 +379,8 @@ static int cli_key_detect(TUYA_UART_NUM_E port_id, char *data, cli_key_t *key)
         switch (state) {
 
         case CHECK_KEY:
-            if (CLI_ENTER_KEY == ch || CLI_ENTER2_KEY == ch || CLI_BACKSPACE_KEY == ch || CLI_BACKSPACE2_KEY == ch || CLI_TABLE_KEY == ch) {
+            if (CLI_ENTER_KEY == ch || CLI_ENTER2_KEY == ch || CLI_BACKSPACE_KEY == ch || CLI_BACKSPACE2_KEY == ch ||
+                CLI_TABLE_KEY == ch) {
                 *key = ch;
                 return OPRT_OK;
             } else if (CLI_ESC_KEY == ch) {
@@ -552,7 +556,10 @@ static void cli_up_key(cli_t *cli)
         cli_out_put(cli->port_id, &ch, 1);
         cli_out_put(cli->port_id, cli->prompt, strlen(cli->prompt));
         cli_out_put(cli->port_id, (char *)history_data, strlen((char *)history_data));
-        strcpy(cli->buffer, (char *)history_data);
+        if (strlen((char *)history_data) < CLI_BUFFER_SIZE) {
+            strncpy(cli->buffer, (char *)history_data, CLI_BUFFER_SIZE);
+            cli->buffer[CLI_BUFFER_SIZE] = '\0';
+        }
         cli->index = strlen(cli->buffer);
         cli->buffer[cli->index] = '\0';
         cli->insert = cli->index;
@@ -576,7 +583,10 @@ static void cli_down_key(cli_t *cli)
         cli_out_put(cli->port_id, &ch, 1);
         cli_out_put(cli->port_id, cli->prompt, strlen(cli->prompt));
         cli_out_put(cli->port_id, (char *)history_data, strlen((char *)history_data));
-        strcpy(cli->buffer, (char *)history_data);
+        if (strlen((char *)history_data) < CLI_BUFFER_SIZE) {
+            strncpy(cli->buffer, (char *)history_data, CLI_BUFFER_SIZE);
+            cli->buffer[CLI_BUFFER_SIZE] = '\0';
+        }
         cli->index = strlen(cli->buffer);
         cli->buffer[cli->index] = '\0';
         cli->insert = cli->index;
