@@ -56,9 +56,9 @@ static int atop_url_params_sign(const char *key, url_param_t *params, int param_
     TUYA_CHECK_NULL_RETURN(buffer, OPRT_MALLOC_FAILED);
 
     for (i = 0; i < param_num; ++i) {
-        printlen += sprintf(buffer + printlen, "%s=%s||", params[i].key, params[i].value);
+        printlen += snprintf(buffer + printlen, 512 - printlen, "%s=%s||", params[i].key, params[i].value);
     }
-    printlen += sprintf(buffer + printlen, "%s", (char *)key);
+    printlen += snprintf(buffer + printlen, 512 - printlen, "%s", (char *)key);
 
     // make md5 digest bin
     tal_md5_ret((const uint8_t *)buffer, printlen, digest);
@@ -66,7 +66,7 @@ static int atop_url_params_sign(const char *key, url_param_t *params, int param_
 
     // make digest hex
     for (i = 0; i < MD5SUM_LENGTH; i++) {
-        *olen += sprintf((char *)out + i * 2, "%02x", digest[i]);
+        *olen += snprintf((char *)out + i * 2, 3, "%02x", digest[i]);
     }
     return rt;
 }
@@ -81,11 +81,11 @@ static int atop_url_params_encode(const char *key, url_param_t *params, int para
 
     // attach url params
     for (i = 0; i < param_num; i++) {
-        printlen += sprintf(buffer + printlen, "%s=%s&", params[i].key, params[i].value);
+        printlen += snprintf(buffer + printlen, *olen - printlen, "%s=%s&", params[i].key, params[i].value);
     }
 
     // attach md5 signature
-    printlen += sprintf(buffer + printlen, "sign=");
+    printlen += snprintf(buffer + printlen, *olen - printlen, "sign=");
     rt = atop_url_params_sign(key, params, param_num, (uint8_t *)buffer + printlen, &sign_len);
     if (rt != 0) {
         PR_ERR("atop_url_params_sign error:%d", rt);
@@ -135,9 +135,9 @@ static int atop_request_data_encode(const char *key, const uint8_t *input, int i
     }
 
     // output the hex data
-    printlen = sprintf((char *)output, "%s", "data=");
+    printlen = snprintf((char *)output, *olen, "%s", "data=");
     for (i = 0; i < (int)buflen; i++) {
-        printlen += sprintf((char *)output + printlen, "%02X", (uint8_t)(encrypted_buffer[i]));
+        printlen += snprintf((char *)output + printlen, *olen - printlen, "%02X", (uint8_t)(encrypted_buffer[i]));
     }
 
     tal_free(encrypted_buffer);
@@ -330,7 +330,7 @@ int atop_base_request(const atop_base_request_t *request, atop_base_response_t *
     params[idx++].value = "3";
 
     char ts_str[11];
-    sprintf(ts_str, "%" PRIu32, request->timestamp);
+    snprintf(ts_str, sizeof(ts_str), "%" PRIu32, request->timestamp);
     params[idx].key = "t";
     params[idx++].value = ts_str;
 
@@ -352,7 +352,7 @@ int atop_base_request(const atop_base_request_t *request, atop_base_response_t *
     }
 
     /* attach path prefix */
-    int path_buffer_len = sprintf(path_buffer, "%s?", (char *)request->path);
+    int path_buffer_len = snprintf(path_buffer, MAX_URL_LENGTH, "%s?", (char *)request->path);
     PR_DEBUG("TUYA_HTTPS_ATOP_URL: %s", path_buffer);
 
     /* param encode */

@@ -59,31 +59,33 @@ static int tuya_mqtt_signature_tool(const tuya_meta_info_t *input, tuya_mqtt_acc
     if (input->devid && input->seckey && input->localkey) {
         // ACTIVED
         memcpy(signout->cipherkey, input->localkey, 16);
-        sprintf(signout->clientid, "%s", input->devid);
-        sprintf(signout->username, "%s", input->devid);
+        snprintf(signout->clientid, sizeof(signout->clientid), "%s", input->devid);
+        snprintf(signout->username, sizeof(signout->username), "%s", input->devid);
         tal_md5_ret((const uint8_t *)input->seckey, strlen(input->seckey), digest);
         for (i = 0; i < 8; ++i) {
-            sprintf(&signout->password[i * 2], "%02x", (unsigned char)digest[i + 4]);
+            snprintf(&signout->password[i * 2], sizeof(signout->password) - i * 2, "%02x",
+                     (unsigned char)digest[i + 4]);
         }
 
         // IO topic
-        sprintf(signout->topic_in, "smart/device/in/%s", input->devid);
-        sprintf(signout->topic_out, "smart/device/out/%s", input->devid);
+        snprintf(signout->topic_in, sizeof(signout->topic_in), "smart/device/in/%s", input->devid);
+        snprintf(signout->topic_out, sizeof(signout->topic_out), "smart/device/out/%s", input->devid);
 
     } else if (input->uuid && input->authkey) {
         // UNACTIVED
         memcpy(signout->cipherkey, input->authkey, 16);
-        sprintf(signout->clientid, "acon_%s", input->uuid);
-        sprintf(signout->username, "acon_%s|pv=%s", input->uuid, TUYA_PV23);
+        snprintf(signout->clientid, sizeof(signout->clientid), "acon_%s", input->uuid);
+        snprintf(signout->username, sizeof(signout->username), "acon_%s|pv=%s", input->uuid, TUYA_PV23);
         tal_md5_ret((const uint8_t *)input->authkey, strlen(input->authkey), digest);
         for (i = 0; i < 8; ++i) {
-            sprintf(&signout->password[i * 2], "%02x", (unsigned char)digest[i + 4]);
+            snprintf(&signout->password[i * 2], sizeof(signout->password) - i * 2, "%02x",
+                     (unsigned char)digest[i + 4]);
         }
 
         // IO topic
-        sprintf(signout->topic_in, "d/ai/%s", input->uuid);
-        sprintf(signout->topic_out, "%s",
-                ""); // not support publish data on direct mode
+        snprintf(signout->topic_in, sizeof(signout->topic_in), "d/ai/%s", input->uuid);
+        snprintf(signout->topic_out, sizeof(signout->topic_out), "%s",
+                 ""); // not support publish data on direct mode
 
     } else {
         PR_ERR("input error");
@@ -950,7 +952,7 @@ int tuya_mqtt_upgrade_progress_report(tuya_mqtt_context_t *context, int channel,
         return OPRT_MALLOC_FAILED;
     }
 
-    int buffer_size = sprintf((char *)data_buf, "{\"progress\":\"%d\",\"firmwareType\":%d}", percent, channel);
+    int buffer_size = snprintf((char *)data_buf, 128, "{\"progress\":\"%d\",\"firmwareType\":%d}", percent, channel);
     uint16_t msgid = tuya_mqtt_protocol_data_publish(context, PRO_UPGE_PUSH, data_buf, (uint16_t)buffer_size);
     tal_free(data_buf);
     if (msgid <= 0) {

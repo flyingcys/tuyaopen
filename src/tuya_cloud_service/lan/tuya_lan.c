@@ -572,13 +572,15 @@ static void lan_make_udp_packets(uint8_t **out, int *p_olen)
     }
     memset(json_buf, 0, data_len);
 
-    offset += sprintf(json_buf + offset, "{\"ip\":\"%s\",\"gwId\":\"%s\",\"uuid\":\"%s\"", ip.ip, id,
-                      lan->iot_client->config.uuid);
-    offset += sprintf(json_buf + offset, ",\"active\":%d,\"ablilty\":0", lan->iot_client->is_activated ? 2 : 0);
-    offset += sprintf(json_buf + offset, ",\"encrypt\":true");
-    offset += sprintf(json_buf + offset, ",\"productKey\":\"%s\"", lan->iot_client->config.productkey);
-    offset += sprintf(json_buf + offset, ",\"version\":\"%s\"", TUYA_LPV35);
-    offset += sprintf(json_buf + offset, ",\"sl\":%d", TUYA_SECURITY_LEVEL);
+    offset += snprintf(json_buf + offset, data_len - offset, "{\"ip\":\"%s\",\"gwId\":\"%s\",\"uuid\":\"%s\"", ip.ip,
+                       id, lan->iot_client->config.uuid);
+    offset += snprintf(json_buf + offset, data_len - offset, ",\"active\":%d,\"ablilty\":0",
+                       lan->iot_client->is_activated ? 2 : 0);
+    offset += snprintf(json_buf + offset, data_len - offset, ",\"encrypt\":true");
+    offset +=
+        snprintf(json_buf + offset, data_len - offset, ",\"productKey\":\"%s\"", lan->iot_client->config.productkey);
+    offset += snprintf(json_buf + offset, data_len - offset, ",\"version\":\"%s\"", TUYA_LPV35);
+    offset += snprintf(json_buf + offset, data_len - offset, ",\"sl\":%d", TUYA_SECURITY_LEVEL);
     json_buf[offset] = '}';
     json_buf[offset + 1] = 0;
 

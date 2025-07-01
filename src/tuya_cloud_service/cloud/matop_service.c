@@ -192,21 +192,11 @@ int matop_serice_init(matop_context_t *context, const matop_config_t *config)
     context->config = *config;
 
     sprintf(topic_buffer, "rpc/rsp/%s", config->devid);
-    ret = tuya_mqtt_subscribe_message_callback_register(context->config.mqctx, topic_buffer,
-                                                        on_matop_service_data_receive, context);
-    if (ret != OPRT_OK) {
-        PR_ERR("Topic subscribe error:%s", topic_buffer);
-        return ret;
-    }
 
+    /* subscribe file topic */
     sprintf(topic_buffer, "rpc/file/%s", config->devid);
-    tuya_mqtt_subscribe_message_callback_register(context->config.mqctx, topic_buffer,
-                                                  on_matop_service_file_rawdata_receive, context);
-    if (ret != OPRT_OK) {
-        PR_ERR("Topic subscribe error:%s", topic_buffer);
-        return ret;
-    }
 
+    /* record request topic */
     sprintf(context->resquest_topic, "rpc/req/%s", config->devid);
     return OPRT_OK;
 }

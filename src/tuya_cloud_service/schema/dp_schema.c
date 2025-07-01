@@ -76,27 +76,33 @@ int dp_rept_json_append(dp_schema_t *schema, char *data, char *time, char *type,
     memset(tmp, 0, len);
 
     int offset = 0;
-    offset += sprintf(tmp + offset, "{\"dps\":%s,\"devId\":\"%s\"", data, schema->devid);
-    if (offset <= 0) {
+    int ret = 0;
+    ret = snprintf(tmp + offset, len - offset, "{\"dps\":%s,\"devId\":\"%s\"}", data, schema->devid);
+    if (ret < 0 || ret >= len - offset) {
         goto __err_exit;
     }
+    offset += ret;
+
     if (time) {
-        offset += sprintf(tmp + offset, ",\"t\":%s", time);
-        if (offset <= 0) {
+        ret = snprintf(tmp + offset, len - offset, ",\"t\":%s", time);
+        if (ret < 0 || ret >= len - offset) {
             goto __err_exit;
         }
+        offset += ret;
     }
     if (rept_seq > 0) {
-        offset += sprintf(tmp + offset, ",\"seq\":\"%u\"", rept_seq);
-        if (offset <= 0) {
+        ret = snprintf(tmp + offset, len - offset, ",\"seq\":\"%u\"", rept_seq);
+        if (ret < 0 || ret >= len - offset) {
             goto __err_exit;
         }
+        offset += ret;
     }
     if (type) {
-        offset += sprintf(tmp + offset, ",\"type\":\"%s\"", type);
-        if (offset <= 0) {
+        ret = snprintf(tmp + offset, len - offset, ",\"type\":\"%s\"", type);
+        if (ret < 0 || ret >= len - offset) {
             goto __err_exit;
         }
+        offset += ret;
     }
     tmp[offset] = '}';
     *pp_out = tmp;
@@ -105,7 +111,7 @@ int dp_rept_json_append(dp_schema_t *schema, char *data, char *time, char *type,
 
 __err_exit:
     tal_free(tmp);
-    PR_ERR("sprintf %d", offset);
+    PR_ERR("snprintf failed %d", offset);
     return OPRT_COM_ERROR;
 }
 
@@ -894,20 +900,21 @@ int dp_rept_json_output(dp_schema_t *schema, dp_rept_in_t *dpin, dp_rept_valid_t
         switch (dp->type) {
         case PROP_BOOL: {
             if (TRUE == dp->value.dp_bool) {
-                offset += sprintf(dpstr + offset, "\"%d\":true,", dp->id);
+                offset += snprintf(dpstr + offset, dpvalid->len - offset, "\"%d\":true,", dp->id);
             } else {
-                offset += sprintf(dpstr + offset, "\"%d\":false,", dp->id);
+                offset += snprintf(dpstr + offset, dpvalid->len - offset, "\"%d\":false,", dp->id);
             }
             break;
         }
 
         case PROP_VALUE: {
-            offset += sprintf(dpstr + offset, "\"%d\":%d,", dp->id, dp->value.dp_value);
+            offset += snprintf(dpstr + offset, dpvalid->len - offset, "\"%d\":%d,", dp->id, dp->value.dp_value);
             break;
         }
 
         case PROP_BITMAP: {
-            offset += sprintf(dpstr + offset, "\"%d\":%" PRIu32 ",", dp->id, dp->value.dp_bitmap);
+            offset +=
+                snprintf(dpstr + offset, dpvalid->len - offset, "\"%d\":%" PRIu32 ",", dp->id, dp->value.dp_bitmap);
             break;
         }
 
@@ -915,7 +922,7 @@ int dp_rept_json_output(dp_schema_t *schema, dp_rept_in_t *dpin, dp_rept_valid_t
             cJSON *temp_str = cJSON_CreateString(dp->value.dp_str);
             char *tmp_data = cJSON_PrintUnformatted(temp_str);
             if (tmp_data) {
-                offset += sprintf(dpstr + offset, "\"%d\":%s,", dp->id, tmp_data);
+                offset += snprintf(dpstr + offset, dpvalid->len - offset, "\"%d\":%s,", dp->id, tmp_data);
             }
             tal_free(tmp_data);
             cJSON_Delete(temp_str);
@@ -923,13 +930,14 @@ int dp_rept_json_output(dp_schema_t *schema, dp_rept_in_t *dpin, dp_rept_valid_t
         }
 
         case PROP_ENUM: {
-            offset +=
-                sprintf(dpstr + offset, "\"%d\":\"%s\",", dp->id, dpnode->prop.prop_enum.pp_enum[dp->value.dp_enum]);
+            offset += snprintf(dpstr + offset, dpvalid->len - offset, "\"%d\":\"%s\",", dp->id,
+                               dpnode->prop.prop_enum.pp_enum[dp->value.dp_enum]);
         } break;
         }
 
         if (is_need_time && dp->time_stamp) {
-            time_offset += sprintf(dptimestr + time_offset, "\"%d\":%u,", dp->id, dp->time_stamp);
+            time_offset +=
+                snprintf(dptimestr + time_offset, dpvalid->timelen - time_offset, "\"%d\":%u,", dp->id, dp->time_stamp);
         }
     }
 

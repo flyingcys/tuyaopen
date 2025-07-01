@@ -1038,11 +1038,12 @@ static int tuya_iot_dp_report_json_common(tuya_iot_client_t *client, const char 
     if (time) {
         buffer = tal_malloc(strlen(dps) + strlen(time) + 64);
         TUYA_CHECK_NULL_RETURN(buffer, OPRT_MALLOC_FAILED);
-        printlen = sprintf(buffer, "{\"devId\":\"%s\",\"dps\":%s,\"t\":%s}", client->activate.devid, dps, time);
+        printlen = snprintf(buffer, strlen(dps) + strlen(time) + 64, "{\"devId\":\"%s\",\"dps\":%s,\"t\":%s}",
+                            client->activate.devid, dps, time);
     } else {
         buffer = tal_malloc(strlen(dps) + 64);
         TUYA_CHECK_NULL_RETURN(buffer, OPRT_MALLOC_FAILED);
-        printlen = sprintf(buffer, "{\"devId\":\"%s\",\"dps\":%s}", client->activate.devid, dps);
+        printlen = snprintf(buffer, strlen(dps) + 64, "{\"devId\":\"%s\",\"dps\":%s}", client->activate.devid, dps);
     }
 
     /* Report buffer */
