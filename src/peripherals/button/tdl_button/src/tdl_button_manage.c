@@ -1,4 +1,3 @@
-
 /**
  * @file tdl_button_manage.c
  * @brief Implementation of Tuya Driver Layer button management system.

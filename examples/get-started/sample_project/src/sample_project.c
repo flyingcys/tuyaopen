@@ -1,4 +1,3 @@
-
 /**
  * @file sample_project.c
  * @brief Simple demonstration of a basic project template for the Tuya SDK.
