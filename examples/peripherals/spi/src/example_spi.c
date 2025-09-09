@@ -31,6 +31,7 @@
 
 #define SPI_FREQ 10000
 
+#define SPI_DMA_ENABLED     1
 /***********************************************************
 ***********************typedef define***********************
 ***********************************************************/
@@ -42,6 +43,7 @@
 /***********************************************************
 ***********************function define**********************
 ***********************************************************/
+char send_buff[] = {"Hello Tuya"};
 
 /**
  * @brief user_main
@@ -52,7 +54,6 @@
 void user_main(void)
 {
     OPERATE_RET rt = OPRT_OK;
-    uint8_t send_buff[] = {"Hello Tuya"};
 
     /* basic init */
     tal_log_init(TAL_LOG_LEVEL_DEBUG, 1024, (TAL_LOG_OUTPUT_CB)tkl_log_output);
@@ -66,18 +67,23 @@ void user_main(void)
     PR_NOTICE("Platform chip:       %s", PLATFORM_CHIP);
     PR_NOTICE("Platform board:      %s", PLATFORM_BOARD);
     PR_NOTICE("Platform commit-id:  %s", PLATFORM_COMMIT);
+    
+    for (uint32_t i = 0; i < 5; i++) {
+        /*spi init*/
+        TUYA_SPI_BASE_CFG_T spi_cfg = {.mode = TUYA_SPI_MODE0,
+                                    .freq_hz = SPI_FREQ,
+                                    .databits = TUYA_SPI_DATA_BIT8,
+                                    .bitorder = TUYA_SPI_ORDER_LSB2MSB,
+                                    .role = TUYA_SPI_ROLE_MASTER,
+                                    .spi_dma_flags = SPI_DMA_ENABLED,
+                                    .type = TUYA_SPI_SOFT_TYPE};
+        TUYA_CALL_ERR_GOTO(tkl_spi_init(SPI_ID, &spi_cfg), __EXIT);
 
-    /*spi init*/
-    TUYA_SPI_BASE_CFG_T spi_cfg = {.mode = TUYA_SPI_MODE0,
-                                   .freq_hz = SPI_FREQ,
-                                   .databits = TUYA_SPI_DATA_BIT8,
-                                   .bitorder = TUYA_SPI_ORDER_LSB2MSB,
-                                   .role = TUYA_SPI_ROLE_MASTER,
-                                   .type = TUYA_SPI_AUTO_TYPE};
-    TUYA_CALL_ERR_GOTO(tkl_spi_init(SPI_ID, &spi_cfg), __EXIT);
+        TUYA_CALL_ERR_LOG(tkl_spi_send(SPI_ID, send_buff, CNTSOF(send_buff)));
+        PR_NOTICE("spi send \"%s\" finish", send_buff);
 
-    TUYA_CALL_ERR_LOG(tkl_spi_send(SPI_ID, send_buff, CNTSOF(send_buff)));
-    PR_NOTICE("spi send \"%s\" finish", send_buff);
+        tal_system_sleep(1000);
+    }
 
     TUYA_CALL_ERR_LOG(tkl_spi_deinit(SPI_ID));
 
