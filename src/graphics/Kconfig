@@ -1,0 +1,4 @@
+menu "configure graphics"
+    rsource "arm-2d/Kconfig"
+    rsource "lvgl/Kconfig"
+endmenu

@@ -1,0 +1,4 @@
+config ARM2D_DEMO
+    bool
+    default y
+    select ENABLE_ARM2D

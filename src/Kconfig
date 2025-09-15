@@ -6,7 +6,7 @@ menu "configure tuyaopen"
     rsource "liblwip/Kconfig"
     rsource "libtls/Kconfig"
     rsource "tal_system/Kconfig"
-    rsource "liblvgl/Kconfig"
+    rsource "graphics/Kconfig"
     rsource "peripherals/Kconfig"
     rsource "tuya_p2p/Kconfig"
 endmenu
