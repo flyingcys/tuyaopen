@@ -58,21 +58,21 @@ extern "C" {
 //     <32=>    32Bits
 // <i> The colour depth of your screen
 #ifndef __DISP0_CFG_COLOUR_DEPTH__
-#   define __DISP0_CFG_COLOUR_DEPTH__                              __GLCD_CFG_COLOUR_DEPTH__
+#   define __DISP0_CFG_COLOUR_DEPTH__                              16
 #endif
 
 // <o>Width of the screen <8-32767>
 // <i> The width of your screen
 // <i> Default: 320
 #ifndef __DISP0_CFG_SCEEN_WIDTH__
-#   define __DISP0_CFG_SCEEN_WIDTH__                               __GLCD_CFG_SCEEN_WIDTH__
+#   define __DISP0_CFG_SCEEN_WIDTH__                               240
 #endif
 
 // <o>Height of the screen <8-32767>
 // <i> The height of your screen
 // <i> Default: 240
 #ifndef __DISP0_CFG_SCEEN_HEIGHT__
-#   define __DISP0_CFG_SCEEN_HEIGHT__                              __GLCD_CFG_SCEEN_HEIGHT__
+#   define __DISP0_CFG_SCEEN_HEIGHT__                              240
 #endif
 
 /*
@@ -96,13 +96,13 @@ extern "C" {
 // <o>Width of the PFB block
 // <i> The width of your PFB block size used in disp0
 #ifndef __DISP0_CFG_PFB_BLOCK_WIDTH__
-#   define __DISP0_CFG_PFB_BLOCK_WIDTH__                           8 //__DISP0_CFG_SCEEN_WIDTH__
+#   define __DISP0_CFG_PFB_BLOCK_WIDTH__                           240
 #endif
 
 // <o>Height of the PFB block
 // <i> The height of your PFB block size used in disp0
 #ifndef __DISP0_CFG_PFB_BLOCK_HEIGHT__
-#   define __DISP0_CFG_PFB_BLOCK_HEIGHT__                          8 //(__DISP0_CFG_SCEEN_HEIGHT__ / 10)
+#   define __DISP0_CFG_PFB_BLOCK_HEIGHT__                          24
 #endif
 
 // <o>Width Alignment of generated PFBs
@@ -139,12 +139,6 @@ extern "C" {
 #   define __DISP0_CFG_PFB_HEAP_SIZE__                             1
 #endif
 
-// <q>Disable Dynamic PFB optimization
-// <i> Selecting this option will disable the dynamic PFB optimisation. Please do NOT select this unless you are sure about the consequences. 
-#ifndef __DISP0_CFG_DISABLE_DYNAMIC_PFB__
-#   define __DISP0_CFG_DISABLE_DYNAMIC_PFB__                       0
-#endif
-
 // </h>
 
 // <h>Navigation Layer
@@ -157,13 +151,13 @@ extern "C" {
 // <i> Configure the default navigation layer of this display adapter. 
 // <i> NOTE: Disable the navigation layer will also remove the real-time FPS display.
 #ifndef __DISP0_CFG_NAVIGATION_LAYER_MODE__
-#   define __DISP0_CFG_NAVIGATION_LAYER_MODE__                      0
+#   define __DISP0_CFG_NAVIGATION_LAYER_MODE__                     1
 #endif
 
 // <o>Number of iterations <0-2000>
 // <i> run number of iterations before calculate the FPS.
 #ifndef __DISP0_CFG_ITERATION_CNT__
-#   define __DISP0_CFG_ITERATION_CNT__                              30
+#   define __DISP0_CFG_ITERATION_CNT__                             30
 #endif
 
 // <o>FPS Calculation Mode
@@ -171,7 +165,7 @@ extern "C" {
 //     <1=>     Real FPS
 // <i> Decide the meaning of the real time FPS display
 #ifndef __DISP0_CFG_FPS_CACULATION_MODE__
-#   define __DISP0_CFG_FPS_CACULATION_MODE__                        1
+#   define __DISP0_CFG_FPS_CACULATION_MODE__                       0
 #endif
 
 // <q> Enable Console
@@ -231,13 +225,13 @@ extern "C" {
 // <q>Enable the helper service for 3FB (LCD Direct Mode)
 // <i> You can select this option when your LCD controller supports direct mode
 #ifndef __DISP0_CFG_ENABLE_3FB_HELPER_SERVICE__
-#   define __DISP0_CFG_ENABLE_3FB_HELPER_SERVICE__                 1
+#   define __DISP0_CFG_ENABLE_3FB_HELPER_SERVICE__                 0
 #endif
 
 // <q>Disable the default scene
 // <i> Remove the default scene for this display adapter. We highly recommend you to disable the default scene when creating real applications.
 #ifndef __DISP0_CFG_DISABLE_DEFAULT_SCENE__
-#   define __DISP0_CFG_DISABLE_DEFAULT_SCENE__                     1
+#   define __DISP0_CFG_DISABLE_DEFAULT_SCENE__                     0
 #endif
 
 // <o>Maximum number of Virtual Resources used per API
@@ -250,7 +244,7 @@ extern "C" {
 // <i> This feature is disabled by default.
 // <i> NOTE: When selecting the background loading mode, you can ONLY use virtual resource as the source tile in the tile-copy-only APIs. 
 #ifndef __DISP0_CFG_VIRTUAL_RESOURCE_HELPER__
-#   define __DISP0_CFG_VIRTUAL_RESOURCE_HELPER__                   2
+#   define __DISP0_CFG_VIRTUAL_RESOURCE_HELPER__                   0
 #endif
 
 // <q>Use heap to allocate buffer in the virtual resource helper service
@@ -340,25 +334,7 @@ extern "C" {
         };                                                                      \
         ARM_2D_SAFE_NAME(ret);})
 
-#define DISP_ADAPTER0_NANO_DRAW()                                               \
-                                                                                \
-    arm_using(const arm_2d_tile_t *ptTile = NULL)                               \
-        arm_using(bool bIsNewFrame = true)                                      \
-            for (__disp_adapter0_draw_t *ARM_2D_SAFE_NAME(ptUserDraw) = NULL;   \
-                (({ ARM_2D_SAFE_NAME(ptUserDraw)                                \
-                        = __disp_adapter0_nano_draw();                          \
-                    if (NULL != ARM_2D_SAFE_NAME(ptUserDraw)) {                 \
-                        ptTile = ARM_2D_SAFE_NAME(ptUserDraw)->ptTile;          \
-                        bIsNewFrame = ARM_2D_SAFE_NAME(ptUserDraw)->bIsNewFrame;\
-                    };                                                          \
-                    (NULL != ARM_2D_SAFE_NAME(ptUserDraw));                     \
-                    }));)
 /*============================ TYPES =========================================*/
-typedef struct {
-    arm_2d_tile_t *ptTile;
-    bool bIsNewFrame;
-} __disp_adapter0_draw_t;
-
 /*============================ GLOBAL VARIABLES ==============================*/
 ARM_NOINIT
 extern
@@ -372,14 +348,6 @@ void disp_adapter0_init(void);
 extern
 arm_fsm_rt_t __disp_adapter0_task(void);
 
-extern
-arm_2d_scene_t *disp_adapter0_nano_prepare(void);
-
-extern
-__disp_adapter0_draw_t * __disp_adapter0_nano_draw(void);
-
-extern
-arm_2d_scene_t *disp_adapter0_get_default_scene(void);
 
 #if __DISP0_CFG_VIRTUAL_RESOURCE_HELPER__
 /*!

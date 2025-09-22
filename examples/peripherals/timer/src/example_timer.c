@@ -26,7 +26,7 @@
 /***********************************************************
 *************************micro define***********************
 ***********************************************************/
-#define DELAY_TIME 500 * 1000 // us
+#define DELAY_TIME  1 * 100 // us
 
 /***********************************************************
 ***********************typedef define***********************
@@ -37,7 +37,7 @@
 ***********************************************************/
 #define TIMER_ID TUYA_TIMER_NUM_3
 
-static char sg_count = 0;
+static uint64_t sg_count = 0;
 
 /***********************************************************
 ***********************function define**********************
@@ -52,15 +52,15 @@ static char sg_count = 0;
 static void __timer_callback(void *args)
 {
     /* TAL_PR_ , PR_ , these two types of prints have locks inside, do not use them in interrupts */
-    tkl_log_output("\r\n------------- Timer Callback --------------\r\n");
-    sg_count++;
+    // tkl_log_output("\r\n------------- Timer Callback --------------\r\n");
+    sg_count ++;
 
-    if (sg_count >= 5) {
-        sg_count = 0;
-        tkl_timer_stop(TIMER_ID);
-        tkl_timer_deinit(TIMER_ID);
-        tkl_log_output("\r\ntimer %d is stop\r\n", TIMER_ID);
-    }
+    // if (sg_count >= 10 * 1000) {
+    //     sg_count = 0;
+    //     // tkl_timer_stop(TIMER_ID);
+    //     // tkl_timer_deinit(TIMER_ID);
+    //     tkl_log_output("\r\ntimer %d is stop\r\n", TIMER_ID);
+    // }
 
     return;
 }
@@ -96,6 +96,7 @@ void user_main(void)
     PR_NOTICE("timer %d is start", TIMER_ID);
 
     while (1) {
+        PR_DEBUG("timer %d count is %lld\r\n", TIMER_ID, sg_count);
         tal_system_sleep(1000);
     }
 

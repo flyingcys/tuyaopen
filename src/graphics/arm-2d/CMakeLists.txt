@@ -38,33 +38,38 @@ file(GLOB LIB_SRCS
     "${MODULE_PATH}/examples/common/loader/zjpgd_loader/zjpgd/*.c"
     "${MODULE_PATH}/examples/demos/*.c"
     "${MODULE_PATH}/examples/demos/monochrome/*.c"
+    # "${MODULE_PATH}/lingdong-gui/gui/*.c"
+    # "${MODULE_PATH}/lingdong-gui/misc/*.c"
 )
 
 # LIB_PUBLIC_INC
 set(LIB_PUBLIC_INC 
-        ${MODULE_PATH}/platform
-        ${MODULE_PATH}/platform/math
-        ${MODULE_PATH}/platform/dsp
-        ${MODULE_PATH}/Library/Include
-        ${MODULE_PATH}/Helper/Include
-        ${MODULE_PATH}/Helper/built_in
-        ${MODULE_PATH}/examples/common/benchmark
-        ${MODULE_PATH}/examples/common/controls
-        ${MODULE_PATH}/examples/common/opcodes
-        ${MODULE_PATH}/examples/common/loader
-        ${MODULE_PATH}/examples/common/loader/tjpgd_loader
-        ${MODULE_PATH}/examples/common/loader/zjpgd_loader
-        ${MODULE_PATH}/examples/common/scenes/fitness
-        ${MODULE_PATH}/examples/common/scenes/meter
-        ${MODULE_PATH}/examples/common/scenes/watch
-        ${MODULE_PATH}/examples/common/scenes/alarm_clock
-        ${MODULE_PATH}/examples/common/scenes/histogram
-        ${MODULE_PATH}/examples/common/scenes/fan
-        ${MODULE_PATH}/examples/common/scenes/bubble_charging
-        ${MODULE_PATH}/examples/common/scenes/animate_background
-        ${MODULE_PATH}/examples/common/scenes/knob
-        ${MODULE_PATH}/examples/demos
-        ${MODULE_PATH}/examples/demos/monochrome
+        "${MODULE_PATH}/platform"
+        "${MODULE_PATH}/platform/math"
+        "${MODULE_PATH}/platform/dsp"
+        "${MODULE_PATH}/Library/Include"
+        "${MODULE_PATH}/Helper/Include"
+        "${MODULE_PATH}/Helper/built_in"
+        "${MODULE_PATH}/examples/common/benchmark"
+        "${MODULE_PATH}/examples/common/controls"
+        "${MODULE_PATH}/examples/common/opcodes"
+        "${MODULE_PATH}/examples/common/loader"
+        "${MODULE_PATH}/examples/common/loader/tjpgd_loader"
+        "${MODULE_PATH}/examples/common/loader/zjpgd_loader"
+        "${MODULE_PATH}/examples/common/scenes/fitness"
+        "${MODULE_PATH}/examples/common/scenes/meter"
+        "${MODULE_PATH}/examples/common/scenes/watch"
+        "${MODULE_PATH}/examples/common/scenes/alarm_clock"
+        "${MODULE_PATH}/examples/common/scenes/histogram"
+        "${MODULE_PATH}/examples/common/scenes/fan"
+        "${MODULE_PATH}/examples/common/scenes/bubble_charging"
+        "${MODULE_PATH}/examples/common/scenes/animate_background"
+        "${MODULE_PATH}/examples/common/scenes/knob"
+        "${MODULE_PATH}/examples/demos"
+        "${MODULE_PATH}/examples/demos/monochrome"
+        "${MODULE_PATH}/lingdong-gui/gui"
+        "${MODULE_PATH}/lingdong-gui/misc"
+        "${MODULE_PATH}/lingdong-gui/config"
 )
 
 add_compile_definitions(

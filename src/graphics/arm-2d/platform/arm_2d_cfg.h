@@ -25,7 +25,9 @@
 #   include "RTE_Components.h"
 #endif
 
-#include <stdio.h>
+#if defined(__ARM_2D_USER_APP_CFG_H__)
+#   include __ARM_2D_USER_APP_CFG_H__
+#endif
 
 #ifdef   __cplusplus
 extern "C" {
@@ -50,7 +52,6 @@ extern "C" {
 // <o>Enable Anti-Alias support for all transform operations.
 //     <0=>     No Anti-Alias
 //     <1=>     Use 4x Supersampling Anti-Alias (4xSSAA)
-//     <2=>     Use 2x Supersampling Anti-Alias (2xSSAA)
 // <i> Note that enabling this feature suffers a non-negligible performance drop.
 // <i> This feature is disabled by default.
 #ifndef __ARM_2D_HAS_ANTI_ALIAS_TRANSFORM__
@@ -90,8 +91,6 @@ extern "C" {
 
 // </h>
 
-
-
 // <h>Log and Debug
 // =======================
 // <q>Enable Log
@@ -116,7 +115,6 @@ extern "C" {
 /* The filter of log channels. Please comment the channels that you want to mask.
  */
 #ifndef __ARM_2D_LOG_CHANNEL_MASK_FILTER__
-
 #   define __ARM_2D_LOG_CHANNEL_MASK_FILTER__                                   \
             (   ARM_2D_LOG_CHN_TYPE_USER                                        \
             |   ARM_2D_LOG_CHN_TYPE_INFO                                        \
@@ -132,13 +130,12 @@ extern "C" {
             |   ARM_2D_LOG_CHN_CONTROLS                                         \
             |   ARM_2D_LOG_CHN_GUI_STACK                                        \
             |   ARM_2D_LOG_CHN_APP)
-
 #endif
 
 // <q>Enable The Layout Debug Mode
 // <i> Arm-2D will mark the layout areas.
 #ifndef __ARM_2D_HELPER_CFG_LAYOUT_DEBUG_MODE__
-#   define __ARM_2D_HELPER_CFG_LAYOUT_DEBUG_MODE__                     0
+#   define __ARM_2D_HELPER_CFG_LAYOUT_DEBUG_MODE__                  0
 #endif
 
 // </h>
@@ -161,6 +158,16 @@ extern "C" {
 //#define __ARM_2D_CFG_UNSAFE_NO_SATURATION_IN_FIXED_POINT__ 
 // </c>
 
+// <c1> Remove the Helium RGB565 Patch in IIR Blur operations
+// <i> This option is used to remove helium rgb565 patch in IIR Blur to gain a better performance, a ghost-shadow effects might noticible when background is white or light.
+//#define __ARM_2D_CFG_UNSAFE_NO_HELIUM_RGB565_PATCH_IN_IIR_BLUR__ 
+// </c>
+
+// <c1> Remove the PFB support in IIR Blur Helium acceleration
+// <i> This option is used to remove the PFB support in IIR Blur Helium backend to gain a better performance.
+//#define __ARM_2D_CFG_UNSAFE_NO_PFB_SUPPORT_IN_IIR_BLUR_HELIUM__ 
+// </c>
+
 // <c1> Disable Dirty Region Optimization Algorithm permanently in PFB helper service
 // <i> This option is used to remove dirty region optimization in PFB helper service. Warning: Some of the application behaviours would be affected, and the dirty region debug mode is no longer available. Disable the dirty region optimization can reduce memory footprint.
 //#define __ARM_2D_CFG_PFB_DISABLE_DIRTY_REGION_OPTIMIZATION__
@@ -170,7 +177,7 @@ extern "C" {
 // <i> This option is used to improve the performance and reduce the application complexity in API selection. Disable this feature allows linker to remove unused APIs further.
 // <i> This option is enabled by default
 #ifndef __ARM_2D_CFG_CALL_NON_OPACITY_VERSION_IMPLICITILY_FOR_255__
-#define __ARM_2D_CFG_CALL_NON_OPACITY_VERSION_IMPLICITILY_FOR_255__         1
+#   define __ARM_2D_CFG_CALL_NON_OPACITY_VERSION_IMPLICITILY_FOR_255__         1
 #endif
 
 // <q> Optimize the scaler version of transform operations for pointer-like resources
@@ -179,7 +186,6 @@ extern "C" {
 #ifndef __ARM_2D_CFG_OPTIMIZE_FOR_POINTER_LIKE_SHAPES_IN_TRANSFORM__
 #   define __ARM_2D_CFG_OPTIMIZE_FOR_POINTER_LIKE_SHAPES_IN_TRANSFORM__     1
 #endif
-// </h>
 
 // <q> Optimize the scaler version of transform operations for hollow out masks
 // <i> This feature is disabled by default. There is no guarantee that the performance will increase or decrease. It is all depends your applications. If your application uses a lot of hollow out masks, it might help.
@@ -192,8 +198,10 @@ extern "C" {
 // <i> Ignore the user application code when a PFB is output of the areas that generated with the layout assistant. Enabling this feature can improve the user application performance. This feature is disabled by default. It is recommended when you trys to optimize the application performance.
 // <i> If you see some visual elements are imcomplete, you can choose those layout assistants with "_open" as posfix in corresonding area. For example, arm_2d_align_centre() can be changed to arm_2d_align_centre_open().
 #ifndef __ARM_2D_CFG_OPTIMIZE_FOR_PFB_IN_LAYOUT_ASSISTANT__
-#   define __ARM_2D_CFG_OPTIMIZE_FOR_PFB_IN_LAYOUT_ASSISTANT__              1
+#   define __ARM_2D_CFG_OPTIMIZE_FOR_PFB_IN_LAYOUT_ASSISTANT__              0
 #endif
+
+// </h>
 
 // <h>Extra Components
 // =======================
@@ -211,7 +219,7 @@ extern "C" {
 // <o> The size of the LCD printf text buffer <16-65535>
 // <i> The text buffer size for the lcd printf service. It determins how many character you can use in one printf string.
 #ifndef __LCD_PRINTF_CFG_TEXT_BUFFER_SIZE__
-#   define __LCD_PRINTF_CFG_TEXT_BUFFER_SIZE__                          80
+#   define __LCD_PRINTF_CFG_TEXT_BUFFER_SIZE__                          256
 #endif
 
 // <h>Benchmark
@@ -220,14 +228,14 @@ extern "C" {
 // <i> The width of your screen for running benchmark
 // <i> Default: 320
 #ifndef __GLCD_CFG_SCEEN_WIDTH__
-#   define __GLCD_CFG_SCEEN_WIDTH__                                     480
+#   define __GLCD_CFG_SCEEN_WIDTH__                                     240
 #endif
 
 // <o>Height of the screen <8-32767>
 // <i> The height of your screen for running benchmark
 // <i> Default: 240
 #ifndef __GLCD_CFG_SCEEN_HEIGHT__
-#   define __GLCD_CFG_SCEEN_HEIGHT__                                    481
+#   define __GLCD_CFG_SCEEN_HEIGHT__                                    240
 #endif
 
 // <o>Number of iterations <1-2000>
@@ -253,7 +261,7 @@ extern "C" {
 // <q> Enable the nebula effect mode in the Benchmark:Watch-panel
 // <i> This feature is disabled by default and it is only available in the Tiny mode.
 #ifndef __ARM_2D_CFG_BENCHMARK_WATCH_PANEL_USE_NEBULA__
-#   define __ARM_2D_CFG_BENCHMARK_WATCH_PANEL_USE_NEBULA__              1
+#   define __ARM_2D_CFG_BENCHMARK_WATCH_PANEL_USE_NEBULA__              0
 #endif
 
 // <q> Exit benchmark when finished
@@ -270,16 +278,11 @@ extern "C" {
 #   define __ARM_2D_CFG_CONTROL_TEXT_BOX_USE_CONTEXT__                  0
 #endif
 
-
 //</h>
 // </h>
 
 // <<< end of configuration section >>>
 
-#define MATRIX_LETTER_TRAIN_USE_BLUR            1
-#define ARM_2D_SCENE_METER_USE_JPG              1
-#define ARM_2D_SCENE_HISTOGRAM_USE_JPG          1
-#define VT_SCALING_RATIO                        1
 
 /*============================ TYPES =========================================*/
 /*============================ GLOBAL VARIABLES ==============================*/

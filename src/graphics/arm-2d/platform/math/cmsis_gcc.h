@@ -304,7 +304,7 @@
 // }
 
 
-#if 0
+#if 1
 /**
   \brief   Reverse byte order (16 bit)
   \details Reverses the byte order within each halfword of a word. For example, 0x12345678 becomes 0x34127856.
