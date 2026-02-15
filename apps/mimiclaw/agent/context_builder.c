@@ -3,15 +3,16 @@
 #include "memory/memory_store.h"
 
 #include "cJSON.h"
+#include "tal_fs.h"
 
 static const char *TAG = "context";
 
 static size_t append_file(char *buf, size_t size, size_t offset, const char *path, const char *header)
 {
-    FILE *f = fopen(path, "r");
+    TUYA_FILE f = tal_fopen(path, "r");
     if (!f || !buf || size == 0 || offset >= size - 1) {
         if (f) {
-            fclose(f);
+            tal_fclose(f);
         }
         return offset;
     }
@@ -19,15 +20,17 @@ static size_t append_file(char *buf, size_t size, size_t offset, const char *pat
     if (header) {
         offset += snprintf(buf + offset, size - offset, "\n## %s\n\n", header);
         if (offset >= size - 1) {
-            fclose(f);
+            tal_fclose(f);
             return size - 1;
         }
     }
 
-    size_t n = fread(buf + offset, 1, size - offset - 1, f);
-    offset += n;
+    int n = tal_fread(buf + offset, (int)(size - offset - 1), f);
+    if (n > 0) {
+        offset += (size_t)n;
+    }
     buf[offset] = '\0';
-    fclose(f);
+    tal_fclose(f);
     return offset;
 }
 

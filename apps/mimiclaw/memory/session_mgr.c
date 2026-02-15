@@ -28,14 +28,14 @@ OPERATE_RET session_append(const char *chat_id, const char *role, const char *co
     char path[128] = {0};
     session_path(chat_id, path, sizeof(path));
 
-    FILE *f = fopen(path, "a");
+    TUYA_FILE f = tal_fopen(path, "a");
     if (!f) {
         return OPRT_FILE_OPEN_FAILED;
     }
 
     cJSON *obj = cJSON_CreateObject();
     if (!obj) {
-        fclose(f);
+        tal_fclose(f);
         return OPRT_CR_CJSON_ERR;
     }
 
@@ -47,13 +47,14 @@ OPERATE_RET session_append(const char *chat_id, const char *role, const char *co
     cJSON_Delete(obj);
 
     if (!line) {
-        fclose(f);
+        tal_fclose(f);
         return OPRT_CR_CJSON_ERR;
     }
 
-    fprintf(f, "%s\n", line);
+    (void)tal_fwrite(line, (int)strlen(line), f);
+    (void)tal_fwrite("\n", 1, f);
     free(line);
-    fclose(f);
+    tal_fclose(f);
     return OPRT_OK;
 }
 
@@ -66,7 +67,7 @@ OPERATE_RET session_get_history_json(const char *chat_id, char *buf, size_t size
     char path[128] = {0};
     session_path(chat_id, path, sizeof(path));
 
-    FILE *f = fopen(path, "r");
+    TUYA_FILE f = tal_fopen(path, "r");
     if (!f) {
         snprintf(buf, size, "[]");
         return OPRT_OK;
@@ -77,7 +78,7 @@ OPERATE_RET session_get_history_json(const char *chat_id, char *buf, size_t size
     int write_idx = 0;
 
     char line[2048] = {0};
-    while (fgets(line, sizeof(line), f)) {
+    while (tal_fgets(line, (int)sizeof(line), f)) {
         size_t len = strlen(line);
         if (len > 0 && line[len - 1] == '\n') {
             line[len - 1] = '\0';
@@ -100,7 +101,7 @@ OPERATE_RET session_get_history_json(const char *chat_id, char *buf, size_t size
             count++;
         }
     }
-    fclose(f);
+    tal_fclose(f);
 
     cJSON *arr = cJSON_CreateArray();
     int start = (count < max_msgs) ? 0 : write_idx;
@@ -145,7 +146,7 @@ OPERATE_RET session_clear(const char *chat_id)
     char path[128] = {0};
     session_path(chat_id, path, sizeof(path));
 
-    return (remove(path) == 0) ? OPRT_OK : OPRT_NOT_FOUND;
+    return (tal_fs_remove(path) == OPRT_OK) ? OPRT_OK : OPRT_NOT_FOUND;
 }
 
 void session_list(void)

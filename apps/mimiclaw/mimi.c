@@ -13,7 +13,9 @@
 #include "tools/tool_registry.h"
 #include "wifi/wifi_manager.h"
 
+#include "cJSON.h"
 #include "tal_fs.h"
+#include "tkl_output.h"
 
 #if defined(ENABLE_LIBLWIP) && (ENABLE_LIBLWIP == 1)
 #include "lwip_init.h"
@@ -21,6 +23,28 @@
 
 static const char *TAG = "mimi";
 static THREAD_HANDLE s_outbound_thread = NULL;
+
+static void mimi_runtime_init(void)
+{
+    static bool s_inited = false;
+    if (s_inited) {
+        return;
+    }
+
+    cJSON_InitHooks(&(cJSON_Hooks){.malloc_fn = tal_malloc, .free_fn = tal_free});
+    (void)tal_log_init(TAL_LOG_LEVEL_DEBUG, 1024, (TAL_LOG_OUTPUT_CB)tkl_log_output);
+
+    // LittleFS mount happens inside tal_kv_init(). We must call this before any tal_fs_* APIs.
+    (void)tal_kv_init(&(tal_kv_cfg_t){
+        .seed = "vmlkasdh93dlvlcy",
+        .key = "dflfuap134ddlduq",
+    });
+
+    (void)tal_sw_timer_init();
+    (void)tal_workq_init();
+
+    s_inited = true;
+}
 
 static OPERATE_RET ensure_dir(const char *path)
 {
@@ -104,6 +128,8 @@ static OPERATE_RET start_outbound_dispatcher(void)
 
 void mimi_app_main(void)
 {
+    mimi_runtime_init();
+
     MIMI_LOGI(TAG, "MimiClaw TuyaOpen app start");
     MIMI_LOGI(TAG, "free heap: %d", tal_system_get_free_heap_size());
 
