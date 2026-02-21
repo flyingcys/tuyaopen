@@ -11,9 +11,12 @@
 #include "proxy/http_proxy.h"
 #include "telegram/telegram_bot.h"
 #include "tools/tool_registry.h"
+#include "tuya_register_center.h"
+#include "tuya_tls.h"
 #include "wifi/wifi_manager.h"
 
 #include "cJSON.h"
+#include "netmgr.h"
 #include "tal_fs.h"
 #include "tkl_output.h"
 
@@ -42,6 +45,8 @@ static void mimi_runtime_init(void)
 
     (void)tal_sw_timer_init();
     (void)tal_workq_init();
+    (void)tuya_tls_init();
+    (void)tuya_register_center_init();
 
     s_inited = true;
 }
@@ -126,6 +131,59 @@ static OPERATE_RET start_outbound_dispatcher(void)
                                        outbound_dispatch_task, NULL, &cfg);
 }
 
+static void mimi_network_init(void)
+{
+    netmgr_type_e type = 0;
+#if defined(ENABLE_WIFI) && (ENABLE_WIFI == 1)
+    type |= NETCONN_WIFI;
+#endif
+#if defined(ENABLE_WIRED) && (ENABLE_WIRED == 1)
+    type |= NETCONN_WIRED;
+#endif
+#if defined(ENABLE_CELLULAR) && (ENABLE_CELLULAR == 1)
+    type |= NETCONN_CELLULAR;
+#endif
+
+    if (type == 0) {
+        MIMI_LOGW(TAG, "no network type enabled");
+        return;
+    }
+
+    OPERATE_RET rt = netmgr_init(type);
+    if (rt == OPRT_OK) {
+        MIMI_LOGI(TAG, "netmgr initialized, type=0x%x", type);
+    } else {
+        MIMI_LOGW(TAG, "netmgr_init failed: %d", rt);
+    }
+}
+
+static void start_online_services(const char *mode)
+{
+    OPERATE_RET rt = telegram_bot_start();
+    if (rt == OPRT_NOT_FOUND) {
+        MIMI_LOGW(TAG, "telegram token missing, telegram service disabled");
+    } else if (rt != OPRT_OK) {
+        MIMI_LOGW(TAG, "telegram_bot_start failed: %d", rt);
+    }
+
+    rt = agent_loop_start();
+    if (rt != OPRT_OK) {
+        MIMI_LOGW(TAG, "agent_loop_start failed: %d", rt);
+    }
+
+    rt = ws_server_start();
+    if (rt != OPRT_OK) {
+        MIMI_LOGW(TAG, "ws_server_start failed: %d", rt);
+    }
+
+    rt = start_outbound_dispatcher();
+    if (rt != OPRT_OK) {
+        MIMI_LOGW(TAG, "start_outbound_dispatcher failed: %d", rt);
+    }
+
+    MIMI_LOGI(TAG, "online services started in %s mode", mode ? mode : "unknown");
+}
+
 void mimi_app_main(void)
 {
     mimi_runtime_init();
@@ -145,11 +203,17 @@ void mimi_app_main(void)
     (void)llm_proxy_init();
     (void)tool_registry_init();
     (void)agent_loop_init();
+
+#if OPERATING_SYSTEM == SYSTEM_LINUX
+    MIMI_LOGI(TAG, "serial CLI disabled on Linux host");
+#else
     (void)serial_cli_init();
+#endif
 
 #if defined(ENABLE_LIBLWIP) && (ENABLE_LIBLWIP == 1)
     TUYA_LwIP_Init();
 #endif
+    mimi_network_init();
 
 #if defined(ENABLE_WIFI) && (ENABLE_WIFI == 1)
     OPERATE_RET wifi_rt = wifi_manager_start();
@@ -160,26 +224,7 @@ void mimi_app_main(void)
 
         if (wifi_manager_wait_connected(30000) == OPRT_OK) {
             MIMI_LOGI(TAG, "WiFi connected: %s", wifi_manager_get_ip());
-
-            OPERATE_RET rt = telegram_bot_start();
-            if (rt != OPRT_OK) {
-                MIMI_LOGW(TAG, "telegram_bot_start failed: %d", rt);
-            }
-
-            rt = agent_loop_start();
-            if (rt != OPRT_OK) {
-                MIMI_LOGW(TAG, "agent_loop_start failed: %d", rt);
-            }
-
-            rt = ws_server_start();
-            if (rt != OPRT_OK) {
-                MIMI_LOGW(TAG, "ws_server_start failed: %d", rt);
-            }
-
-            rt = start_outbound_dispatcher();
-            if (rt != OPRT_OK) {
-                MIMI_LOGW(TAG, "start_outbound_dispatcher failed: %d", rt);
-            }
+            start_online_services("wifi");
         } else {
             MIMI_LOGW(TAG, "WiFi connection timeout. Check MIMI_SECRET_WIFI_SSID in mimi_secrets.h");
         }
@@ -191,7 +236,12 @@ void mimi_app_main(void)
         }
     }
 #else
-    MIMI_LOGW(TAG, "ENABLE_WIFI disabled, skip WiFi connect and network services");
+#if defined(ENABLE_WIRED) && (ENABLE_WIRED == 1)
+    MIMI_LOGI(TAG, "ENABLE_WIFI disabled, start online services with wired network");
+    start_online_services("wired");
+#else
+    MIMI_LOGW(TAG, "both WiFi and wired are disabled, skip network services");
+#endif
 #endif
 
     MIMI_LOGI(TAG, "MimiClaw started");

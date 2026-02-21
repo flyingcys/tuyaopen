@@ -1,10 +1,15 @@
 #include "http_proxy.h"
 
+#include "iotdns.h"
 #include "mimi_config.h"
+#include "tal_network.h"
 #include "tuya_transporter.h"
+#include "tuya_tls.h"
 
 struct proxy_conn {
     tuya_transporter_t tcp;
+    tuya_tls_hander tls;
+    int socket_fd;
 };
 
 static const char *TAG = "proxy";
@@ -36,7 +41,7 @@ static int parse_http_status(const char *header)
     return atoi(sp + 1);
 }
 
-static int proxy_write_all(tuya_transporter_t tcp, const char *data, int len, int timeout_ms)
+static int proxy_write_all_tcp(tuya_transporter_t tcp, const char *data, int len, int timeout_ms)
 {
     int sent = 0;
     while (sent < len) {
@@ -193,7 +198,7 @@ proxy_conn_t *proxy_conn_open(const char *host, int port, int timeout_ms)
         return NULL;
     }
 
-    if (proxy_write_all(conn->tcp, req, req_len, timeout_ms) != req_len) {
+    if (proxy_write_all_tcp(conn->tcp, req, req_len, timeout_ms) != req_len) {
         MIMI_LOGE(TAG, "send CONNECT failed");
         tuya_transporter_close(conn->tcp);
         tuya_transporter_destroy(conn->tcp);
@@ -220,25 +225,108 @@ proxy_conn_t *proxy_conn_open(const char *host, int port, int timeout_ms)
         return NULL;
     }
 
-    MIMI_LOGI(TAG, "CONNECT tunnel ready %s:%d via %s:%u", host, port, s_proxy_host, s_proxy_port);
+    rt = tuya_transporter_ctrl(conn->tcp, TUYA_TRANSPORTER_GET_TCP_SOCKET, &conn->socket_fd);
+    if (rt != OPRT_OK || conn->socket_fd < 0) {
+        MIMI_LOGE(TAG, "get proxy socket failed rt=%d fd=%d", rt, conn->socket_fd);
+        tuya_transporter_close(conn->tcp);
+        tuya_transporter_destroy(conn->tcp);
+        free(conn);
+        return NULL;
+    }
+
+    uint8_t *cacert = NULL;
+    uint16_t cacert_len = 0;
+    bool verify_peer = false;
+    rt = tuya_iotdns_query_domain_certs((char *)host, &cacert, &cacert_len);
+    if (rt == OPRT_OK && cacert && cacert_len > 0) {
+        verify_peer = true;
+    } else {
+#if OPERATING_SYSTEM == SYSTEM_LINUX
+        MIMI_LOGW(TAG, "proxy tls cert unavailable for %s, fallback to no-verify mode", host);
+#else
+        MIMI_LOGE(TAG, "proxy tls query cert failed host=%s rt=%d", host, rt);
+        if (cacert) {
+            tal_free(cacert);
+        }
+        tuya_transporter_close(conn->tcp);
+        tuya_transporter_destroy(conn->tcp);
+        free(conn);
+        return NULL;
+#endif
+    }
+
+    conn->tls = tuya_tls_connect_create();
+    if (!conn->tls) {
+        MIMI_LOGE(TAG, "create tls handler failed");
+        if (cacert) {
+            tal_free(cacert);
+        }
+        tuya_transporter_close(conn->tcp);
+        tuya_transporter_destroy(conn->tcp);
+        free(conn);
+        return NULL;
+    }
+
+    int timeout_s = timeout_ms / 1000;
+    if (timeout_s <= 0) {
+        timeout_s = 1;
+    }
+
+    tuya_tls_config_t cfg_tls = {
+        .mode = TUYA_TLS_SERVER_CERT_MODE,
+        .hostname = (char *)host,
+        .port = (uint32_t)port,
+        .timeout = timeout_s,
+        .verify = verify_peer,
+        .ca_cert = verify_peer ? (char *)cacert : NULL,
+        .ca_cert_size = verify_peer ? cacert_len : 0,
+    };
+
+    (void)tuya_tls_config_set(conn->tls, &cfg_tls);
+    rt = tuya_tls_connect(conn->tls, (char *)host, port, conn->socket_fd, timeout_s);
+    if (cacert) {
+        tal_free(cacert);
+    }
+    if (rt != OPRT_OK) {
+        MIMI_LOGE(TAG, "proxy tls connect failed host=%s rt=%d", host, rt);
+        tuya_tls_connect_destroy(conn->tls);
+        conn->tls = NULL;
+        tuya_transporter_close(conn->tcp);
+        tuya_transporter_destroy(conn->tcp);
+        free(conn);
+        return NULL;
+    }
+
+    MIMI_LOGI(TAG, "CONNECT+TLS tunnel ready %s:%d via %s:%u", host, port, s_proxy_host, s_proxy_port);
     return conn;
 }
 
 int proxy_conn_write(proxy_conn_t *conn, const char *data, int len)
 {
-    if (!conn || !conn->tcp || !data || len <= 0) {
+    if (!conn || !conn->tls || !data || len <= 0) {
         return -1;
     }
-    return proxy_write_all(conn->tcp, data, len, 5000);
+
+    int sent = 0;
+    while (sent < len) {
+        int n = tuya_tls_write(conn->tls, (uint8_t *)data + sent, (uint32_t)(len - sent));
+        if (n <= 0) {
+            return -1;
+        }
+        sent += n;
+    }
+
+    return sent;
 }
 
 int proxy_conn_read(proxy_conn_t *conn, char *buf, int len, int timeout_ms)
 {
-    if (!conn || !conn->tcp || !buf || len <= 0 || timeout_ms <= 0) {
+    if (!conn || !conn->tls || conn->socket_fd < 0 || !buf || len <= 0 || timeout_ms <= 0) {
         return -1;
     }
 
-    int n = tuya_transporter_read(conn->tcp, (uint8_t *)buf, len, timeout_ms);
+    (void)tal_net_set_timeout(conn->socket_fd, timeout_ms, TRANS_RECV);
+    int n = tuya_tls_read(conn->tls, (uint8_t *)buf, (uint32_t)len);
     if (n == OPRT_RESOURCE_NOT_READY) {
         return 0;
     }
@@ -253,10 +341,16 @@ void proxy_conn_close(proxy_conn_t *conn)
     if (!conn) {
         return;
     }
+    if (conn->tls) {
+        (void)tuya_tls_disconnect(conn->tls);
+        tuya_tls_connect_destroy(conn->tls);
+        conn->tls = NULL;
+    }
     if (conn->tcp) {
         (void)tuya_transporter_close(conn->tcp);
         (void)tuya_transporter_destroy(conn->tcp);
         conn->tcp = NULL;
     }
+    conn->socket_fd = -1;
     free(conn);
 }

@@ -5,6 +5,7 @@
 #include "http_client_interface.h"
 #include "iotdns.h"
 #include "mimi_config.h"
+#include "proxy/http_proxy.h"
 
 static const char *TAG = "telegram";
 static char s_bot_token[128] = {0};
@@ -13,7 +14,7 @@ static THREAD_HANDLE s_poll_thread = NULL;
 static uint8_t *s_tg_cacert = NULL;
 static uint16_t s_tg_cacert_len = 0;
 
-#define TG_HOST "api.telegram.org"
+#define TG_HOST MIMI_TG_API_HOST
 #define TG_HTTP_TIMEOUT_MS ((MIMI_TG_POLL_TIMEOUT_S + 5) * 1000)
 #define TG_HTTP_RESP_BUF_SIZE (16 * 1024)
 
@@ -37,20 +38,131 @@ static OPERATE_RET ensure_tg_cert(void)
 
     OPERATE_RET rt = tuya_iotdns_query_domain_certs((char *)TG_HOST, &s_tg_cacert, &s_tg_cacert_len);
     if (rt != OPRT_OK || !s_tg_cacert || s_tg_cacert_len == 0) {
+#if OPERATING_SYSTEM == SYSTEM_LINUX
+        s_tg_cacert = NULL;
+        s_tg_cacert_len = 0;
+        MIMI_LOGW(TAG, "cert unavailable for %s, fallback to Linux TLS no-verify mode", TG_HOST);
+        return OPRT_OK;
+#else
         MIMI_LOGE(TAG, "query cert failed rt=%d", rt);
         return (rt == OPRT_OK) ? OPRT_COM_ERROR : rt;
+#endif
     }
 
     return OPRT_OK;
 }
 
-static OPERATE_RET tg_http_call(const char *path, const char *post_data,
-                                char *resp_buf, size_t resp_buf_size, uint16_t *status_code)
+static uint16_t parse_http_status_code(const char *raw_resp)
 {
-    if (!path || !resp_buf || resp_buf_size == 0) {
-        return OPRT_INVALID_PARM;
+    if (!raw_resp || strncmp(raw_resp, "HTTP/", 5) != 0) {
+        return 0;
     }
 
+    const char *sp = strchr(raw_resp, ' ');
+    if (!sp) {
+        return 0;
+    }
+    return (uint16_t)atoi(sp + 1);
+}
+
+static OPERATE_RET tg_http_call_via_proxy(const char *path, const char *post_data,
+                                          char *resp_buf, size_t resp_buf_size, uint16_t *status_code)
+{
+    proxy_conn_t *conn = proxy_conn_open(TG_HOST, 443, TG_HTTP_TIMEOUT_MS);
+    if (!conn) {
+        MIMI_LOGE(TAG, "proxy open failed host=%s", TG_HOST);
+        return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
+    }
+
+    int body_len = post_data ? (int)strlen(post_data) : 0;
+    char req_header[768] = {0};
+    int req_len = 0;
+    if (post_data) {
+        req_len = snprintf(req_header, sizeof(req_header),
+                           "POST %s HTTP/1.1\r\n"
+                           "Host: %s\r\n"
+                           "Content-Type: application/json\r\n"
+                           "Content-Length: %d\r\n"
+                           "Connection: close\r\n\r\n",
+                           path, TG_HOST, body_len);
+    } else {
+        req_len = snprintf(req_header, sizeof(req_header),
+                           "GET %s HTTP/1.1\r\n"
+                           "Host: %s\r\n"
+                           "Connection: close\r\n\r\n",
+                           path, TG_HOST);
+    }
+    if (req_len <= 0 || req_len >= (int)sizeof(req_header)) {
+        proxy_conn_close(conn);
+        return OPRT_BUFFER_NOT_ENOUGH;
+    }
+
+    if (proxy_conn_write(conn, req_header, req_len) != req_len) {
+        proxy_conn_close(conn);
+        return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
+    }
+    if (body_len > 0 && proxy_conn_write(conn, post_data, body_len) != body_len) {
+        proxy_conn_close(conn);
+        return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
+    }
+
+    size_t raw_cap = 4096;
+    size_t raw_len = 0;
+    char *raw = calloc(1, raw_cap);
+    if (!raw) {
+        proxy_conn_close(conn);
+        return OPRT_MALLOC_FAILED;
+    }
+
+    while (1) {
+        if (raw_len + 1024 >= raw_cap) {
+            size_t new_cap = raw_cap * 2;
+            char *tmp = realloc(raw, new_cap);
+            if (!tmp) {
+                free(raw);
+                proxy_conn_close(conn);
+                return OPRT_MALLOC_FAILED;
+            }
+            raw = tmp;
+            raw_cap = new_cap;
+        }
+
+        int n = proxy_conn_read(conn, raw + raw_len, (int)(raw_cap - raw_len - 1), TG_HTTP_TIMEOUT_MS);
+        if (n < 0) {
+            free(raw);
+            proxy_conn_close(conn);
+            return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
+        }
+        if (n == 0) {
+            break;
+        }
+
+        raw_len += (size_t)n;
+        raw[raw_len] = '\0';
+    }
+    proxy_conn_close(conn);
+
+    if (status_code) {
+        *status_code = parse_http_status_code(raw);
+    }
+
+    resp_buf[0] = '\0';
+    char *body = strstr(raw, "\r\n\r\n");
+    if (body) {
+        body += 4;
+        size_t body_len_sz = strlen(body);
+        size_t copy = (body_len_sz < resp_buf_size - 1) ? body_len_sz : (resp_buf_size - 1);
+        memcpy(resp_buf, body, copy);
+        resp_buf[copy] = '\0';
+    }
+    free(raw);
+
+    return OPRT_OK;
+}
+
+static OPERATE_RET tg_http_call_direct(const char *path, const char *post_data,
+                                       char *resp_buf, size_t resp_buf_size, uint16_t *status_code)
+{
     OPERATE_RET rt = ensure_tg_cert();
     if (rt != OPRT_OK) {
         return rt;
@@ -99,6 +211,20 @@ static OPERATE_RET tg_http_call(const char *path, const char *post_data,
 
     http_client_free(&response);
     return OPRT_OK;
+}
+
+static OPERATE_RET tg_http_call(const char *path, const char *post_data,
+                                char *resp_buf, size_t resp_buf_size, uint16_t *status_code)
+{
+    if (!path || !resp_buf || resp_buf_size == 0) {
+        return OPRT_INVALID_PARM;
+    }
+
+    if (http_proxy_is_enabled()) {
+        return tg_http_call_via_proxy(path, post_data, resp_buf, resp_buf_size, status_code);
+    }
+
+    return tg_http_call_direct(path, post_data, resp_buf, resp_buf_size, status_code);
 }
 
 static bool tg_response_ok(const char *json_str)
@@ -179,10 +305,12 @@ static void process_updates(const char *json_str)
 static void telegram_poll_task(void *arg)
 {
     (void)arg;
-    MIMI_LOGI(TAG, "telegram poll task started");
+    uint32_t fail_delay_ms = MIMI_TG_FAIL_BASE_MS;
+    MIMI_LOGI(TAG, "telegram poll task started host=%s", TG_HOST);
 
     while (1) {
         if (s_bot_token[0] == '\0') {
+            fail_delay_ms = MIMI_TG_FAIL_BASE_MS;
             tal_system_sleep(3000);
             continue;
         }
@@ -192,6 +320,7 @@ static void telegram_poll_task(void *arg)
                          s_bot_token, (long long)s_update_offset, MIMI_TG_POLL_TIMEOUT_S);
         if (n <= 0 || (size_t)n >= sizeof(path)) {
             MIMI_LOGE(TAG, "getUpdates path too long");
+            fail_delay_ms = MIMI_TG_FAIL_BASE_MS;
             tal_system_sleep(3000);
             continue;
         }
@@ -200,11 +329,16 @@ static void telegram_poll_task(void *arg)
         uint16_t status = 0;
         OPERATE_RET rt = tg_http_call(path, NULL, resp, sizeof(resp), &status);
         if (rt != OPRT_OK || status != 200) {
-            MIMI_LOGW(TAG, "getUpdates failed rt=%d http=%u", rt, status);
-            tal_system_sleep(2000);
+            MIMI_LOGW(TAG, "getUpdates failed rt=%d http=%u retry_in_ms=%u", rt, status, fail_delay_ms);
+            tal_system_sleep(fail_delay_ms);
+            if (fail_delay_ms < MIMI_TG_FAIL_MAX_MS) {
+                uint32_t next_delay = fail_delay_ms << 1;
+                fail_delay_ms = (next_delay > MIMI_TG_FAIL_MAX_MS) ? MIMI_TG_FAIL_MAX_MS : next_delay;
+            }
             continue;
         }
 
+        fail_delay_ms = MIMI_TG_FAIL_BASE_MS;
         process_updates(resp);
     }
 }

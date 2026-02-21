@@ -68,8 +68,14 @@ static OPERATE_RET ensure_provider_cert(void)
 
     OPERATE_RET rt = tuya_iotdns_query_domain_certs((char *)llm_api_host(), &cert, cert_len);
     if (rt != OPRT_OK || !cert || *cert_len == 0) {
+#if OPERATING_SYSTEM == SYSTEM_LINUX
+        MIMI_LOGW(TAG, "cert unavailable for %s, fallback to Linux TLS no-verify mode", llm_api_host());
+        cert = NULL;
+        *cert_len = 0;
+#else
         MIMI_LOGE(TAG, "query cert failed host=%s rt=%d", llm_api_host(), rt);
         return (rt == OPRT_OK) ? OPRT_COM_ERROR : rt;
+#endif
     }
 
     if (provider_is_openai()) {

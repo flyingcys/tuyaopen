@@ -81,21 +81,41 @@ http_client_status_t http_client_request(const http_client_request_t *request, h
 
     /* TLS pre init */
     NetworkContext_t network;
-    TUYA_TRANSPORT_TYPE_E transport_type = (request->cacert == NULL) ? TRANSPORT_TYPE_TCP : TRANSPORT_TYPE_TLS;
+    bool has_cacert = (request->cacert != NULL && request->cacert_len > 0);
+    bool allow_insecure_tls = false;
+#if OPERATING_SYSTEM == SYSTEM_LINUX
+    uint16_t target_port = (request->port == 0) ? DEFAULT_HTTPS_PORT : request->port;
+    allow_insecure_tls = (target_port == DEFAULT_HTTPS_PORT);
+#endif
+    TUYA_TRANSPORT_TYPE_E transport_type =
+        (has_cacert || allow_insecure_tls) ? TRANSPORT_TYPE_TLS : TRANSPORT_TYPE_TCP;
     network = tuya_transporter_create(transport_type, NULL);
     if (NULL == network) {
         return HTTP_CLIENT_MALLOC_FAULT;
     }
 
     if (transport_type == TRANSPORT_TYPE_TLS) {
+        bool verify_peer = has_cacert;
+#if OPERATING_SYSTEM == SYSTEM_LINUX
+        if (!verify_peer) {
+            PR_WARN("TLS peer verification disabled for %s:%u", request->host,
+                    (request->port == 0) ? DEFAULT_HTTPS_PORT : request->port);
+        }
+#else
+        if (!verify_peer) {
+            tuya_transporter_destroy(network);
+            return HTTP_CLIENT_SERIALIZE_FAULT;
+        }
+#endif
+
         tuya_tls_config_t tls_config = {
-            .ca_cert = (char *)request->cacert,
-            .ca_cert_size = request->cacert_len,
+            .ca_cert = verify_peer ? (char *)request->cacert : NULL,
+            .ca_cert_size = verify_peer ? request->cacert_len : 0,
             .hostname = (char *)request->host,
             .port = (request->port == 0) ? DEFAULT_HTTPS_PORT : request->port,
             .timeout = request->timeout_ms,
             .mode = TUYA_TLS_SERVER_CERT_MODE,
-            .verify = true,
+            .verify = verify_peer,
         };
 
         ret = tuya_transporter_ctrl(network, TUYA_TRANSPORTER_SET_TLS_CONFIG, &tls_config);

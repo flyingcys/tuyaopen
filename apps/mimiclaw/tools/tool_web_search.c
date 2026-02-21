@@ -37,8 +37,15 @@ static OPERATE_RET ensure_search_cert(void)
 
     OPERATE_RET rt = tuya_iotdns_query_domain_certs((char *)SEARCH_HOST, &s_search_cacert, &s_search_cacert_len);
     if (rt != OPRT_OK || !s_search_cacert || s_search_cacert_len == 0) {
+#if OPERATING_SYSTEM == SYSTEM_LINUX
+        s_search_cacert = NULL;
+        s_search_cacert_len = 0;
+        MIMI_LOGW(TAG, "cert unavailable for %s, fallback to Linux TLS no-verify mode", SEARCH_HOST);
+        return OPRT_OK;
+#else
         MIMI_LOGE(TAG, "query cert failed rt=%d", rt);
         return (rt == OPRT_OK) ? OPRT_COM_ERROR : rt;
+#endif
     }
 
     return OPRT_OK;
