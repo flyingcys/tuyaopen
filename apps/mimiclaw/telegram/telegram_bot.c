@@ -3,9 +3,9 @@
 #include "bus/message_bus.h"
 #include "cJSON.h"
 #include "http_client_interface.h"
-#include "iotdns.h"
 #include "mimi_config.h"
 #include "proxy/http_proxy.h"
+#include "tls_cert_bundle.h"
 
 static const char *TAG = "telegram";
 static char s_bot_token[128] = {0};
@@ -17,6 +17,9 @@ static uint16_t s_tg_cacert_len = 0;
 #define TG_HOST MIMI_TG_API_HOST
 #define TG_HTTP_TIMEOUT_MS ((MIMI_TG_POLL_TIMEOUT_S + 5) * 1000)
 #define TG_HTTP_RESP_BUF_SIZE (16 * 1024)
+#define TG_PROXY_READ_SLICE_MS 1000
+#define TG_PROXY_READ_TOTAL_MS ((MIMI_TG_POLL_TIMEOUT_S + 20) * 1000)
+#define TG_PROXY_LONGPOLL_TIMEOUT_S 20
 
 static void safe_copy(char *dst, size_t dst_size, const char *src)
 {
@@ -36,7 +39,7 @@ static OPERATE_RET ensure_tg_cert(void)
         return OPRT_OK;
     }
 
-    OPERATE_RET rt = tuya_iotdns_query_domain_certs((char *)TG_HOST, &s_tg_cacert, &s_tg_cacert_len);
+    OPERATE_RET rt = mimi_tls_query_domain_certs(TG_HOST, &s_tg_cacert, &s_tg_cacert_len);
     if (rt != OPRT_OK || !s_tg_cacert || s_tg_cacert_len == 0) {
 #if OPERATING_SYSTEM == SYSTEM_LINUX
         s_tg_cacert = NULL;
@@ -114,6 +117,7 @@ static OPERATE_RET tg_http_call_via_proxy(const char *path, const char *post_dat
         return OPRT_MALLOC_FAILED;
     }
 
+    uint32_t wait_begin_ms = tal_system_get_millisecond();
     while (1) {
         if (raw_len + 1024 >= raw_cap) {
             size_t new_cap = raw_cap * 2;
@@ -127,8 +131,20 @@ static OPERATE_RET tg_http_call_via_proxy(const char *path, const char *post_dat
             raw_cap = new_cap;
         }
 
-        int n = proxy_conn_read(conn, raw + raw_len, (int)(raw_cap - raw_len - 1), TG_HTTP_TIMEOUT_MS);
+        int n = proxy_conn_read(conn, raw + raw_len, (int)(raw_cap - raw_len - 1), TG_PROXY_READ_SLICE_MS);
+        if (n == OPRT_RESOURCE_NOT_READY) {
+            if ((int)(tal_system_get_millisecond() - wait_begin_ms) >= TG_PROXY_READ_TOTAL_MS) {
+                free(raw);
+                proxy_conn_close(conn);
+                return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
+            }
+            continue;
+        }
         if (n < 0) {
+            if (raw_len > 0) {
+                MIMI_LOGW(TAG, "proxy read closed with rt=%d, parse partial response len=%u", n, (unsigned)raw_len);
+                break;
+            }
             free(raw);
             proxy_conn_close(conn);
             return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
@@ -139,8 +155,14 @@ static OPERATE_RET tg_http_call_via_proxy(const char *path, const char *post_dat
 
         raw_len += (size_t)n;
         raw[raw_len] = '\0';
+        wait_begin_ms = tal_system_get_millisecond();
     }
     proxy_conn_close(conn);
+
+    if (raw_len == 0) {
+        free(raw);
+        return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
+    }
 
     if (status_code) {
         *status_code = parse_http_status_code(raw);
@@ -306,6 +328,12 @@ static void telegram_poll_task(void *arg)
 {
     (void)arg;
     uint32_t fail_delay_ms = MIMI_TG_FAIL_BASE_MS;
+    char *resp = tal_malloc(TG_HTTP_RESP_BUF_SIZE);
+    if (!resp) {
+        MIMI_LOGE(TAG, "alloc telegram poll resp buffer failed");
+        return;
+    }
+
     MIMI_LOGI(TAG, "telegram poll task started host=%s", TG_HOST);
 
     while (1) {
@@ -315,9 +343,14 @@ static void telegram_poll_task(void *arg)
             continue;
         }
 
+        int poll_timeout_s = MIMI_TG_POLL_TIMEOUT_S;
+        if (http_proxy_is_enabled() && poll_timeout_s > TG_PROXY_LONGPOLL_TIMEOUT_S) {
+            poll_timeout_s = TG_PROXY_LONGPOLL_TIMEOUT_S;
+        }
+
         char path[320] = {0};
         int n = snprintf(path, sizeof(path), "/bot%s/getUpdates?offset=%lld&timeout=%d",
-                         s_bot_token, (long long)s_update_offset, MIMI_TG_POLL_TIMEOUT_S);
+                         s_bot_token, (long long)s_update_offset, poll_timeout_s);
         if (n <= 0 || (size_t)n >= sizeof(path)) {
             MIMI_LOGE(TAG, "getUpdates path too long");
             fail_delay_ms = MIMI_TG_FAIL_BASE_MS;
@@ -325,9 +358,9 @@ static void telegram_poll_task(void *arg)
             continue;
         }
 
-        char resp[TG_HTTP_RESP_BUF_SIZE] = {0};
+        memset(resp, 0, TG_HTTP_RESP_BUF_SIZE);
         uint16_t status = 0;
-        OPERATE_RET rt = tg_http_call(path, NULL, resp, sizeof(resp), &status);
+        OPERATE_RET rt = tg_http_call(path, NULL, resp, TG_HTTP_RESP_BUF_SIZE, &status);
         if (rt != OPRT_OK || status != 200) {
             MIMI_LOGW(TAG, "getUpdates failed rt=%d http=%u retry_in_ms=%u", rt, status, fail_delay_ms);
             tal_system_sleep(fail_delay_ms);
@@ -341,6 +374,8 @@ static void telegram_poll_task(void *arg)
         fail_delay_ms = MIMI_TG_FAIL_BASE_MS;
         process_updates(resp);
     }
+
+    tal_free(resp);
 }
 
 OPERATE_RET telegram_bot_init(void)
@@ -433,17 +468,25 @@ OPERATE_RET telegram_send_message(const char *chat_id, const char *text)
             return OPRT_BUFFER_NOT_ENOUGH;
         }
 
-        char resp[TG_HTTP_RESP_BUF_SIZE] = {0};
+        char *resp = tal_malloc(TG_HTTP_RESP_BUF_SIZE);
+        if (!resp) {
+            free(segment);
+            free(json);
+            return OPRT_MALLOC_FAILED;
+        }
+        memset(resp, 0, TG_HTTP_RESP_BUF_SIZE);
+
         uint16_t status = 0;
         OPERATE_RET rt = OPRT_MALLOC_FAILED;
         if (json) {
-            rt = tg_http_call(path, json, resp, sizeof(resp), &status);
+            rt = tg_http_call(path, json, resp, TG_HTTP_RESP_BUF_SIZE, &status);
         }
         free(json);
 
         if (rt != OPRT_OK || status != 200 || !tg_response_ok(resp)) {
             cJSON *body2 = cJSON_CreateObject();
             if (!body2) {
+                tal_free(resp);
                 free(segment);
                 return OPRT_MALLOC_FAILED;
             }
@@ -453,20 +496,23 @@ OPERATE_RET telegram_send_message(const char *chat_id, const char *text)
             cJSON_Delete(body2);
 
             if (!json2) {
+                tal_free(resp);
                 free(segment);
                 return OPRT_MALLOC_FAILED;
             }
 
-            memset(resp, 0, sizeof(resp));
+            memset(resp, 0, TG_HTTP_RESP_BUF_SIZE);
             status = 0;
-            rt = tg_http_call(path, json2, resp, sizeof(resp), &status);
+            rt = tg_http_call(path, json2, resp, TG_HTTP_RESP_BUF_SIZE, &status);
             free(json2);
             if (rt != OPRT_OK || status != 200 || !tg_response_ok(resp)) {
+                tal_free(resp);
                 free(segment);
                 return OPRT_COM_ERROR;
             }
         }
 
+        tal_free(resp);
         free(segment);
         if (text_len == 0) {
             break;

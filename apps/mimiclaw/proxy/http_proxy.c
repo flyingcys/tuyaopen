@@ -1,10 +1,11 @@
 #include "http_proxy.h"
 
-#include "iotdns.h"
 #include "mimi_config.h"
 #include "tal_network.h"
+#include "tls_cert_bundle.h"
 #include "tuya_transporter.h"
 #include "tuya_tls.h"
+#include "mbedtls/ssl.h"
 
 struct proxy_conn {
     tuya_transporter_t tcp;
@@ -237,7 +238,7 @@ proxy_conn_t *proxy_conn_open(const char *host, int port, int timeout_ms)
     uint8_t *cacert = NULL;
     uint16_t cacert_len = 0;
     bool verify_peer = false;
-    rt = tuya_iotdns_query_domain_certs((char *)host, &cacert, &cacert_len);
+    rt = mimi_tls_query_domain_certs(host, &cacert, &cacert_len);
     if (rt == OPRT_OK && cacert && cacert_len > 0) {
         verify_peer = true;
     } else {
@@ -325,13 +326,27 @@ int proxy_conn_read(proxy_conn_t *conn, char *buf, int len, int timeout_ms)
         return -1;
     }
 
-    (void)tal_net_set_timeout(conn->socket_fd, timeout_ms, TRANS_RECV);
+    TUYA_FD_SET_T readfds;
+    tal_net_fd_zero(&readfds);
+    tal_net_fd_set(conn->socket_fd, &readfds);
+    int ready = tal_net_select(conn->socket_fd + 1, &readfds, NULL, NULL, timeout_ms);
+    if (ready < 0) {
+        return -1;
+    }
+    if (ready == 0) {
+        return OPRT_RESOURCE_NOT_READY;
+    }
+
     int n = tuya_tls_read(conn->tls, (uint8_t *)buf, (uint32_t)len);
-    if (n == OPRT_RESOURCE_NOT_READY) {
+    if (n > 0) {
+        return n;
+    }
+    if (n == 0 || n == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
         return 0;
     }
-    if (n <= 0) {
-        return -1;
+    if (n == OPRT_RESOURCE_NOT_READY || n == MBEDTLS_ERR_SSL_WANT_READ ||
+        n == MBEDTLS_ERR_SSL_WANT_WRITE || n == MBEDTLS_ERR_SSL_TIMEOUT || n == -100) {
+        return OPRT_RESOURCE_NOT_READY;
     }
     return n;
 }

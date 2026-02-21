@@ -134,9 +134,6 @@ static OPERATE_RET start_outbound_dispatcher(void)
 static void mimi_network_init(void)
 {
     netmgr_type_e type = 0;
-#if defined(ENABLE_WIFI) && (ENABLE_WIFI == 1)
-    type |= NETCONN_WIFI;
-#endif
 #if defined(ENABLE_WIRED) && (ENABLE_WIRED == 1)
     type |= NETCONN_WIRED;
 #endif
@@ -145,13 +142,13 @@ static void mimi_network_init(void)
 #endif
 
     if (type == 0) {
-        MIMI_LOGW(TAG, "no network type enabled");
+        MIMI_LOGI(TAG, "skip netmgr init: wifi handled by wifi_manager");
         return;
     }
 
     OPERATE_RET rt = netmgr_init(type);
     if (rt == OPRT_OK) {
-        MIMI_LOGI(TAG, "netmgr initialized, type=0x%x", type);
+        MIMI_LOGI(TAG, "netmgr initialized (non-wifi), type=0x%x", type);
     } else {
         MIMI_LOGW(TAG, "netmgr_init failed: %d", rt);
     }
@@ -218,8 +215,7 @@ void mimi_app_main(void)
 #if defined(ENABLE_WIFI) && (ENABLE_WIFI == 1)
     OPERATE_RET wifi_rt = wifi_manager_start();
     if (wifi_rt == OPRT_OK) {
-        MIMI_LOGI(TAG, "scanning nearby APs on boot...");
-        wifi_manager_scan_and_print();
+        MIMI_LOGI(TAG, "current target ssid: %s", wifi_manager_get_target_ssid());
         MIMI_LOGI(TAG, "waiting for WiFi connection...");
 
         if (wifi_manager_wait_connected(30000) == OPRT_OK) {

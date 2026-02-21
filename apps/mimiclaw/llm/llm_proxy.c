@@ -1,7 +1,7 @@
 #include "llm_proxy.h"
 
 #include "http_client_interface.h"
-#include "iotdns.h"
+#include "tls_cert_bundle.h"
 
 static const char *TAG = "llm";
 
@@ -66,7 +66,7 @@ static OPERATE_RET ensure_provider_cert(void)
         return OPRT_COM_ERROR;
     }
 
-    OPERATE_RET rt = tuya_iotdns_query_domain_certs((char *)llm_api_host(), &cert, cert_len);
+    OPERATE_RET rt = mimi_tls_query_domain_certs(llm_api_host(), &cert, cert_len);
     if (rt != OPRT_OK || !cert || *cert_len == 0) {
 #if OPERATING_SYSTEM == SYSTEM_LINUX
         MIMI_LOGW(TAG, "cert unavailable for %s, fallback to Linux TLS no-verify mode", llm_api_host());

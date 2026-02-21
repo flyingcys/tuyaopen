@@ -2,8 +2,8 @@
 
 #include "cJSON.h"
 #include "http_client_interface.h"
-#include "iotdns.h"
 #include "mimi_config.h"
+#include "tls_cert_bundle.h"
 
 static char s_search_key[128] = {0};
 static uint8_t *s_search_cacert = NULL;
@@ -35,7 +35,7 @@ static OPERATE_RET ensure_search_cert(void)
         return OPRT_OK;
     }
 
-    OPERATE_RET rt = tuya_iotdns_query_domain_certs((char *)SEARCH_HOST, &s_search_cacert, &s_search_cacert_len);
+    OPERATE_RET rt = mimi_tls_query_domain_certs(SEARCH_HOST, &s_search_cacert, &s_search_cacert_len);
     if (rt != OPRT_OK || !s_search_cacert || s_search_cacert_len == 0) {
 #if OPERATING_SYSTEM == SYSTEM_LINUX
         s_search_cacert = NULL;

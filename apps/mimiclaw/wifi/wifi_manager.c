@@ -6,8 +6,6 @@ static const char *TAG = "wifi";
 
 #if defined(ENABLE_WIFI) && (ENABLE_WIFI == 1)
 
-#include "netconn_wifi.h"
-#include "netmgr.h"
 #include "tal_wifi.h"
 
 #ifndef WIFI_SSID_LEN
@@ -18,52 +16,21 @@ static const char *TAG = "wifi";
 #define WIFI_PASSWD_LEN 64
 #endif
 
-static bool s_connected = false;
-static bool s_netmgr_ready = false;
+static volatile bool s_connected = false;
+static bool s_wifi_inited = false;
 static char s_ip_str[40] = "0.0.0.0";
+static char s_target_ssid[WIFI_SSID_LEN + 1] = {0};
 
-static OPERATE_RET ensure_netmgr_ready(void)
+static void reset_link_state(void)
 {
-    if (s_netmgr_ready) {
-        return OPRT_OK;
-    }
-
-    netmgr_status_e status = NETMGR_LINK_DOWN;
-    OPERATE_RET rt = netmgr_conn_get(NETCONN_AUTO, NETCONN_CMD_STATUS, &status);
-    if (rt == OPRT_OK || rt == OPRT_NOT_SUPPORTED || rt == OPRT_TIMEOUT) {
-        s_netmgr_ready = true;
-        return OPRT_OK;
-    }
-
-    // follow TuyaOpen demos: init only enabled net types
-    netmgr_type_e type = 0;
-#if defined(ENABLE_WIFI) && (ENABLE_WIFI == 1)
-    type |= NETCONN_WIFI;
-#endif
-#if defined(ENABLE_WIRED) && (ENABLE_WIRED == 1)
-    type |= NETCONN_WIRED;
-#endif
-#if defined(ENABLE_CELLULAR) && (ENABLE_CELLULAR == 1)
-    type |= NETCONN_CELLULAR;
-#endif
-    if (type == 0) {
-        return OPRT_NOT_SUPPORTED;
-    }
-
-    rt = netmgr_init(type);
-    if (rt != OPRT_OK) {
-        MIMI_LOGW(TAG, "netmgr_init failed: %d", rt);
-        return rt;
-    }
-
-    s_netmgr_ready = true;
-    return OPRT_OK;
+    s_connected = false;
+    snprintf(s_ip_str, sizeof(s_ip_str), "0.0.0.0");
 }
 
-static void update_ip_from_netmgr(void)
+static void update_ip_from_wifi(void)
 {
     NW_IP_S ip = {0};
-    if (netmgr_conn_get(NETCONN_AUTO, NETCONN_CMD_IP, &ip) != OPRT_OK) {
+    if (tal_wifi_get_ip(WF_STATION, &ip) != OPRT_OK) {
         snprintf(s_ip_str, sizeof(s_ip_str), "0.0.0.0");
         return;
     }
@@ -75,21 +42,56 @@ static void update_ip_from_netmgr(void)
 #endif
 }
 
+static void wifi_event_callback(WF_EVENT_E event, void *arg)
+{
+    (void)arg;
+
+    switch (event) {
+    case WFE_CONNECTED:
+        s_connected = true;
+        update_ip_from_wifi();
+        MIMI_LOGI(TAG, "wifi connected, ip=%s", s_ip_str);
+        break;
+
+    case WFE_CONNECT_FAILED:
+        reset_link_state();
+        MIMI_LOGW(TAG, "wifi connect failed");
+        break;
+
+    case WFE_DISCONNECTED:
+        reset_link_state();
+        MIMI_LOGW(TAG, "wifi disconnected");
+        break;
+
+    default:
+        break;
+    }
+}
+
 OPERATE_RET wifi_manager_init(void)
 {
-    s_connected = false;
-    snprintf(s_ip_str, sizeof(s_ip_str), "0.0.0.0");
-
-    OPERATE_RET rt = ensure_netmgr_ready();
-    if (rt != OPRT_OK) {
-        MIMI_LOGW(TAG, "wifi manager init degrade: %d", rt);
+    reset_link_state();
+    if (s_wifi_inited) {
+        return OPRT_OK;
     }
 
+    OPERATE_RET rt = tal_wifi_init(wifi_event_callback);
+    if (rt != OPRT_OK) {
+        MIMI_LOGW(TAG, "tal_wifi_init failed: %d", rt);
+        return rt;
+    }
+
+    s_wifi_inited = true;
     return OPRT_OK;
 }
 
 OPERATE_RET wifi_manager_start(void)
 {
+    OPERATE_RET rt = wifi_manager_init();
+    if (rt != OPRT_OK) {
+        return rt;
+    }
+
     char ssid[WIFI_SSID_LEN + 1] = {0};
     char pass[WIFI_PASSWD_LEN + 1] = {0};
 
@@ -105,24 +107,24 @@ OPERATE_RET wifi_manager_start(void)
         return OPRT_NOT_FOUND;
     }
 
-    OPERATE_RET rt = ensure_netmgr_ready();
+    reset_link_state();
+
+    snprintf(s_target_ssid, sizeof(s_target_ssid), "%s", ssid);
+
+    // Keep the same visible connect print style as official STA example.
+    PR_NOTICE("connect wifi ssid: %s", s_target_ssid);
+
+    rt = tal_wifi_set_work_mode(WWM_STATION);
     if (rt != OPRT_OK) {
+        MIMI_LOGW(TAG, "tal_wifi_set_work_mode station failed: %d", rt);
         return rt;
     }
 
-    netconn_wifi_info_t wifi_info = {0};
-    strncpy(wifi_info.ssid, ssid, sizeof(wifi_info.ssid) - 1);
-    strncpy(wifi_info.pswd, pass, sizeof(wifi_info.pswd) - 1);
-
-    rt = netmgr_conn_set(NETCONN_WIFI, NETCONN_CMD_SSID_PSWD, &wifi_info);
+    MIMI_LOGI(TAG, "connecting wifi ssid=%s", s_target_ssid);
+    rt = tal_wifi_station_connect((int8_t *)ssid, (int8_t *)pass);
     if (rt != OPRT_OK) {
-        MIMI_LOGW(TAG, "set wifi credentials to netmgr failed: %d", rt);
+        MIMI_LOGW(TAG, "tal_wifi_station_connect failed: %d", rt);
         return rt;
-    }
-
-    rt = netmgr_conn_set(NETCONN_WIFI, NETCONN_CMD_CLOSE, NULL);
-    if (rt != OPRT_OK) {
-        MIMI_LOGW(TAG, "trigger wifi reconnect failed: %d", rt);
     }
 
     return OPRT_OK;
@@ -130,18 +132,10 @@ OPERATE_RET wifi_manager_start(void)
 
 OPERATE_RET wifi_manager_wait_connected(uint32_t timeout_ms)
 {
-    OPERATE_RET rt = ensure_netmgr_ready();
-    if (rt != OPRT_OK) {
-        return rt;
-    }
-
     uint64_t start = tal_time_get_posix_ms();
     while (1) {
-        netmgr_status_e status = NETMGR_LINK_DOWN;
-        rt = netmgr_conn_get(NETCONN_AUTO, NETCONN_CMD_STATUS, &status);
-        if (rt == OPRT_OK && status == NETMGR_LINK_UP) {
-            s_connected = true;
-            update_ip_from_netmgr();
+        if (s_connected) {
+            update_ip_from_wifi();
             return OPRT_OK;
         }
 
@@ -160,14 +154,8 @@ OPERATE_RET wifi_manager_wait_connected(uint32_t timeout_ms)
 
 bool wifi_manager_is_connected(void)
 {
-    if (ensure_netmgr_ready() == OPRT_OK) {
-        netmgr_status_e status = NETMGR_LINK_DOWN;
-        if (netmgr_conn_get(NETCONN_AUTO, NETCONN_CMD_STATUS, &status) == OPRT_OK) {
-            s_connected = (status == NETMGR_LINK_UP);
-            if (s_connected) {
-                update_ip_from_netmgr();
-            }
-        }
+    if (s_connected) {
+        update_ip_from_wifi();
     }
 
     return s_connected;
@@ -180,6 +168,11 @@ const char *wifi_manager_get_ip(void)
     }
 
     return "0.0.0.0";
+}
+
+const char *wifi_manager_get_target_ssid(void)
+{
+    return s_target_ssid[0] ? s_target_ssid : "<empty>";
 }
 
 OPERATE_RET wifi_manager_set_credentials(const char *ssid, const char *password)
@@ -203,16 +196,10 @@ OPERATE_RET wifi_manager_set_credentials(const char *ssid, const char *password)
 
 void wifi_manager_scan_and_print(void)
 {
-    OPERATE_RET rt = ensure_netmgr_ready();
-    if (rt != OPRT_OK) {
-        MIMI_LOGW(TAG, "scan unavailable, netmgr not ready: %d", rt);
-        return;
-    }
-
     AP_IF_S *ap_list = NULL;
     uint32_t ap_num = 0;
 
-    rt = tal_wifi_all_ap_scan(&ap_list, &ap_num);
+    OPERATE_RET rt = tal_wifi_all_ap_scan(&ap_list, &ap_num);
     if (rt != OPRT_OK) {
         MIMI_LOGW(TAG, "wifi scan failed: %d", rt);
         return;

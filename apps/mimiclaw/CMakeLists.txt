@@ -20,6 +20,7 @@ set(APP_SRCS
     ${APP_PATH}/cli/serial_cli.c
     ${APP_PATH}/ota/ota_manager.c
     ${APP_PATH}/proxy/http_proxy.c
+    ${APP_PATH}/tls_cert_bundle.c
     ${APP_PATH}/tools/tool_registry.c
     ${APP_PATH}/tools/tool_web_search.c
     ${APP_PATH}/tools/tool_get_time.c
