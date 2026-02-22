@@ -14,6 +14,15 @@ static THREAD_HANDLE s_agent_thread = NULL;
 
 #define TOOL_OUTPUT_SIZE (8 * 1024)
 
+static uint32_t bounded_random_index(uint32_t count)
+{
+    if (count == 0) {
+        return 0;
+    }
+
+    return (uint32_t)tal_system_get_random(0xFFFFFFFFu) % count;
+}
+
 static cJSON *build_assistant_content(const llm_response_t *resp)
 {
     cJSON *content = cJSON_CreateArray();
@@ -144,7 +153,8 @@ static void agent_loop_task(void *arg)
             mimi_msg_t status = {0};
             strncpy(status.channel, in_msg.channel, sizeof(status.channel) - 1);
             strncpy(status.chat_id, in_msg.chat_id, sizeof(status.chat_id) - 1);
-            status.content = strdup(working_phrases[tal_system_get_random(phrase_count)]);
+            uint32_t phrase_index = bounded_random_index((uint32_t)phrase_count);
+            status.content = strdup(working_phrases[phrase_index]);
             if (status.content) {
                 if (message_bus_push_outbound(&status) != OPRT_OK) {
                     free(status.content);

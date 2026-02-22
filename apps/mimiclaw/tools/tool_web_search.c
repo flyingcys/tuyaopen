@@ -246,20 +246,28 @@ OPERATE_RET tool_web_search_execute(const char *input_json, char *output, size_t
         return OPRT_BUFFER_NOT_ENOUGH;
     }
 
-    char resp[SEARCH_RESP_BUF_SIZE] = {0};
+    char *resp = tal_malloc(SEARCH_RESP_BUF_SIZE);
+    if (!resp) {
+        snprintf(output, output_size, "Error: alloc search response buffer failed");
+        return OPRT_MALLOC_FAILED;
+    }
+    memset(resp, 0, SEARCH_RESP_BUF_SIZE);
     uint16_t status = 0;
-    OPERATE_RET rt = search_http_call(path, resp, sizeof(resp), &status);
+    OPERATE_RET rt = search_http_call(path, resp, SEARCH_RESP_BUF_SIZE, &status);
     if (rt != OPRT_OK) {
         snprintf(output, output_size, "Error: search request failed (rt=%d)", rt);
+        tal_free(resp);
         return rt;
     }
 
     if (status != 200) {
         snprintf(output, output_size, "Error: search API http=%u", status);
+        tal_free(resp);
         return OPRT_COM_ERROR;
     }
 
     cJSON *root = cJSON_Parse(resp);
+    tal_free(resp);
     if (!root) {
         snprintf(output, output_size, "Error: parse search response failed");
         return OPRT_CJSON_PARSE_ERR;

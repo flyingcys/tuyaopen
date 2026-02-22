@@ -21,6 +21,24 @@ static uint16_t s_tg_cacert_len = 0;
 #define TG_PROXY_READ_TOTAL_MS ((MIMI_TG_POLL_TIMEOUT_S + 20) * 1000)
 #define TG_PROXY_LONGPOLL_TIMEOUT_S 20
 
+static const char *json_string_or_default(cJSON *obj, const char *key, const char *fallback)
+{
+    cJSON *item = obj ? cJSON_GetObjectItem(obj, key) : NULL;
+    return (cJSON_IsString(item) && item->valuestring) ? item->valuestring : fallback;
+}
+
+static uint32_t json_uint_or_default(cJSON *obj, const char *key, uint32_t fallback)
+{
+    cJSON *item = obj ? cJSON_GetObjectItem(obj, key) : NULL;
+    if (!cJSON_IsNumber(item)) {
+        return fallback;
+    }
+    if (item->valuedouble < 0) {
+        return fallback;
+    }
+    return (uint32_t)item->valuedouble;
+}
+
 static void safe_copy(char *dst, size_t dst_size, const char *src)
 {
     if (!dst || dst_size == 0) {
@@ -290,10 +308,9 @@ static void process_updates(const char *json_str)
         }
 
         cJSON *message = cJSON_GetObjectItem(update, "message");
-        cJSON *text = message ? cJSON_GetObjectItem(message, "text") : NULL;
         cJSON *chat = message ? cJSON_GetObjectItem(message, "chat") : NULL;
         cJSON *chat_id = chat ? cJSON_GetObjectItem(chat, "id") : NULL;
-        if (!cJSON_IsString(text) || !text->valuestring || !chat_id) {
+        if (!message || !chat_id) {
             continue;
         }
 
@@ -303,6 +320,28 @@ static void process_updates(const char *json_str)
         } else if (cJSON_IsNumber(chat_id)) {
             snprintf(chat_id_str, sizeof(chat_id_str), "%.0f", chat_id->valuedouble);
         } else {
+            continue;
+        }
+
+        cJSON *text = cJSON_GetObjectItem(message, "text");
+        if (cJSON_IsString(text) && text->valuestring) {
+            MIMI_LOGI(TAG, "rx text chat=%s len=%u text=%s", chat_id_str, (unsigned)strlen(text->valuestring),
+                      text->valuestring);
+        }
+
+        cJSON *document = cJSON_GetObjectItem(message, "document");
+        if (cJSON_IsObject(document)) {
+            const char *file_name = json_string_or_default(document, "file_name", "<empty>");
+            const char *mime_type = json_string_or_default(document, "mime_type", "<empty>");
+            const char *file_id = json_string_or_default(document, "file_id", "<empty>");
+            uint32_t file_size = json_uint_or_default(document, "file_size", 0);
+            const char *caption = json_string_or_default(message, "caption", "");
+            MIMI_LOGI(TAG,
+                      "rx document chat=%s name=%s mime=%s size=%u file_id=%s caption=%s",
+                      chat_id_str, file_name, mime_type, (unsigned)file_size, file_id, caption);
+        }
+
+        if (!cJSON_IsString(text) || !text->valuestring) {
             continue;
         }
 
