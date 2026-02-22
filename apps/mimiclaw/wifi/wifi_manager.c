@@ -20,11 +20,58 @@ static volatile bool s_connected = false;
 static bool s_wifi_inited = false;
 static char s_ip_str[40] = "0.0.0.0";
 static char s_target_ssid[WIFI_SSID_LEN + 1] = {0};
+static char s_target_pass[WIFI_PASSWD_LEN + 1] = {0};
+static volatile bool s_retry_pending = false;
+static uint32_t s_retry_count = 0;
+static uint64_t s_next_retry_ms = 0;
 
 static void reset_link_state(void)
 {
     s_connected = false;
     snprintf(s_ip_str, sizeof(s_ip_str), "0.0.0.0");
+}
+
+static void reset_retry_state(void)
+{
+    s_retry_pending = false;
+    s_retry_count = 0;
+    s_next_retry_ms = 0;
+}
+
+static uint32_t wifi_retry_delay_ms(uint32_t retry_count)
+{
+    uint32_t delay = MIMI_WIFI_RETRY_BASE_MS;
+    while (retry_count > 0 && delay < MIMI_WIFI_RETRY_MAX_MS) {
+        if (delay > (MIMI_WIFI_RETRY_MAX_MS / 2)) {
+            delay = MIMI_WIFI_RETRY_MAX_MS;
+            break;
+        }
+        delay <<= 1;
+        retry_count--;
+    }
+    if (delay > MIMI_WIFI_RETRY_MAX_MS) {
+        delay = MIMI_WIFI_RETRY_MAX_MS;
+    }
+    return delay;
+}
+
+static void schedule_wifi_retry(const char *reason)
+{
+    if (s_target_ssid[0] == '\0') {
+        return;
+    }
+    if (s_retry_count >= MIMI_WIFI_MAX_RETRY) {
+        s_retry_pending = false;
+        MIMI_LOGW(TAG, "wifi retry exhausted (%u), reason=%s", (unsigned)MIMI_WIFI_MAX_RETRY,
+                  reason ? reason : "unknown");
+        return;
+    }
+
+    uint32_t delay_ms = wifi_retry_delay_ms(s_retry_count);
+    s_next_retry_ms = tal_time_get_posix_ms() + delay_ms;
+    s_retry_pending = true;
+    MIMI_LOGW(TAG, "schedule wifi retry %u/%u in %u ms, reason=%s", (unsigned)(s_retry_count + 1),
+              (unsigned)MIMI_WIFI_MAX_RETRY, (unsigned)delay_ms, reason ? reason : "unknown");
 }
 
 static void update_ip_from_wifi(void)
@@ -49,6 +96,7 @@ static void wifi_event_callback(WF_EVENT_E event, void *arg)
     switch (event) {
     case WFE_CONNECTED:
         s_connected = true;
+        reset_retry_state();
         update_ip_from_wifi();
         MIMI_LOGI(TAG, "wifi connected, ip=%s", s_ip_str);
         break;
@@ -56,11 +104,13 @@ static void wifi_event_callback(WF_EVENT_E event, void *arg)
     case WFE_CONNECT_FAILED:
         reset_link_state();
         MIMI_LOGW(TAG, "wifi connect failed");
+        schedule_wifi_retry("connect_failed");
         break;
 
     case WFE_DISCONNECTED:
         reset_link_state();
         MIMI_LOGW(TAG, "wifi disconnected");
+        schedule_wifi_retry("disconnected");
         break;
 
     default:
@@ -108,8 +158,10 @@ OPERATE_RET wifi_manager_start(void)
     }
 
     reset_link_state();
+    reset_retry_state();
 
     snprintf(s_target_ssid, sizeof(s_target_ssid), "%s", ssid);
+    snprintf(s_target_pass, sizeof(s_target_pass), "%s", pass);
 
     // Keep the same visible connect print style as official STA example.
     PR_NOTICE("connect wifi ssid: %s", s_target_ssid);
@@ -124,7 +176,7 @@ OPERATE_RET wifi_manager_start(void)
     rt = tal_wifi_station_connect((int8_t *)ssid, (int8_t *)pass);
     if (rt != OPRT_OK) {
         MIMI_LOGW(TAG, "tal_wifi_station_connect failed: %d", rt);
-        return rt;
+        schedule_wifi_retry("connect_call_failed");
     }
 
     return OPRT_OK;
@@ -139,8 +191,22 @@ OPERATE_RET wifi_manager_wait_connected(uint32_t timeout_ms)
             return OPRT_OK;
         }
 
+        uint64_t now = tal_time_get_posix_ms();
+        if (s_retry_pending && now >= s_next_retry_ms) {
+            s_retry_pending = false;
+            if (s_retry_count < MIMI_WIFI_MAX_RETRY) {
+                s_retry_count++;
+                MIMI_LOGI(TAG, "retrying wifi connect attempt %u/%u ssid=%s", (unsigned)s_retry_count,
+                          (unsigned)MIMI_WIFI_MAX_RETRY, s_target_ssid);
+                OPERATE_RET rt = tal_wifi_station_connect((int8_t *)s_target_ssid, (int8_t *)s_target_pass);
+                if (rt != OPRT_OK) {
+                    MIMI_LOGW(TAG, "retry connect call failed: %d", rt);
+                    schedule_wifi_retry("retry_call_failed");
+                }
+            }
+        }
+
         if (timeout_ms != UINT32_MAX) {
-            uint64_t now = tal_time_get_posix_ms();
             if (now > start && (now - start) >= timeout_ms) {
                 s_connected = false;
                 snprintf(s_ip_str, sizeof(s_ip_str), "0.0.0.0");

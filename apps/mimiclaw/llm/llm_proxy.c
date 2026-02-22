@@ -14,6 +14,15 @@ static uint16_t s_openai_cacert_len = 0;
 static uint8_t *s_anthropic_cacert = NULL;
 static uint16_t s_anthropic_cacert_len = 0;
 
+typedef struct {
+    bool parsed;
+    char host[96];
+    char path[160];
+} llm_endpoint_t;
+
+static llm_endpoint_t s_openai_endpoint = {0};
+static llm_endpoint_t s_anthropic_endpoint = {0};
+
 static void safe_copy(char *dst, size_t dst_size, const char *src)
 {
     if (!dst || dst_size == 0) {
@@ -31,14 +40,69 @@ static bool provider_is_openai(void)
     return strcmp(s_provider, "openai") == 0;
 }
 
+static void parse_endpoint_url(const char *url, llm_endpoint_t *endpoint)
+{
+    if (!endpoint || endpoint->parsed) {
+        return;
+    }
+
+    endpoint->parsed = true;
+    endpoint->host[0] = '\0';
+    snprintf(endpoint->path, sizeof(endpoint->path), "/");
+
+    if (!url || url[0] == '\0') {
+        return;
+    }
+
+    const char *begin = url;
+    const char *scheme = strstr(url, "://");
+    if (scheme) {
+        begin = scheme + 3;
+    }
+
+    size_t host_len = strcspn(begin, "/:");
+    if (host_len == 0) {
+        return;
+    }
+    if (host_len >= sizeof(endpoint->host)) {
+        host_len = sizeof(endpoint->host) - 1;
+    }
+    memcpy(endpoint->host, begin, host_len);
+    endpoint->host[host_len] = '\0';
+
+    const char *path = strchr(begin, '/');
+    if (path && path[0] == '/') {
+        snprintf(endpoint->path, sizeof(endpoint->path), "%s", path);
+    }
+}
+
+static llm_endpoint_t *llm_current_endpoint(void)
+{
+    if (provider_is_openai()) {
+        parse_endpoint_url(MIMI_OPENAI_API_URL, &s_openai_endpoint);
+        return &s_openai_endpoint;
+    }
+
+    parse_endpoint_url(MIMI_LLM_API_URL, &s_anthropic_endpoint);
+    return &s_anthropic_endpoint;
+}
+
 static const char *llm_api_host(void)
 {
-    return provider_is_openai() ? "api.openai.com" : "api.anthropic.com";
+    llm_endpoint_t *endpoint = llm_current_endpoint();
+    if (!endpoint || endpoint->host[0] == '\0') {
+        return NULL;
+    }
+    return endpoint->host;
 }
 
 static const char *llm_api_path(void)
 {
-    return provider_is_openai() ? "/v1/chat/completions" : "/v1/messages";
+    llm_endpoint_t *endpoint = llm_current_endpoint();
+    if (!endpoint || endpoint->path[0] == '\0') {
+        return "/";
+    }
+    return endpoint->path;
 }
 
 static void get_provider_cert(uint8_t **cert, uint16_t **cert_len)
@@ -66,14 +130,20 @@ static OPERATE_RET ensure_provider_cert(void)
         return OPRT_COM_ERROR;
     }
 
-    OPERATE_RET rt = mimi_tls_query_domain_certs(llm_api_host(), &cert, cert_len);
+    const char *host = llm_api_host();
+    if (!host || host[0] == '\0') {
+        MIMI_LOGE(TAG, "invalid llm endpoint host for provider=%s", s_provider);
+        return OPRT_INVALID_PARM;
+    }
+
+    OPERATE_RET rt = mimi_tls_query_domain_certs(host, &cert, cert_len);
     if (rt != OPRT_OK || !cert || *cert_len == 0) {
 #if OPERATING_SYSTEM == SYSTEM_LINUX
-        MIMI_LOGW(TAG, "cert unavailable for %s, fallback to Linux TLS no-verify mode", llm_api_host());
+        MIMI_LOGW(TAG, "cert unavailable for %s, fallback to Linux TLS no-verify mode", host);
         cert = NULL;
         *cert_len = 0;
 #else
-        MIMI_LOGE(TAG, "query cert failed host=%s rt=%d", llm_api_host(), rt);
+        MIMI_LOGE(TAG, "query cert failed host=%s rt=%d", host, rt);
         return (rt == OPRT_OK) ? OPRT_COM_ERROR : rt;
 #endif
     }
@@ -374,6 +444,12 @@ static OPERATE_RET llm_http_call(const char *post_data, char *resp_buf, size_t r
         return OPRT_COM_ERROR;
     }
 
+    const char *host = llm_api_host();
+    const char *path = llm_api_path();
+    if (!host || host[0] == '\0' || !path || path[0] != '/') {
+        return OPRT_INVALID_PARM;
+    }
+
     char auth[192] = {0};
     http_client_header_t headers[4] = {0};
     uint8_t header_count = 0;
@@ -405,10 +481,10 @@ static OPERATE_RET llm_http_call(const char *post_data, char *resp_buf, size_t r
         &(const http_client_request_t){
             .cacert = cacert,
             .cacert_len = *cacert_len,
-            .host = llm_api_host(),
+            .host = host,
             .port = 443,
             .method = "POST",
-            .path = llm_api_path(),
+            .path = path,
             .headers = headers,
             .headers_count = header_count,
             .body = (const uint8_t *)post_data,
@@ -464,7 +540,8 @@ OPERATE_RET llm_proxy_init(void)
         safe_copy(s_provider, sizeof(s_provider), tmp);
     }
 
-    MIMI_LOGI(TAG, "llm init provider=%s model=%s key=%s", s_provider, s_model,
+    MIMI_LOGI(TAG, "llm init provider=%s model=%s host=%s path=%s key=%s", s_provider, s_model,
+              llm_api_host() ? llm_api_host() : "<invalid>", llm_api_path(),
               s_api_key[0] ? "configured" : "empty");
     return OPRT_OK;
 }
@@ -554,22 +631,28 @@ OPERATE_RET llm_chat(const char *system_prompt, const char *messages_json,
         return OPRT_MALLOC_FAILED;
     }
 
-    char raw_resp[MIMI_LLM_STREAM_BUF_SIZE] = {0};
+    char *raw_resp = calloc(1, MIMI_LLM_STREAM_BUF_SIZE);
+    if (!raw_resp) {
+        return OPRT_MALLOC_FAILED;
+    }
     uint16_t status = 0;
-    OPERATE_RET rt = llm_http_call(post_data, raw_resp, sizeof(raw_resp), &status);
+    OPERATE_RET rt = llm_http_call(post_data, raw_resp, MIMI_LLM_STREAM_BUF_SIZE, &status);
     free(post_data);
 
     if (rt != OPRT_OK) {
         snprintf(response_buf, buf_size, "HTTP request failed (rt=%d)", rt);
+        free(raw_resp);
         return rt;
     }
 
     if (status != 200) {
         snprintf(response_buf, buf_size, "API error (HTTP %u): %.300s", status, raw_resp);
+        free(raw_resp);
         return OPRT_COM_ERROR;
     }
 
     cJSON *root = cJSON_Parse(raw_resp);
+    free(raw_resp);
     if (!root) {
         snprintf(response_buf, buf_size, "Error: parse response failed");
         return OPRT_CR_CJSON_ERR;
@@ -668,19 +751,26 @@ OPERATE_RET llm_chat_tools(const char *system_prompt,
         return OPRT_MALLOC_FAILED;
     }
 
-    char raw_resp[MIMI_LLM_STREAM_BUF_SIZE] = {0};
+    char *raw_resp = calloc(1, MIMI_LLM_STREAM_BUF_SIZE);
+    if (!raw_resp) {
+        free(post_data);
+        return OPRT_MALLOC_FAILED;
+    }
     uint16_t status = 0;
-    OPERATE_RET rt = llm_http_call(post_data, raw_resp, sizeof(raw_resp), &status);
+    OPERATE_RET rt = llm_http_call(post_data, raw_resp, MIMI_LLM_STREAM_BUF_SIZE, &status);
     free(post_data);
 
     if (rt != OPRT_OK) {
+        free(raw_resp);
         return rt;
     }
     if (status != 200) {
+        free(raw_resp);
         return OPRT_COM_ERROR;
     }
 
     cJSON *root = cJSON_Parse(raw_resp);
+    free(raw_resp);
     if (!root) {
         return OPRT_CR_CJSON_ERR;
     }
