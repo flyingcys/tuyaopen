@@ -4,8 +4,6 @@
 #include "cJSON.h"
 #include "tal_fs.h"
 
-#include <time.h>
-
 static const char *TAG = "session";
 
 static void session_path(const char *chat_id, char *buf, size_t size)
@@ -41,7 +39,7 @@ OPERATE_RET session_append(const char *chat_id, const char *role, const char *co
 
     cJSON_AddStringToObject(obj, "role", role);
     cJSON_AddStringToObject(obj, "content", content);
-    cJSON_AddNumberToObject(obj, "ts", (double)time(NULL));
+    cJSON_AddNumberToObject(obj, "ts", (double)tal_time_get_posix());
 
     char *line = cJSON_PrintUnformatted(obj);
     cJSON_Delete(obj);
@@ -53,7 +51,7 @@ OPERATE_RET session_append(const char *chat_id, const char *role, const char *co
 
     (void)tal_fwrite(line, (int)strlen(line), f);
     (void)tal_fwrite("\n", 1, f);
-    free(line);
+    cJSON_free(line);
     tal_fclose(f);
     return OPRT_OK;
 }
@@ -62,6 +60,9 @@ OPERATE_RET session_get_history_json(const char *chat_id, char *buf, size_t size
 {
     if (!chat_id || !buf || size == 0 || max_msgs <= 0) {
         return OPRT_INVALID_PARM;
+    }
+    if (max_msgs > MIMI_SESSION_MAX_MSGS) {
+        max_msgs = MIMI_SESSION_MAX_MSGS;
     }
 
     char path[128] = {0};
@@ -133,7 +134,7 @@ OPERATE_RET session_get_history_json(const char *chat_id, char *buf, size_t size
 
     strncpy(buf, json_str, size - 1);
     buf[size - 1] = '\0';
-    free(json_str);
+    cJSON_free(json_str);
     return OPRT_OK;
 }
 

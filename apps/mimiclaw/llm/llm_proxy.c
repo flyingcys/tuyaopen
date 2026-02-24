@@ -315,7 +315,7 @@ static cJSON *convert_messages_openai(const char *system_prompt, cJSON *messages
                     char *args = cJSON_PrintUnformatted(input);
                     if (args) {
                         cJSON_AddStringToObject(func, "arguments", args);
-                        free(args);
+                        cJSON_free(args);
                     }
                 }
                 cJSON_AddItemToObject(tc, "function", func);
@@ -637,7 +637,7 @@ OPERATE_RET llm_chat(const char *system_prompt, const char *messages_json,
     }
     uint16_t status = 0;
     OPERATE_RET rt = llm_http_call(post_data, raw_resp, MIMI_LLM_STREAM_BUF_SIZE, &status);
-    free(post_data);
+    cJSON_free(post_data);
 
     if (rt != OPRT_OK) {
         snprintf(response_buf, buf_size, "HTTP request failed (rt=%d)", rt);
@@ -753,12 +753,12 @@ OPERATE_RET llm_chat_tools(const char *system_prompt,
 
     char *raw_resp = calloc(1, MIMI_LLM_STREAM_BUF_SIZE);
     if (!raw_resp) {
-        free(post_data);
+        cJSON_free(post_data);
         return OPRT_MALLOC_FAILED;
     }
     uint16_t status = 0;
     OPERATE_RET rt = llm_http_call(post_data, raw_resp, MIMI_LLM_STREAM_BUF_SIZE, &status);
-    free(post_data);
+    cJSON_free(post_data);
 
     if (rt != OPRT_OK) {
         free(raw_resp);
@@ -854,8 +854,12 @@ OPERATE_RET llm_chat_tools(const char *system_prompt,
                     strncpy(call->name, name->valuestring, sizeof(call->name) - 1);
                 }
                 if (input) {
-                    call->input = cJSON_PrintUnformatted(input);
-                    call->input_len = call->input ? strlen(call->input) : 0;
+                    char *input_json = cJSON_PrintUnformatted(input);
+                    if (input_json) {
+                        call->input = strdup(input_json);
+                        cJSON_free(input_json);
+                        call->input_len = call->input ? strlen(call->input) : 0;
+                    }
                 }
                 resp->call_count++;
             }

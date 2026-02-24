@@ -117,6 +117,6 @@ OPERATE_RET context_build_messages(const char *history_json, const char *user_me
 
     strncpy(buf, json, size - 1);
     buf[size - 1] = '\0';
-    free(json);
+    cJSON_free(json);
     return OPRT_OK;
 }

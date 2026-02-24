@@ -45,7 +45,10 @@ static void build_tools_json(void)
         cJSON_AddItemToArray(arr, tool);
     }
 
-    free(s_tools_json);
+    if (s_tools_json) {
+        cJSON_free(s_tools_json);
+        s_tools_json = NULL;
+    }
     s_tools_json = cJSON_PrintUnformatted(arr);
     cJSON_Delete(arr);
 }

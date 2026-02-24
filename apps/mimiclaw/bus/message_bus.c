@@ -8,6 +8,10 @@ static QUEUE_HANDLE s_outbound_queue = NULL;
 
 OPERATE_RET message_bus_init(void)
 {
+    if (s_inbound_queue && s_outbound_queue) {
+        return OPRT_OK;
+    }
+
     OPERATE_RET rt = tal_queue_create_init(&s_inbound_queue, sizeof(mimi_msg_t), MIMI_BUS_QUEUE_LEN);
     if (rt != OPRT_OK) {
         MIMI_LOGE(TAG, "create inbound queue failed: %d", rt);
@@ -17,6 +21,8 @@ OPERATE_RET message_bus_init(void)
     rt = tal_queue_create_init(&s_outbound_queue, sizeof(mimi_msg_t), MIMI_BUS_QUEUE_LEN);
     if (rt != OPRT_OK) {
         MIMI_LOGE(TAG, "create outbound queue failed: %d", rt);
+        tal_queue_free(s_inbound_queue);
+        s_inbound_queue = NULL;
         return rt;
     }
 

@@ -584,7 +584,7 @@ static OPERATE_RET ws_send_text_to_client_locked(ws_client_t *client, const char
     }
 
     OPERATE_RET rt = ws_send_frame(client->fd, 0x1, (const uint8_t *)payload, strlen(payload));
-    free(payload);
+    cJSON_free(payload);
     return rt;
 }
 
@@ -683,12 +683,13 @@ OPERATE_RET ws_server_stop(void)
         return OPRT_OK;
     }
 
-    tal_mutex_lock(s_ws_mutex);
     for (int i = 0; i < MIMI_WS_MAX_CLIENTS; i++) {
         ws_close_client_locked(&s_clients[i]);
     }
     ws_close_fd(&s_listen_fd);
-    tal_mutex_unlock(s_ws_mutex);
+    tal_mutex_release(s_ws_mutex);
+    s_ws_mutex = NULL;
+    ws_clients_init();
 
     return OPRT_OK;
 }

@@ -234,7 +234,7 @@ static OPERATE_RET tg_http_call_direct(const char *path, const char *post_data,
         },
         &response);
     if (http_rt != HTTP_CLIENT_SUCCESS) {
-        MIMI_LOGE(TAG, "http request failed: %d path=%s", http_rt, path);
+        MIMI_LOGE(TAG, "http request failed: %d", http_rt);
         return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
     }
 
@@ -503,14 +503,14 @@ OPERATE_RET telegram_send_message(const char *chat_id, const char *text)
         int n = snprintf(path, sizeof(path), "/bot%s/sendMessage", s_bot_token);
         if (n <= 0 || (size_t)n >= sizeof(path)) {
             free(segment);
-            free(json);
+            cJSON_free(json);
             return OPRT_BUFFER_NOT_ENOUGH;
         }
 
         char *resp = tal_malloc(TG_HTTP_RESP_BUF_SIZE);
         if (!resp) {
             free(segment);
-            free(json);
+            cJSON_free(json);
             return OPRT_MALLOC_FAILED;
         }
         memset(resp, 0, TG_HTTP_RESP_BUF_SIZE);
@@ -520,7 +520,7 @@ OPERATE_RET telegram_send_message(const char *chat_id, const char *text)
         if (json) {
             rt = tg_http_call(path, json, resp, TG_HTTP_RESP_BUF_SIZE, &status);
         }
-        free(json);
+        cJSON_free(json);
 
         if (rt != OPRT_OK || status != 200 || !tg_response_ok(resp)) {
             cJSON *body2 = cJSON_CreateObject();
@@ -543,7 +543,7 @@ OPERATE_RET telegram_send_message(const char *chat_id, const char *text)
             memset(resp, 0, TG_HTTP_RESP_BUF_SIZE);
             status = 0;
             rt = tg_http_call(path, json2, resp, TG_HTTP_RESP_BUF_SIZE, &status);
-            free(json2);
+            cJSON_free(json2);
             if (rt != OPRT_OK || status != 200 || !tg_response_ok(resp)) {
                 tal_free(resp);
                 free(segment);

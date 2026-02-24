@@ -3,16 +3,32 @@
 
 #include "tal_fs.h"
 
-#include <time.h>
-
 static const char *TAG = "memory";
 
 static void get_date_str(char *buf, size_t size, int days_ago)
 {
-    time_t now = time(NULL) - (time_t)days_ago * 86400;
-    struct tm tm_now;
-    localtime_r(&now, &tm_now);
-    strftime(buf, size, "%Y-%m-%d", &tm_now);
+    if (!buf || size == 0) {
+        return;
+    }
+
+    TIME_T now = tal_time_get_posix();
+    if (days_ago > 0) {
+        now -= (TIME_T)days_ago * 86400;
+    }
+    if (now < 0) {
+        now = 0;
+    }
+
+    POSIX_TM_S tm_now = {0};
+    if (tal_time_get_local_time_custom(now, &tm_now) != OPRT_OK) {
+        if (!tal_time_gmtime_r(&now, &tm_now)) {
+            snprintf(buf, size, "1970-01-01");
+            return;
+        }
+    }
+
+    snprintf(buf, size, "%04d-%02d-%02d",
+             tm_now.tm_year + 1900, tm_now.tm_mon + 1, tm_now.tm_mday);
 }
 
 OPERATE_RET memory_store_init(void)
