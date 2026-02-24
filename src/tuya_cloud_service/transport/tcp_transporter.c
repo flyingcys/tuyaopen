@@ -106,8 +106,6 @@ OPERATE_RET tuya_tcp_transporter_connect(tuya_transporter_t t, const char *host,
                                  tcp_transporter->config.bindPort))) { // socket bind port
         op_ret = OPRT_MID_TRANSPORT_SOCK_NET_BIND_FAILED;
         goto err_out;
-    } else {
-        PR_DEBUG("bind ip:%08x port:%d ok", tcp_transporter->config.bindAddr, tcp_transporter->config.bindPort);
     }
 
     if (tcp_transporter->config.sendTimeoutMs &&

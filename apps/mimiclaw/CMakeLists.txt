@@ -18,7 +18,6 @@ set(APP_SRCS
     ${APP_PATH}/memory/session_mgr.c
     ${APP_PATH}/gateway/ws_server.c
     ${APP_PATH}/cli/serial_cli.c
-    ${APP_PATH}/ota/ota_manager.c
     ${APP_PATH}/proxy/http_proxy.c
     ${APP_PATH}/tls_cert_bundle.c
     ${APP_PATH}/tools/tool_registry.c
