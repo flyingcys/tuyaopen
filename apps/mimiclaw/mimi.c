@@ -3,6 +3,7 @@
 #include "agent/agent_loop.h"
 #include "bus/message_bus.h"
 #include "cli/serial_cli.h"
+#include "discord/discord_bot.h"
 #include "gateway/ws_server.h"
 #include "llm/llm_proxy.h"
 #include "memory/memory_store.h"
@@ -20,12 +21,91 @@
 #include "tal_fs.h"
 #include "tkl_output.h"
 
+#include <ctype.h>
+
 #if defined(ENABLE_LIBLWIP) && (ENABLE_LIBLWIP == 1)
 #include "lwip_init.h"
 #endif
 
 static const char *TAG = "mimi";
 static THREAD_HANDLE s_outbound_thread = NULL;
+
+typedef enum {
+    MIMI_CHANNEL_MODE_AUTO = 0,
+    MIMI_CHANNEL_MODE_TELEGRAM,
+    MIMI_CHANNEL_MODE_DISCORD,
+    MIMI_CHANNEL_MODE_BOTH,
+} mimi_channel_mode_t;
+
+static bool str_ieq(const char *a, const char *b)
+{
+    if (!a || !b) {
+        return false;
+    }
+    while (*a && *b) {
+        if (tolower((unsigned char)*a) != tolower((unsigned char)*b)) {
+            return false;
+        }
+        a++;
+        b++;
+    }
+    return *a == '\0' && *b == '\0';
+}
+
+static mimi_channel_mode_t parse_channel_mode(const char *mode)
+{
+    if (!mode || mode[0] == '\0') {
+        return MIMI_CHANNEL_MODE_AUTO;
+    }
+    if (str_ieq(mode, "telegram")) {
+        return MIMI_CHANNEL_MODE_TELEGRAM;
+    }
+    if (str_ieq(mode, "discord")) {
+        return MIMI_CHANNEL_MODE_DISCORD;
+    }
+    if (str_ieq(mode, "both")) {
+        return MIMI_CHANNEL_MODE_BOTH;
+    }
+    return MIMI_CHANNEL_MODE_AUTO;
+}
+
+static const char *channel_mode_str(mimi_channel_mode_t mode)
+{
+    switch (mode) {
+    case MIMI_CHANNEL_MODE_TELEGRAM:
+        return "telegram";
+    case MIMI_CHANNEL_MODE_DISCORD:
+        return "discord";
+    case MIMI_CHANNEL_MODE_BOTH:
+        return "both";
+    case MIMI_CHANNEL_MODE_AUTO:
+    default:
+        return "auto";
+    }
+}
+
+static mimi_channel_mode_t load_channel_mode(void)
+{
+    char mode_buf[24] = {0};
+    if (MIMI_SECRET_CHANNEL_MODE[0] != '\0') {
+        snprintf(mode_buf, sizeof(mode_buf), "%s", MIMI_SECRET_CHANNEL_MODE);
+    } else {
+        snprintf(mode_buf, sizeof(mode_buf), "auto");
+    }
+
+    char kv_mode[24] = {0};
+    if (mimi_kv_get_string(MIMI_NVS_BOT, MIMI_NVS_KEY_CHANNEL_MODE, kv_mode, sizeof(kv_mode)) == OPRT_OK &&
+        kv_mode[0] != '\0') {
+        snprintf(mode_buf, sizeof(mode_buf), "%s", kv_mode);
+    }
+
+    mimi_channel_mode_t mode = parse_channel_mode(mode_buf);
+    if (!(str_ieq(mode_buf, "auto") || str_ieq(mode_buf, "telegram") || str_ieq(mode_buf, "discord") ||
+          str_ieq(mode_buf, "both"))) {
+        MIMI_LOGW(TAG, "invalid channel_mode=%s, fallback to auto", mode_buf);
+    }
+    return mode;
+}
 
 static void mimi_runtime_init(void)
 {
@@ -35,7 +115,7 @@ static void mimi_runtime_init(void)
     }
 
     cJSON_InitHooks(&(cJSON_Hooks){.malloc_fn = tal_malloc, .free_fn = tal_free});
-    (void)tal_log_init(TAL_LOG_LEVEL_INFO, 1024, (TAL_LOG_OUTPUT_CB)tkl_log_output);
+    (void)tal_log_init(TAL_LOG_LEVEL_DEBUG, 1024, (TAL_LOG_OUTPUT_CB)tkl_log_output);
 
     // LittleFS mount happens inside tal_kv_init(). We must call this before any tal_fs_* APIs.
     (void)tal_kv_init(&(tal_kv_cfg_t){
@@ -109,6 +189,11 @@ static void outbound_dispatch_task(void *arg)
             if (send_rt != OPRT_OK) {
                 MIMI_LOGE(TAG, "telegram send failed chat=%s rt=%d", msg.chat_id, send_rt);
             }
+        } else if (strcmp(msg.channel, MIMI_CHAN_DISCORD) == 0) {
+            OPERATE_RET dc_rt = discord_send_message(msg.chat_id, msg.content ? msg.content : "");
+            if (dc_rt != OPRT_OK) {
+                MIMI_LOGE(TAG, "discord send failed channel=%s rt=%d", msg.chat_id, dc_rt);
+            }
         } else if (strcmp(msg.channel, MIMI_CHAN_WEBSOCKET) == 0) {
             OPERATE_RET ws_rt = ws_server_send(msg.chat_id, msg.content ? msg.content : "");
             if (ws_rt != OPRT_OK) {
@@ -164,6 +249,14 @@ static void mimi_network_init(void)
 
 static void start_online_services(const char *mode)
 {
+    mimi_channel_mode_t channel_mode = load_channel_mode();
+    bool enable_tg = (channel_mode == MIMI_CHANNEL_MODE_AUTO ||
+                      channel_mode == MIMI_CHANNEL_MODE_TELEGRAM ||
+                      channel_mode == MIMI_CHANNEL_MODE_BOTH);
+    bool enable_dc = (channel_mode == MIMI_CHANNEL_MODE_AUTO ||
+                      channel_mode == MIMI_CHANNEL_MODE_DISCORD ||
+                      channel_mode == MIMI_CHANNEL_MODE_BOTH);
+
     OPERATE_RET rt = start_outbound_dispatcher();
     if (rt != OPRT_OK) {
         MIMI_LOGW(TAG, "start_outbound_dispatcher failed: %d", rt);
@@ -174,11 +267,26 @@ static void start_online_services(const char *mode)
         MIMI_LOGW(TAG, "agent_loop_start failed: %d", rt);
     }
 
-    rt = telegram_bot_start();
-    if (rt == OPRT_NOT_FOUND) {
-        MIMI_LOGW(TAG, "telegram token missing, telegram service disabled");
-    } else if (rt != OPRT_OK) {
-        MIMI_LOGW(TAG, "telegram_bot_start failed: %d", rt);
+    if (enable_tg) {
+        rt = telegram_bot_start();
+        if (rt == OPRT_NOT_FOUND) {
+            MIMI_LOGW(TAG, "telegram token missing, telegram service disabled");
+        } else if (rt != OPRT_OK) {
+            MIMI_LOGW(TAG, "telegram_bot_start failed: %d", rt);
+        }
+    } else {
+        MIMI_LOGI(TAG, "telegram disabled by channel_mode=%s", channel_mode_str(channel_mode));
+    }
+
+    if (enable_dc) {
+        rt = discord_bot_start();
+        if (rt == OPRT_NOT_FOUND) {
+            MIMI_LOGW(TAG, "discord token missing, discord service disabled");
+        } else if (rt != OPRT_OK) {
+            MIMI_LOGW(TAG, "discord_bot_start failed: %d", rt);
+        }
+    } else {
+        MIMI_LOGI(TAG, "discord disabled by channel_mode=%s", channel_mode_str(channel_mode));
     }
 
     rt = ws_server_start();
@@ -186,7 +294,8 @@ static void start_online_services(const char *mode)
         MIMI_LOGW(TAG, "ws_server_start failed: %d", rt);
     }
 
-    MIMI_LOGI(TAG, "online services started in %s mode", mode ? mode : "unknown");
+    MIMI_LOGI(TAG, "online services started in %s mode, channel_mode=%s",
+              mode ? mode : "unknown", channel_mode_str(channel_mode));
 }
 
 void mimi_app_main(void)
@@ -205,6 +314,7 @@ void mimi_app_main(void)
 #endif
     (void)http_proxy_init();
     (void)telegram_bot_init();
+    (void)discord_bot_init();
     (void)llm_proxy_init();
     (void)tool_registry_init();
     (void)agent_loop_init();

@@ -134,6 +134,13 @@ static OPERATE_RET query_builtin_cert(const char *host, uint8_t **cacert, uint16
         pem = TG_GODADDY_G2_CA_PEM;
     } else if (strcmp(host, "api.openai.com") == 0) {
         pem = OPENAI_WE1_CA_PEM;
+    } else if (strcmp(host, "discord.com") == 0 || strcmp(host, "gateway.discord.gg") == 0) {
+        /*
+         * Discord serves a Google WE1 chain and this stack may report
+         * UNKNOWN_SIG_ALG when parsing it as built-in fallback CA.
+         * Let caller decide host-specific fallback behavior instead.
+         */
+        return OPRT_NOT_FOUND;
     } else if (strcmp(host, "api.deepseek.com") == 0) {
         pem = DEEPSEEK_DIGICERT_G2_CA_PEM;
     } else {

@@ -5,6 +5,7 @@
 #include "memory/session_mgr.h"
 #include "mimi_config.h"
 #include "proxy/http_proxy.h"
+#include "discord/discord_bot.h"
 #include "tal_cli.h"
 #include "telegram/telegram_bot.h"
 #include "tools/tool_web_search.h"
@@ -111,6 +112,27 @@ static const cli_help_item_t s_cli_help_items[] = {
         .usage = "<token>",
         .summary_1 = "Set Telegram bot token",
         .arg_1 = "       <token>  Telegram bot token",
+        .verbose = 0,
+    },
+    {
+        .name = "set_dc_token",
+        .usage = "<token>",
+        .summary_1 = "Set Discord bot token",
+        .arg_1 = "       <token>  Discord bot token",
+        .verbose = 0,
+    },
+    {
+        .name = "set_dc_channel",
+        .usage = "<channel_id>",
+        .summary_1 = "Set optional default Discord channel ID",
+        .arg_1 = "  <channel_id>  Discord channel ID",
+        .verbose = 0,
+    },
+    {
+        .name = "set_channel_mode",
+        .usage = "<auto|telegram|discord|both>",
+        .summary_1 = "Set active chat channel mode",
+        .arg_1 = "         <mode>  auto|telegram|discord|both",
         .verbose = 0,
     },
     {
@@ -370,6 +392,56 @@ static void cmd_set_tg_token(int argc, char *argv[])
     cli_echof("set_tg_token rt=%d", rt);
 }
 
+static bool is_valid_channel_mode(const char *mode)
+{
+    if (!mode || mode[0] == '\0') {
+        return false;
+    }
+
+    return strcmp(mode, "auto") == 0 ||
+           strcmp(mode, "telegram") == 0 ||
+           strcmp(mode, "discord") == 0 ||
+           strcmp(mode, "both") == 0;
+}
+
+static void cmd_set_dc_token(int argc, char *argv[])
+{
+    if (argc < 2) {
+        cli_echof("usage: set_dc_token <token>");
+        return;
+    }
+
+    OPERATE_RET rt = discord_set_token(argv[1]);
+    cli_echof("set_dc_token rt=%d", rt);
+}
+
+static void cmd_set_dc_channel(int argc, char *argv[])
+{
+    if (argc < 2) {
+        cli_echof("usage: set_dc_channel <channel_id>");
+        return;
+    }
+
+    OPERATE_RET rt = discord_set_channel_id(argv[1]);
+    cli_echof("set_dc_channel rt=%d", rt);
+}
+
+static void cmd_set_channel_mode(int argc, char *argv[])
+{
+    if (argc < 2) {
+        cli_echof("usage: set_channel_mode <auto|telegram|discord|both>");
+        return;
+    }
+
+    if (!is_valid_channel_mode(argv[1])) {
+        cli_echof("invalid mode: %s (use auto|telegram|discord|both)", argv[1]);
+        return;
+    }
+
+    OPERATE_RET rt = mimi_kv_set_string(MIMI_NVS_BOT, MIMI_NVS_KEY_CHANNEL_MODE, argv[1]);
+    cli_echof("set_channel_mode rt=%d", rt);
+}
+
 static void cmd_set_api_key(int argc, char *argv[])
 {
     if (argc < 2) {
@@ -513,6 +585,9 @@ static void cmd_config_show(int argc, char *argv[])
     print_config_item("WiFi SSID", MIMI_NVS_WIFI, MIMI_NVS_KEY_SSID, MIMI_SECRET_WIFI_SSID, false);
     print_config_item("WiFi Pass", MIMI_NVS_WIFI, MIMI_NVS_KEY_PASS, MIMI_SECRET_WIFI_PASS, true);
     print_config_item("TG Token", MIMI_NVS_TG, MIMI_NVS_KEY_TG_TOKEN, MIMI_SECRET_TG_TOKEN, true);
+    print_config_item("DC Token", MIMI_NVS_DC, MIMI_NVS_KEY_DC_TOKEN, MIMI_SECRET_DC_TOKEN, true);
+    print_config_item("DC Channel", MIMI_NVS_DC, MIMI_NVS_KEY_DC_CHANNEL_ID, MIMI_SECRET_DC_CHANNEL_ID, false);
+    print_config_item("ChannelMode", MIMI_NVS_BOT, MIMI_NVS_KEY_CHANNEL_MODE, MIMI_SECRET_CHANNEL_MODE, false);
     print_config_item("API Key", MIMI_NVS_LLM, MIMI_NVS_KEY_API_KEY, MIMI_SECRET_API_KEY, true);
     print_config_item("Model", MIMI_NVS_LLM, MIMI_NVS_KEY_MODEL, MIMI_SECRET_MODEL, false);
     print_config_item("Provider", MIMI_NVS_LLM, MIMI_NVS_KEY_PROVIDER, MIMI_SECRET_MODEL_PROVIDER, false);
@@ -530,6 +605,10 @@ static void cmd_config_reset(int argc, char *argv[])
     (void)mimi_kv_del(MIMI_NVS_WIFI, MIMI_NVS_KEY_SSID);
     (void)mimi_kv_del(MIMI_NVS_WIFI, MIMI_NVS_KEY_PASS);
     (void)mimi_kv_del(MIMI_NVS_TG, MIMI_NVS_KEY_TG_TOKEN);
+    (void)mimi_kv_del(MIMI_NVS_DC, MIMI_NVS_KEY_DC_TOKEN);
+    (void)mimi_kv_del(MIMI_NVS_DC, MIMI_NVS_KEY_DC_CHANNEL_ID);
+    (void)mimi_kv_del(MIMI_NVS_DC, MIMI_NVS_KEY_DC_LAST_MSG_ID);
+    (void)mimi_kv_del(MIMI_NVS_BOT, MIMI_NVS_KEY_CHANNEL_MODE);
     (void)mimi_kv_del(MIMI_NVS_LLM, MIMI_NVS_KEY_API_KEY);
     (void)mimi_kv_del(MIMI_NVS_LLM, MIMI_NVS_KEY_MODEL);
     (void)mimi_kv_del(MIMI_NVS_LLM, MIMI_NVS_KEY_PROVIDER);
@@ -555,6 +634,9 @@ static const cli_cmd_t s_mimi_cli_cmds[] = {
     {.name = "wifi_status", .help = "Show WiFi connection status", .func = cmd_wifi_status},
     {.name = "wifi_scan", .help = "Scan and list nearby WiFi APs", .func = cmd_wifi_scan},
     {.name = "set_tg_token", .help = "Set Telegram bot token", .func = cmd_set_tg_token},
+    {.name = "set_dc_token", .help = "Set Discord bot token", .func = cmd_set_dc_token},
+    {.name = "set_dc_channel", .help = "Set Discord channel ID", .func = cmd_set_dc_channel},
+    {.name = "set_channel_mode", .help = "Set channel mode auto|telegram|discord|both", .func = cmd_set_channel_mode},
     {.name = "set_api_key", .help = "Set LLM API key", .func = cmd_set_api_key},
     {.name = "set_model", .help = "Set LLM model", .func = cmd_set_model},
     {.name = "set_model_provider", .help = "Set LLM model provider", .func = cmd_set_model_provider},

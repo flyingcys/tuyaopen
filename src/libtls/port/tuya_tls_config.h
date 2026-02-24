@@ -916,7 +916,8 @@
 // #define MBEDTLS_ECP_DP_SECP192R1_ENABLED
 // #define MBEDTLS_ECP_DP_SECP224R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP256R1_ENABLED
-// #define MBEDTLS_ECP_DP_SECP384R1_ENABLED
+/* Required by some modern public TLS chains (e.g. Google Trust Services). */
+#define MBEDTLS_ECP_DP_SECP384R1_ENABLED
 // #define MBEDTLS_ECP_DP_SECP521R1_ENABLED
 // #define MBEDTLS_ECP_DP_SECP192K1_ENABLED
 // #define MBEDTLS_ECP_DP_SECP224K1_ENABLED
@@ -924,7 +925,8 @@
 // #define MBEDTLS_ECP_DP_BP256R1_ENABLED
 // #define MBEDTLS_ECP_DP_BP384R1_ENABLED
 // #define MBEDTLS_ECP_DP_BP512R1_ENABLED
-// #define MBEDTLS_ECP_DP_CURVE25519_ENABLED
+/* Enable X25519 for broader TLS 1.3 server compatibility. */
+#define MBEDTLS_ECP_DP_CURVE25519_ENABLED
 // #define MBEDTLS_ECP_DP_CURVE448_ENABLED
 #endif
 /**
@@ -3217,8 +3219,8 @@
  *
  * This module adds support for SHA-384 and SHA-512.
  */
-// #define MBEDTLS_SHA384_C
-// #define MBEDTLS_SHA512_C
+#define MBEDTLS_SHA384_C
+#define MBEDTLS_SHA512_C
 
 /**
  * \def MBEDTLS_SSL_CACHE_C
