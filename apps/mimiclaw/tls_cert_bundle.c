@@ -135,12 +135,15 @@ static OPERATE_RET query_builtin_cert(const char *host, uint8_t **cacert, uint16
     } else if (strcmp(host, "api.openai.com") == 0) {
         pem = OPENAI_WE1_CA_PEM;
     } else if (strcmp(host, "discord.com") == 0 || strcmp(host, "gateway.discord.gg") == 0) {
+#if OPERATING_SYSTEM == SYSTEM_LINUX
         /*
-         * Discord serves a Google WE1 chain and this stack may report
-         * UNKNOWN_SIG_ALG when parsing it as built-in fallback CA.
-         * Let caller decide host-specific fallback behavior instead.
+         * Linux host currently uses no-verify fallback when iotdns cert query
+         * is unavailable for Discord hosts.
          */
         return OPRT_NOT_FOUND;
+#else
+        pem = OPENAI_WE1_CA_PEM;
+#endif
     } else if (strcmp(host, "api.deepseek.com") == 0) {
         pem = DEEPSEEK_DIGICERT_G2_CA_PEM;
     } else {

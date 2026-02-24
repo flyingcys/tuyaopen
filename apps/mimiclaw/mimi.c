@@ -4,6 +4,7 @@
 #include "bus/message_bus.h"
 #include "cli/serial_cli.h"
 #include "discord/discord_bot.h"
+#include "feishu/feishu_bot.h"
 #include "gateway/ws_server.h"
 #include "llm/llm_proxy.h"
 #include "memory/memory_store.h"
@@ -34,6 +35,7 @@ typedef enum {
     MIMI_CHANNEL_MODE_AUTO = 0,
     MIMI_CHANNEL_MODE_TELEGRAM,
     MIMI_CHANNEL_MODE_DISCORD,
+    MIMI_CHANNEL_MODE_FEISHU,
     MIMI_CHANNEL_MODE_BOTH,
 } mimi_channel_mode_t;
 
@@ -63,6 +65,9 @@ static mimi_channel_mode_t parse_channel_mode(const char *mode)
     if (str_ieq(mode, "discord")) {
         return MIMI_CHANNEL_MODE_DISCORD;
     }
+    if (str_ieq(mode, "feishu")) {
+        return MIMI_CHANNEL_MODE_FEISHU;
+    }
     if (str_ieq(mode, "both")) {
         return MIMI_CHANNEL_MODE_BOTH;
     }
@@ -76,6 +81,8 @@ static const char *channel_mode_str(mimi_channel_mode_t mode)
         return "telegram";
     case MIMI_CHANNEL_MODE_DISCORD:
         return "discord";
+    case MIMI_CHANNEL_MODE_FEISHU:
+        return "feishu";
     case MIMI_CHANNEL_MODE_BOTH:
         return "both";
     case MIMI_CHANNEL_MODE_AUTO:
@@ -101,6 +108,7 @@ static mimi_channel_mode_t load_channel_mode(void)
 
     mimi_channel_mode_t mode = parse_channel_mode(mode_buf);
     if (!(str_ieq(mode_buf, "auto") || str_ieq(mode_buf, "telegram") || str_ieq(mode_buf, "discord") ||
+          str_ieq(mode_buf, "feishu") ||
           str_ieq(mode_buf, "both"))) {
         MIMI_LOGW(TAG, "invalid channel_mode=%s, fallback to auto", mode_buf);
     }
@@ -194,6 +202,11 @@ static void outbound_dispatch_task(void *arg)
             if (dc_rt != OPRT_OK) {
                 MIMI_LOGE(TAG, "discord send failed channel=%s rt=%d", msg.chat_id, dc_rt);
             }
+        } else if (strcmp(msg.channel, MIMI_CHAN_FEISHU) == 0) {
+            OPERATE_RET fs_rt = feishu_send_message(msg.chat_id, msg.content ? msg.content : "");
+            if (fs_rt != OPRT_OK) {
+                MIMI_LOGE(TAG, "feishu send failed chat=%s rt=%d", msg.chat_id, fs_rt);
+            }
         } else if (strcmp(msg.channel, MIMI_CHAN_WEBSOCKET) == 0) {
             OPERATE_RET ws_rt = ws_server_send(msg.chat_id, msg.content ? msg.content : "");
             if (ws_rt != OPRT_OK) {
@@ -256,6 +269,8 @@ static void start_online_services(const char *mode)
     bool enable_dc = (channel_mode == MIMI_CHANNEL_MODE_AUTO ||
                       channel_mode == MIMI_CHANNEL_MODE_DISCORD ||
                       channel_mode == MIMI_CHANNEL_MODE_BOTH);
+    bool enable_fs = (channel_mode == MIMI_CHANNEL_MODE_AUTO ||
+                      channel_mode == MIMI_CHANNEL_MODE_FEISHU);
 
     OPERATE_RET rt = start_outbound_dispatcher();
     if (rt != OPRT_OK) {
@@ -289,6 +304,17 @@ static void start_online_services(const char *mode)
         MIMI_LOGI(TAG, "discord disabled by channel_mode=%s", channel_mode_str(channel_mode));
     }
 
+    if (enable_fs) {
+        rt = feishu_bot_start();
+        if (rt == OPRT_NOT_FOUND) {
+            MIMI_LOGW(TAG, "feishu app_id/app_secret missing, feishu service disabled");
+        } else if (rt != OPRT_OK) {
+            MIMI_LOGW(TAG, "feishu_bot_start failed: %d", rt);
+        }
+    } else {
+        MIMI_LOGI(TAG, "feishu disabled by channel_mode=%s", channel_mode_str(channel_mode));
+    }
+
     rt = ws_server_start();
     if (rt != OPRT_OK) {
         MIMI_LOGW(TAG, "ws_server_start failed: %d", rt);
@@ -315,6 +341,7 @@ void mimi_app_main(void)
     (void)http_proxy_init();
     (void)telegram_bot_init();
     (void)discord_bot_init();
+    (void)feishu_bot_init();
     (void)llm_proxy_init();
     (void)tool_registry_init();
     (void)agent_loop_init();

@@ -6,6 +6,7 @@
 #include "mimi_config.h"
 #include "proxy/http_proxy.h"
 #include "discord/discord_bot.h"
+#include "feishu/feishu_bot.h"
 #include "tal_cli.h"
 #include "telegram/telegram_bot.h"
 #include "tools/tool_web_search.h"
@@ -130,9 +131,30 @@ static const cli_help_item_t s_cli_help_items[] = {
     },
     {
         .name = "set_channel_mode",
-        .usage = "<auto|telegram|discord|both>",
+        .usage = "<auto|telegram|discord|feishu|both>",
         .summary_1 = "Set active chat channel mode",
-        .arg_1 = "         <mode>  auto|telegram|discord|both",
+        .arg_1 = "         <mode>  auto|telegram|discord|feishu|both",
+        .verbose = 0,
+    },
+    {
+        .name = "set_fs_appid",
+        .usage = "<app_id>",
+        .summary_1 = "Set Feishu app_id",
+        .arg_1 = "      <app_id>  Feishu app_id",
+        .verbose = 0,
+    },
+    {
+        .name = "set_fs_appsecret",
+        .usage = "<app_secret>",
+        .summary_1 = "Set Feishu app_secret",
+        .arg_1 = "  <app_secret>  Feishu app_secret",
+        .verbose = 0,
+    },
+    {
+        .name = "set_fs_allow",
+        .usage = "<open_id_csv>",
+        .summary_1 = "Set Feishu allow_from open_id CSV (empty = allow all)",
+        .arg_1 = "<open_id_csv>  Comma-separated sender open_id allowlist",
         .verbose = 0,
     },
     {
@@ -401,6 +423,7 @@ static bool is_valid_channel_mode(const char *mode)
     return strcmp(mode, "auto") == 0 ||
            strcmp(mode, "telegram") == 0 ||
            strcmp(mode, "discord") == 0 ||
+           strcmp(mode, "feishu") == 0 ||
            strcmp(mode, "both") == 0;
 }
 
@@ -429,17 +452,50 @@ static void cmd_set_dc_channel(int argc, char *argv[])
 static void cmd_set_channel_mode(int argc, char *argv[])
 {
     if (argc < 2) {
-        cli_echof("usage: set_channel_mode <auto|telegram|discord|both>");
+        cli_echof("usage: set_channel_mode <auto|telegram|discord|feishu|both>");
         return;
     }
 
     if (!is_valid_channel_mode(argv[1])) {
-        cli_echof("invalid mode: %s (use auto|telegram|discord|both)", argv[1]);
+        cli_echof("invalid mode: %s (use auto|telegram|discord|feishu|both)", argv[1]);
         return;
     }
 
     OPERATE_RET rt = mimi_kv_set_string(MIMI_NVS_BOT, MIMI_NVS_KEY_CHANNEL_MODE, argv[1]);
     cli_echof("set_channel_mode rt=%d", rt);
+}
+
+static void cmd_set_fs_appid(int argc, char *argv[])
+{
+    if (argc < 2) {
+        cli_echof("usage: set_fs_appid <app_id>");
+        return;
+    }
+
+    OPERATE_RET rt = feishu_set_app_id(argv[1]);
+    cli_echof("set_fs_appid rt=%d", rt);
+}
+
+static void cmd_set_fs_appsecret(int argc, char *argv[])
+{
+    if (argc < 2) {
+        cli_echof("usage: set_fs_appsecret <app_secret>");
+        return;
+    }
+
+    OPERATE_RET rt = feishu_set_app_secret(argv[1]);
+    cli_echof("set_fs_appsecret rt=%d", rt);
+}
+
+static void cmd_set_fs_allow(int argc, char *argv[])
+{
+    if (argc < 2) {
+        cli_echof("usage: set_fs_allow <open_id_csv>");
+        return;
+    }
+
+    OPERATE_RET rt = feishu_set_allow_from(argv[1]);
+    cli_echof("set_fs_allow rt=%d", rt);
 }
 
 static void cmd_set_api_key(int argc, char *argv[])
@@ -587,6 +643,9 @@ static void cmd_config_show(int argc, char *argv[])
     print_config_item("TG Token", MIMI_NVS_TG, MIMI_NVS_KEY_TG_TOKEN, MIMI_SECRET_TG_TOKEN, true);
     print_config_item("DC Token", MIMI_NVS_DC, MIMI_NVS_KEY_DC_TOKEN, MIMI_SECRET_DC_TOKEN, true);
     print_config_item("DC Channel", MIMI_NVS_DC, MIMI_NVS_KEY_DC_CHANNEL_ID, MIMI_SECRET_DC_CHANNEL_ID, false);
+    print_config_item("FS AppID", MIMI_NVS_FS, MIMI_NVS_KEY_FS_APP_ID, MIMI_SECRET_FS_APP_ID, false);
+    print_config_item("FS Secret", MIMI_NVS_FS, MIMI_NVS_KEY_FS_APP_SECRET, MIMI_SECRET_FS_APP_SECRET, true);
+    print_config_item("FS Allow", MIMI_NVS_FS, MIMI_NVS_KEY_FS_ALLOW_FROM, MIMI_SECRET_FS_ALLOW_FROM, false);
     print_config_item("ChannelMode", MIMI_NVS_BOT, MIMI_NVS_KEY_CHANNEL_MODE, MIMI_SECRET_CHANNEL_MODE, false);
     print_config_item("API Key", MIMI_NVS_LLM, MIMI_NVS_KEY_API_KEY, MIMI_SECRET_API_KEY, true);
     print_config_item("Model", MIMI_NVS_LLM, MIMI_NVS_KEY_MODEL, MIMI_SECRET_MODEL, false);
@@ -608,6 +667,9 @@ static void cmd_config_reset(int argc, char *argv[])
     (void)mimi_kv_del(MIMI_NVS_DC, MIMI_NVS_KEY_DC_TOKEN);
     (void)mimi_kv_del(MIMI_NVS_DC, MIMI_NVS_KEY_DC_CHANNEL_ID);
     (void)mimi_kv_del(MIMI_NVS_DC, MIMI_NVS_KEY_DC_LAST_MSG_ID);
+    (void)mimi_kv_del(MIMI_NVS_FS, MIMI_NVS_KEY_FS_APP_ID);
+    (void)mimi_kv_del(MIMI_NVS_FS, MIMI_NVS_KEY_FS_APP_SECRET);
+    (void)mimi_kv_del(MIMI_NVS_FS, MIMI_NVS_KEY_FS_ALLOW_FROM);
     (void)mimi_kv_del(MIMI_NVS_BOT, MIMI_NVS_KEY_CHANNEL_MODE);
     (void)mimi_kv_del(MIMI_NVS_LLM, MIMI_NVS_KEY_API_KEY);
     (void)mimi_kv_del(MIMI_NVS_LLM, MIMI_NVS_KEY_MODEL);
@@ -636,7 +698,10 @@ static const cli_cmd_t s_mimi_cli_cmds[] = {
     {.name = "set_tg_token", .help = "Set Telegram bot token", .func = cmd_set_tg_token},
     {.name = "set_dc_token", .help = "Set Discord bot token", .func = cmd_set_dc_token},
     {.name = "set_dc_channel", .help = "Set Discord channel ID", .func = cmd_set_dc_channel},
-    {.name = "set_channel_mode", .help = "Set channel mode auto|telegram|discord|both", .func = cmd_set_channel_mode},
+    {.name = "set_channel_mode", .help = "Set channel mode auto|telegram|discord|feishu|both", .func = cmd_set_channel_mode},
+    {.name = "set_fs_appid", .help = "Set Feishu app_id", .func = cmd_set_fs_appid},
+    {.name = "set_fs_appsecret", .help = "Set Feishu app_secret", .func = cmd_set_fs_appsecret},
+    {.name = "set_fs_allow", .help = "Set Feishu allow_from open_id CSV", .func = cmd_set_fs_allow},
     {.name = "set_api_key", .help = "Set LLM API key", .func = cmd_set_api_key},
     {.name = "set_model", .help = "Set LLM model", .func = cmd_set_model},
     {.name = "set_model_provider", .help = "Set LLM model provider", .func = cmd_set_model_provider},

@@ -15,7 +15,7 @@ typedef struct {
     int fd;
     BOOL_T active;
     BOOL_T handshake_done;
-    char chat_id[32];
+    char chat_id[96];
     uint8_t rx_buf[4096];
     size_t rx_len;
 } ws_client_t;

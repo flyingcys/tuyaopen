@@ -4,13 +4,14 @@
 
 #define MIMI_CHAN_TELEGRAM  "telegram"
 #define MIMI_CHAN_DISCORD   "discord"
+#define MIMI_CHAN_FEISHU    "feishu"
 #define MIMI_CHAN_WEBSOCKET "websocket"
 #define MIMI_CHAN_CLI       "cli"
 #define MIMI_CHAN_SYSTEM    "system"
 
 typedef struct {
     char channel[16];
-    char chat_id[32];
+    char chat_id[96];
     char *content;
 } mimi_msg_t;
 
