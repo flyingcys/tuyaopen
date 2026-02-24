@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-DC_C="${APP_DIR}/discord/discord_bot.c"
+DC_C="${APP_DIR}/channels/discord_bot.c"
 CFG_H="${APP_DIR}/mimi_config.h"
 
 if [[ ! -f "${DC_C}" || ! -f "${CFG_H}" ]]; then

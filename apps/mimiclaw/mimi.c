@@ -3,15 +3,15 @@
 #include "agent/agent_loop.h"
 #include "bus/message_bus.h"
 #include "cli/serial_cli.h"
-#include "discord/discord_bot.h"
-#include "feishu/feishu_bot.h"
+#include "channels/discord_bot.h"
+#include "channels/feishu_bot.h"
 #include "gateway/ws_server.h"
 #include "llm/llm_proxy.h"
 #include "memory/memory_store.h"
 #include "memory/session_mgr.h"
 #include "mimi_config.h"
 #include "proxy/http_proxy.h"
-#include "telegram/telegram_bot.h"
+#include "channels/telegram_bot.h"
 #include "tools/tool_registry.h"
 #include "tuya_register_center.h"
 #include "tuya_tls.h"
@@ -307,7 +307,7 @@ static void start_online_services(const char *mode)
     if (enable_fs) {
         rt = feishu_bot_start();
         if (rt == OPRT_NOT_FOUND) {
-            MIMI_LOGW(TAG, "feishu app_id/app_secret missing, feishu service disabled");
+            MIMI_LOGW(TAG, "feishu credentials missing, feishu service disabled");
         } else if (rt != OPRT_OK) {
             MIMI_LOGW(TAG, "feishu_bot_start failed: %d", rt);
         }

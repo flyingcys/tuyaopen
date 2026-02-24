@@ -10,14 +10,14 @@ if [[ ! -f "${TLS_C}" ]]; then
   exit 1
 fi
 
-if ! grep -q "api.deepseek.com" "${TLS_C}"; then
-  echo "FAIL: tls_cert_bundle.c has no built-in fallback branch for api.deepseek.com" >&2
+if grep -q "api.deepseek.com" "${TLS_C}"; then
+  echo "FAIL: tls_cert_bundle.c still has host-specific fallback branch for api.deepseek.com" >&2
   exit 1
 fi
 
-if ! grep -q "DEEPSEEK_DIGICERT_G2_CA_PEM" "${TLS_C}"; then
-  echo "FAIL: tls_cert_bundle.c has no DeepSeek fallback CA blob" >&2
+if grep -q "DEEPSEEK_DIGICERT_G2_CA_PEM" "${TLS_C}"; then
+  echo "FAIL: tls_cert_bundle.c still has DeepSeek-specific built-in CA blob" >&2
   exit 1
 fi
 
-echo "PASS: DeepSeek built-in CA fallback is implemented."
+echo "PASS: DeepSeek-specific hardcoded TLS fallback was removed."

@@ -2254,12 +2254,13 @@ static void handle_event_payload(const uint8_t *payload, size_t payload_len)
         return;
     }
 
-    MIMI_LOGI(TAG, "rx feishu event=%s chat=%s sender=%s type=%s len=%u",
+    MIMI_LOGI(TAG, "rx feishu event=%s chat=%s sender=%s type=%s len=%u text=%s",
               event_type,
               reply_to,
               sender_open_id,
               msg_type ? msg_type : "",
-              (unsigned)strlen(text));
+              (unsigned)strlen(text),
+              text);
 
     publish_inbound_feishu(reply_to, text);
 
@@ -2525,9 +2526,8 @@ OPERATE_RET feishu_bot_init(void)
     s_tenant_expire_ms = 0;
     fs_frag_clear();
 
-    MIMI_LOGI(TAG, "feishu init app_id=%s app_secret=%s allow_from=%s",
-              s_app_id[0] ? "configured" : "empty",
-              s_app_secret[0] ? "configured" : "empty",
+    MIMI_LOGI(TAG, "feishu init credentials=%s allow_from=%s",
+              (s_app_id[0] && s_app_secret[0]) ? "configured" : "empty",
               s_allow_from[0] ? "configured" : "open");
 
     return OPRT_OK;

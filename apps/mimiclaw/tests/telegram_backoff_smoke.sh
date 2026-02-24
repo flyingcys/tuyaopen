@@ -41,7 +41,7 @@ trap cleanup EXIT
 (
   set +u
   source "${ROOT_DIR}/export.sh"
-  touch "${APP_DIR}/telegram/telegram_bot.c"
+  touch "${APP_DIR}/channels/telegram_bot.c"
   cd "${APP_DIR}"
   tos.py build >/dev/null
 )

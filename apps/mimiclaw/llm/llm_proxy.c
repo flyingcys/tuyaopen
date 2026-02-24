@@ -494,9 +494,18 @@ static OPERATE_RET llm_http_call(const char *post_data, char *resp_buf, size_t r
     uint8_t *cacert = NULL;
     uint16_t *cacert_len = NULL;
     get_provider_cert(&cacert, &cacert_len);
-    if (!cacert || !cacert_len || *cacert_len == 0) {
+    if (!cacert_len) {
         return OPRT_COM_ERROR;
     }
+#if OPERATING_SYSTEM == SYSTEM_LINUX
+    if (!cacert || *cacert_len == 0) {
+        MIMI_LOGW(TAG, "llm host=%s use Linux TLS no-verify mode", llm_api_host() ? llm_api_host() : "");
+    }
+#else
+    if (!cacert || *cacert_len == 0) {
+        return OPRT_COM_ERROR;
+    }
+#endif
 
     const char *host = llm_api_host();
     const char *path = llm_api_path();

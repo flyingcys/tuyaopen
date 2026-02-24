@@ -22,7 +22,7 @@ if ! grep -q 'MIMI_CHAN_DISCORD' "${BUS_H}"; then
   exit 1
 fi
 
-if ! grep -q 'discord/discord_bot.h' "${MIMI_C}"; then
+if ! grep -q 'channels/discord_bot.h' "${MIMI_C}"; then
   echo "FAIL: mimi.c does not include discord bot header" >&2
   exit 1
 fi
@@ -37,7 +37,7 @@ if ! grep -q 'discord_bot_init' "${MIMI_C}" || ! grep -q 'discord_bot_start' "${
   exit 1
 fi
 
-if ! grep -q 'discord/discord_bot.c' "${CMAKE_FILE}"; then
+if ! grep -q 'channels/discord_bot.c' "${CMAKE_FILE}"; then
   echo "FAIL: discord source file is not in CMakeLists.txt" >&2
   exit 1
 fi

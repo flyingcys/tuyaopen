@@ -5,10 +5,10 @@
 #include "memory/session_mgr.h"
 #include "mimi_config.h"
 #include "proxy/http_proxy.h"
-#include "discord/discord_bot.h"
-#include "feishu/feishu_bot.h"
+#include "channels/discord_bot.h"
+#include "channels/feishu_bot.h"
 #include "tal_cli.h"
-#include "telegram/telegram_bot.h"
+#include "channels/telegram_bot.h"
 #include "tools/tool_web_search.h"
 #include "wifi/wifi_manager.h"
 
@@ -643,7 +643,7 @@ static void cmd_config_show(int argc, char *argv[])
     print_config_item("TG Token", MIMI_NVS_TG, MIMI_NVS_KEY_TG_TOKEN, MIMI_SECRET_TG_TOKEN, true);
     print_config_item("DC Token", MIMI_NVS_DC, MIMI_NVS_KEY_DC_TOKEN, MIMI_SECRET_DC_TOKEN, true);
     print_config_item("DC Channel", MIMI_NVS_DC, MIMI_NVS_KEY_DC_CHANNEL_ID, MIMI_SECRET_DC_CHANNEL_ID, false);
-    print_config_item("FS AppID", MIMI_NVS_FS, MIMI_NVS_KEY_FS_APP_ID, MIMI_SECRET_FS_APP_ID, false);
+    print_config_item("FS AppID", MIMI_NVS_FS, MIMI_NVS_KEY_FS_APP_ID, MIMI_SECRET_FS_APP_ID, true);
     print_config_item("FS Secret", MIMI_NVS_FS, MIMI_NVS_KEY_FS_APP_SECRET, MIMI_SECRET_FS_APP_SECRET, true);
     print_config_item("FS Allow", MIMI_NVS_FS, MIMI_NVS_KEY_FS_ALLOW_FROM, MIMI_SECRET_FS_ALLOW_FROM, false);
     print_config_item("ChannelMode", MIMI_NVS_BOT, MIMI_NVS_KEY_CHANNEL_MODE, MIMI_SECRET_CHANNEL_MODE, false);

@@ -10,9 +10,9 @@ set(APP_SRCS
     ${APP_PATH}/mimi.c
     ${APP_PATH}/bus/message_bus.c
     ${APP_PATH}/wifi/wifi_manager.c
-    ${APP_PATH}/telegram/telegram_bot.c
-    ${APP_PATH}/discord/discord_bot.c
-    ${APP_PATH}/feishu/feishu_bot.c
+    ${APP_PATH}/channels/telegram_bot.c
+    ${APP_PATH}/channels/discord_bot.c
+    ${APP_PATH}/channels/feishu_bot.c
     ${APP_PATH}/llm/llm_proxy.c
     ${APP_PATH}/agent/agent_loop.c
     ${APP_PATH}/agent/context_builder.c

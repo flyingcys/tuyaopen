@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-TG_C="${APP_DIR}/telegram/telegram_bot.c"
+TG_C="${APP_DIR}/channels/telegram_bot.c"
 
 if [[ ! -f "${TG_C}" ]]; then
   echo "FAIL: ${TG_C} not found" >&2

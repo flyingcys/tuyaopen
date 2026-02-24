@@ -10,19 +10,19 @@ if [[ ! -f "${TLS_C}" ]]; then
   exit 1
 fi
 
-if ! grep -q "api.openai.com" "${TLS_C}"; then
-  echo "FAIL: tls_cert_bundle.c has no built-in fallback branch for api.openai.com" >&2
+if grep -q "api.openai.com" "${TLS_C}"; then
+  echo "FAIL: tls_cert_bundle.c still has host-specific fallback branch for api.openai.com" >&2
   exit 1
 fi
 
-if ! grep -q "OPENAI_WE1_CA_PEM" "${TLS_C}"; then
-  echo "FAIL: tls_cert_bundle.c has no OpenAI WE1 fallback CA blob" >&2
+if grep -q "OPENAI_WE1_CA_PEM" "${TLS_C}"; then
+  echo "FAIL: tls_cert_bundle.c still has OpenAI-specific built-in CA blob" >&2
   exit 1
 fi
 
 if grep -q "OPENAI_GTS_R4_CA_PEM" "${TLS_C}"; then
-  echo "FAIL: tls_cert_bundle.c still uses OpenAI GTS Root R4 fallback (P-384 unsupported on target)" >&2
+  echo "FAIL: tls_cert_bundle.c still has deprecated OpenAI GTS Root R4 symbol" >&2
   exit 1
 fi
 
-echo "PASS: OpenAI built-in CA fallback is implemented."
+echo "PASS: OpenAI-specific hardcoded TLS fallback was removed."

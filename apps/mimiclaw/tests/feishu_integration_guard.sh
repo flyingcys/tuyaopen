@@ -9,8 +9,8 @@ CLI_C="${APP_DIR}/cli/serial_cli.c"
 CFG_H="${APP_DIR}/mimi_config.h"
 SECRETS_EXAMPLE="${APP_DIR}/mimi_secrets.h.example"
 CMAKE_FILE="${APP_DIR}/CMakeLists.txt"
-FS_H="${APP_DIR}/feishu/feishu_bot.h"
-FS_C="${APP_DIR}/feishu/feishu_bot.c"
+FS_H="${APP_DIR}/channels/feishu_bot.h"
+FS_C="${APP_DIR}/channels/feishu_bot.c"
 
 for f in "${BUS_H}" "${MIMI_C}" "${CLI_C}" "${CFG_H}" "${SECRETS_EXAMPLE}" "${CMAKE_FILE}"; do
   if [[ ! -f "${f}" ]]; then
@@ -24,7 +24,7 @@ if ! grep -q 'MIMI_CHAN_FEISHU' "${BUS_H}"; then
   exit 1
 fi
 
-if ! grep -q 'feishu/feishu_bot.h' "${MIMI_C}"; then
+if ! grep -q 'channels/feishu_bot.h' "${MIMI_C}"; then
   echo "FAIL: mimi.c does not include feishu bot header" >&2
   exit 1
 fi
@@ -39,7 +39,7 @@ if ! grep -q 'feishu_bot_init' "${MIMI_C}" || ! grep -q 'feishu_bot_start' "${MI
   exit 1
 fi
 
-if ! grep -q 'feishu/feishu_bot.c' "${CMAKE_FILE}"; then
+if ! grep -q 'channels/feishu_bot.c' "${CMAKE_FILE}"; then
   echo "FAIL: feishu source file is not in CMakeLists.txt" >&2
   exit 1
 fi

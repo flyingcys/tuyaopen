@@ -633,8 +633,8 @@ static void handle_message_create_event(cJSON *event)
     }
 
     safe_copy(s_channel_id, sizeof(s_channel_id), channel_id);
-    MIMI_LOGI(TAG, "rx discord event=MESSAGE_CREATE channel=%s id=%s len=%u",
-              channel_id, message_id ? message_id : "", (unsigned)strlen(content));
+    MIMI_LOGI(TAG, "rx discord event=MESSAGE_CREATE channel=%s id=%s len=%u text=%s",
+              channel_id, message_id ? message_id : "", (unsigned)strlen(content), content);
 
     publish_inbound_discord(channel_id, content);
 }
