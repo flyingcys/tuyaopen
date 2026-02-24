@@ -5,8 +5,13 @@
 
 static const char *TAG = "llm";
 
-static char s_api_key[128] = {0};
-static char s_model[64] = MIMI_LLM_DEFAULT_MODEL;
+#define LLM_API_KEY_MAX_LEN 320
+#define LLM_MODEL_MAX_LEN   64
+#define LLM_DUMP_MAX_BYTES   (16 * 1024)
+#define LLM_DUMP_CHUNK_BYTES 320
+
+static char s_api_key[LLM_API_KEY_MAX_LEN] = {0};
+static char s_model[LLM_MODEL_MAX_LEN] = MIMI_LLM_DEFAULT_MODEL;
 static char s_provider[32] = MIMI_LLM_PROVIDER_DEFAULT;
 
 static uint8_t *s_openai_cacert = NULL;
@@ -23,6 +28,53 @@ typedef struct {
 static llm_endpoint_t s_openai_endpoint = {0};
 static llm_endpoint_t s_anthropic_endpoint = {0};
 
+static void llm_log_payload(const char *label, const char *payload)
+{
+    if (!payload) {
+        MIMI_LOGI(TAG, "%s: <null>", label);
+        return;
+    }
+
+    size_t total = strlen(payload);
+#if MIMI_LLM_LOG_VERBOSE_PAYLOAD
+    size_t shown = total > LLM_DUMP_MAX_BYTES ? LLM_DUMP_MAX_BYTES : total;
+    MIMI_LOGI(TAG, "%s (%u bytes)%s",
+              label,
+              (unsigned)total,
+              (shown < total) ? " [truncated]" : "");
+
+    char chunk[LLM_DUMP_CHUNK_BYTES + 1];
+    for (size_t off = 0; off < shown; off += LLM_DUMP_CHUNK_BYTES) {
+        size_t n = shown - off;
+        if (n > LLM_DUMP_CHUNK_BYTES) {
+            n = LLM_DUMP_CHUNK_BYTES;
+        }
+        memcpy(chunk, payload + off, n);
+        chunk[n] = '\0';
+        MIMI_LOGI(TAG, "%s[%u]: %s", label, (unsigned)off, chunk);
+    }
+#else
+    if (MIMI_LLM_LOG_PREVIEW_BYTES > 0) {
+        size_t shown = total > MIMI_LLM_LOG_PREVIEW_BYTES ? MIMI_LLM_LOG_PREVIEW_BYTES : total;
+        char preview[MIMI_LLM_LOG_PREVIEW_BYTES + 1];
+        memcpy(preview, payload, shown);
+        preview[shown] = '\0';
+        for (size_t i = 0; i < shown; i++) {
+            if (preview[i] == '\n' || preview[i] == '\r' || preview[i] == '\t') {
+                preview[i] = ' ';
+            }
+        }
+        MIMI_LOGI(TAG, "%s (%u bytes): %s%s",
+                  label,
+                  (unsigned)total,
+                  preview,
+                  (shown < total) ? " ..." : "");
+    } else {
+        MIMI_LOGI(TAG, "%s (%u bytes)", label, (unsigned)total);
+    }
+#endif
+}
+
 static void safe_copy(char *dst, size_t dst_size, const char *src)
 {
     if (!dst || dst_size == 0) {
@@ -32,7 +84,9 @@ static void safe_copy(char *dst, size_t dst_size, const char *src)
         dst[0] = '\0';
         return;
     }
-    snprintf(dst, dst_size, "%s", src);
+    size_t n = strnlen(src, dst_size - 1);
+    memcpy(dst, src, n);
+    dst[n] = '\0';
 }
 
 static bool provider_is_openai(void)
@@ -450,7 +504,7 @@ static OPERATE_RET llm_http_call(const char *post_data, char *resp_buf, size_t r
         return OPRT_INVALID_PARM;
     }
 
-    char auth[192] = {0};
+    char auth[LLM_API_KEY_MAX_LEN + 16] = {0};
     http_client_header_t headers[4] = {0};
     uint8_t header_count = 0;
 
@@ -527,17 +581,19 @@ OPERATE_RET llm_proxy_init(void)
         safe_copy(s_provider, sizeof(s_provider), MIMI_SECRET_MODEL_PROVIDER);
     }
 
-    char tmp[128] = {0};
-    if (mimi_kv_get_string(MIMI_NVS_LLM, MIMI_NVS_KEY_API_KEY, tmp, sizeof(tmp)) == OPRT_OK) {
-        safe_copy(s_api_key, sizeof(s_api_key), tmp);
+    char api_key_tmp[LLM_API_KEY_MAX_LEN] = {0};
+    if (mimi_kv_get_string(MIMI_NVS_LLM, MIMI_NVS_KEY_API_KEY, api_key_tmp, sizeof(api_key_tmp)) == OPRT_OK) {
+        safe_copy(s_api_key, sizeof(s_api_key), api_key_tmp);
     }
 
-    if (mimi_kv_get_string(MIMI_NVS_LLM, MIMI_NVS_KEY_MODEL, tmp, sizeof(tmp)) == OPRT_OK) {
-        safe_copy(s_model, sizeof(s_model), tmp);
+    char model_tmp[LLM_MODEL_MAX_LEN] = {0};
+    if (mimi_kv_get_string(MIMI_NVS_LLM, MIMI_NVS_KEY_MODEL, model_tmp, sizeof(model_tmp)) == OPRT_OK) {
+        safe_copy(s_model, sizeof(s_model), model_tmp);
     }
 
-    if (mimi_kv_get_string(MIMI_NVS_LLM, MIMI_NVS_KEY_PROVIDER, tmp, sizeof(tmp)) == OPRT_OK) {
-        safe_copy(s_provider, sizeof(s_provider), tmp);
+    char provider_tmp[32] = {0};
+    if (mimi_kv_get_string(MIMI_NVS_LLM, MIMI_NVS_KEY_PROVIDER, provider_tmp, sizeof(provider_tmp)) == OPRT_OK) {
+        safe_copy(s_provider, sizeof(s_provider), provider_tmp);
     }
 
     MIMI_LOGI(TAG, "llm init provider=%s model=%s host=%s path=%s key=%s", s_provider, s_model,
@@ -590,7 +646,11 @@ OPERATE_RET llm_chat(const char *system_prompt, const char *messages_json,
         return OPRT_MALLOC_FAILED;
     }
     cJSON_AddStringToObject(body, "model", s_model);
-    cJSON_AddNumberToObject(body, "max_tokens", MIMI_LLM_MAX_TOKENS);
+    if (provider_is_openai()) {
+        cJSON_AddNumberToObject(body, "max_completion_tokens", MIMI_LLM_MAX_TOKENS);
+    } else {
+        cJSON_AddNumberToObject(body, "max_tokens", MIMI_LLM_MAX_TOKENS);
+    }
 
     cJSON *parsed_messages = NULL;
     if (messages_json && messages_json[0]) {
@@ -635,9 +695,11 @@ OPERATE_RET llm_chat(const char *system_prompt, const char *messages_json,
     if (!raw_resp) {
         return OPRT_MALLOC_FAILED;
     }
+    llm_log_payload("LLM request", post_data);
     uint16_t status = 0;
     OPERATE_RET rt = llm_http_call(post_data, raw_resp, MIMI_LLM_STREAM_BUF_SIZE, &status);
     cJSON_free(post_data);
+    llm_log_payload("LLM raw response", raw_resp);
 
     if (rt != OPRT_OK) {
         snprintf(response_buf, buf_size, "HTTP request failed (rt=%d)", rt);
@@ -713,7 +775,11 @@ OPERATE_RET llm_chat_tools(const char *system_prompt,
     }
 
     cJSON_AddStringToObject(body, "model", s_model);
-    cJSON_AddNumberToObject(body, "max_tokens", MIMI_LLM_MAX_TOKENS);
+    if (provider_is_openai()) {
+        cJSON_AddNumberToObject(body, "max_completion_tokens", MIMI_LLM_MAX_TOKENS);
+    } else {
+        cJSON_AddNumberToObject(body, "max_tokens", MIMI_LLM_MAX_TOKENS);
+    }
 
     if (provider_is_openai()) {
         cJSON *openai_msgs = convert_messages_openai(system_prompt, messages);
@@ -756,9 +822,11 @@ OPERATE_RET llm_chat_tools(const char *system_prompt,
         cJSON_free(post_data);
         return OPRT_MALLOC_FAILED;
     }
+    llm_log_payload("LLM tools request", post_data);
     uint16_t status = 0;
     OPERATE_RET rt = llm_http_call(post_data, raw_resp, MIMI_LLM_STREAM_BUF_SIZE, &status);
     cJSON_free(post_data);
+    llm_log_payload("LLM tools raw response", raw_resp);
 
     if (rt != OPRT_OK) {
         free(raw_resp);

@@ -260,15 +260,57 @@ OPERATE_RET wifi_manager_set_credentials(const char *ssid, const char *password)
     return OPRT_OK;
 }
 
-void wifi_manager_scan_and_print(void)
+OPERATE_RET wifi_manager_scan_and_print(void)
 {
+    OPERATE_RET rt = wifi_manager_init();
+    if (rt != OPRT_OK) {
+        MIMI_LOGW(TAG, "wifi scan init failed: %d", rt);
+        return rt;
+    }
+
+    WF_WK_MD_E mode = WWM_POWERDOWN;
+    rt = tal_wifi_get_work_mode(&mode);
+    if (rt != OPRT_OK) {
+        MIMI_LOGW(TAG, "wifi scan get mode failed: %d", rt);
+        return rt;
+    }
+    if (mode != WWM_STATION && mode != WWM_STATIONAP) {
+        rt = tal_wifi_set_work_mode(WWM_STATION);
+        if (rt != OPRT_OK) {
+            MIMI_LOGW(TAG, "wifi scan set station mode failed: %d", rt);
+            return rt;
+        }
+        tal_system_sleep(200);
+    }
+
     AP_IF_S *ap_list = NULL;
     uint32_t ap_num = 0;
 
-    OPERATE_RET rt = tal_wifi_all_ap_scan(&ap_list, &ap_num);
+    for (int attempt = 0; attempt < 2; attempt++) {
+        rt = tal_wifi_all_ap_scan(&ap_list, &ap_num);
+        if (rt == OPRT_OK && ap_num > 0) {
+            break;
+        }
+
+        if (ap_list) {
+            (void)tal_wifi_release_ap(ap_list);
+            ap_list = NULL;
+        }
+        ap_num = 0;
+
+        if (attempt == 0) {
+            tal_system_sleep(300);
+        }
+    }
+
     if (rt != OPRT_OK) {
         MIMI_LOGW(TAG, "wifi scan failed: %d", rt);
-        return;
+        return rt;
+    }
+
+    if (ap_num == 0 || !ap_list) {
+        MIMI_LOGW(TAG, "wifi scan found 0 ap(s)");
+        return OPRT_NOT_FOUND;
     }
 
     MIMI_LOGI(TAG, "wifi scan found %u ap(s)", (unsigned)ap_num);
@@ -297,6 +339,7 @@ void wifi_manager_scan_and_print(void)
     }
 
     (void)tal_wifi_release_ap(ap_list);
+    return OPRT_OK;
 }
 
 #else
@@ -341,9 +384,10 @@ OPERATE_RET wifi_manager_set_credentials(const char *ssid, const char *password)
     return mimi_kv_set_string(MIMI_NVS_WIFI, MIMI_NVS_KEY_PASS, password);
 }
 
-void wifi_manager_scan_and_print(void)
+OPERATE_RET wifi_manager_scan_and_print(void)
 {
     MIMI_LOGW(TAG, "wifi scan disabled (ENABLE_WIFI!=1)");
+    return OPRT_NOT_SUPPORTED;
 }
 
 #endif

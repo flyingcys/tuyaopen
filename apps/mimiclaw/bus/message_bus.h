@@ -5,6 +5,7 @@
 #define MIMI_CHAN_TELEGRAM  "telegram"
 #define MIMI_CHAN_WEBSOCKET "websocket"
 #define MIMI_CHAN_CLI       "cli"
+#define MIMI_CHAN_SYSTEM    "system"
 
 typedef struct {
     char channel[16];

@@ -16,6 +16,7 @@ struct proxy_conn {
 static const char *TAG = "proxy";
 static char s_proxy_host[64] = {0};
 static uint16_t s_proxy_port = 0;
+static char s_proxy_type[8] = "http"; /* http | socks5 */
 
 static int find_header_end(const char *buf, int len)
 {
@@ -42,7 +43,26 @@ static int parse_http_status(const char *header)
     return atoi(sp + 1);
 }
 
-static int proxy_write_all_tcp(tuya_transporter_t tcp, const char *data, int len, int timeout_ms)
+static bool proxy_type_valid(const char *type)
+{
+    return type && (strcmp(type, "http") == 0 || strcmp(type, "socks5") == 0);
+}
+
+static void proxy_type_set(const char *type)
+{
+    if (type && strcmp(type, "socks5") == 0) {
+        memcpy(s_proxy_type, "socks5", sizeof("socks5"));
+    } else {
+        memcpy(s_proxy_type, "http", sizeof("http"));
+    }
+}
+
+static bool proxy_type_is_socks5(void)
+{
+    return strcmp(s_proxy_type, "socks5") == 0;
+}
+
+static int proxy_write_all_tcp(tuya_transporter_t tcp, const void *data, int len, int timeout_ms)
 {
     int sent = 0;
     while (sent < len) {
@@ -53,6 +73,36 @@ static int proxy_write_all_tcp(tuya_transporter_t tcp, const char *data, int len
         sent += n;
     }
     return sent;
+}
+
+static int proxy_read_exact_tcp(tuya_transporter_t tcp, uint8_t *buf, int len, int timeout_ms)
+{
+    int got = 0;
+    uint32_t start_ms = tal_system_get_millisecond();
+
+    while (got < len) {
+        uint32_t now_ms = tal_system_get_millisecond();
+        if ((int)(now_ms - start_ms) >= timeout_ms) {
+            return -1;
+        }
+
+        int remain_ms = timeout_ms - (int)(now_ms - start_ms);
+        if (remain_ms < 50) {
+            remain_ms = 50;
+        }
+
+        int n = tuya_transporter_read(tcp, buf + got, len - got, remain_ms);
+        if (n == OPRT_RESOURCE_NOT_READY) {
+            tal_system_sleep(10);
+            continue;
+        }
+        if (n <= 0) {
+            return -1;
+        }
+        got += n;
+    }
+
+    return got;
 }
 
 static int proxy_read_headers(tuya_transporter_t tcp, char *buf, int size, int timeout_ms)
@@ -91,6 +141,149 @@ static int proxy_read_headers(tuya_transporter_t tcp, char *buf, int size, int t
     return -1;
 }
 
+static OPERATE_RET proxy_open_transport(proxy_conn_t *conn, int timeout_ms)
+{
+    if (!conn) {
+        return OPRT_INVALID_PARM;
+    }
+
+    conn->tcp = tuya_transporter_create(TRANSPORT_TYPE_TCP, NULL);
+    if (!conn->tcp) {
+        MIMI_LOGE(TAG, "create tcp transporter failed");
+        return OPRT_COM_ERROR;
+    }
+
+    tuya_tcp_config_t cfg = {0};
+    cfg.isReuse = TRUE;
+    cfg.isDisableNagle = TRUE;
+    cfg.sendTimeoutMs = timeout_ms;
+    cfg.recvTimeoutMs = timeout_ms;
+    (void)tuya_transporter_ctrl(conn->tcp, TUYA_TRANSPORTER_SET_TCP_CONFIG, &cfg);
+
+    OPERATE_RET rt = tuya_transporter_connect(conn->tcp, s_proxy_host, s_proxy_port, timeout_ms);
+    if (rt != OPRT_OK) {
+        MIMI_LOGE(TAG, "connect proxy failed %s:%u rt=%d", s_proxy_host, s_proxy_port, rt);
+        tuya_transporter_destroy(conn->tcp);
+        conn->tcp = NULL;
+        return rt;
+    }
+
+    return OPRT_OK;
+}
+
+static OPERATE_RET open_http_connect_tunnel(proxy_conn_t *conn, const char *host, int port, int timeout_ms)
+{
+    char req[512] = {0};
+    int req_len = snprintf(req, sizeof(req),
+                           "CONNECT %s:%d HTTP/1.1\r\n"
+                           "Host: %s:%d\r\n"
+                           "Proxy-Connection: Keep-Alive\r\n"
+                           "Connection: Keep-Alive\r\n\r\n",
+                           host, port, host, port);
+    if (req_len <= 0 || req_len >= (int)sizeof(req)) {
+        return OPRT_BUFFER_NOT_ENOUGH;
+    }
+
+    if (proxy_write_all_tcp(conn->tcp, req, req_len, timeout_ms) != req_len) {
+        return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
+    }
+
+    char header[1024] = {0};
+    int hdr_len = proxy_read_headers(conn->tcp, header, sizeof(header), timeout_ms);
+    if (hdr_len <= 0) {
+        return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
+    }
+
+    int code = parse_http_status(header);
+    if (code != 200) {
+        MIMI_LOGE(TAG, "CONNECT rejected code=%d", code);
+        return OPRT_COM_ERROR;
+    }
+
+    return OPRT_OK;
+}
+
+static OPERATE_RET open_socks5_tunnel(proxy_conn_t *conn, const char *host, int port, int timeout_ms)
+{
+    if (!conn || !conn->tcp || !host || port <= 0) {
+        return OPRT_INVALID_PARM;
+    }
+
+    size_t host_len = strlen(host);
+    if (host_len == 0 || host_len > 255) {
+        MIMI_LOGE(TAG, "invalid socks5 host len=%u", (unsigned)host_len);
+        return OPRT_INVALID_PARM;
+    }
+
+    uint8_t greeting[3] = {0x05, 0x01, 0x00};
+    if (proxy_write_all_tcp(conn->tcp, greeting, sizeof(greeting), timeout_ms) != (int)sizeof(greeting)) {
+        return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
+    }
+
+    uint8_t greet_resp[2] = {0};
+    if (proxy_read_exact_tcp(conn->tcp, greet_resp, sizeof(greet_resp), timeout_ms) != (int)sizeof(greet_resp)) {
+        return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
+    }
+    if (greet_resp[0] != 0x05 || greet_resp[1] != 0x00) {
+        MIMI_LOGE(TAG, "SOCKS5 greeting rejected ver=%u method=%u", greet_resp[0], greet_resp[1]);
+        return OPRT_COM_ERROR;
+    }
+
+    uint8_t req[4 + 1 + 255 + 2] = {0};
+    size_t req_len = 0;
+    req[req_len++] = 0x05;
+    req[req_len++] = 0x01;
+    req[req_len++] = 0x00;
+    req[req_len++] = 0x03;
+    req[req_len++] = (uint8_t)host_len;
+    memcpy(req + req_len, host, host_len);
+    req_len += host_len;
+    req[req_len++] = (uint8_t)((port >> 8) & 0xFF);
+    req[req_len++] = (uint8_t)(port & 0xFF);
+
+    if (proxy_write_all_tcp(conn->tcp, req, (int)req_len, timeout_ms) != (int)req_len) {
+        return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
+    }
+
+    uint8_t resp_head[4] = {0};
+    if (proxy_read_exact_tcp(conn->tcp, resp_head, sizeof(resp_head), timeout_ms) != (int)sizeof(resp_head)) {
+        return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
+    }
+
+    if (resp_head[0] != 0x05 || resp_head[1] != 0x00) {
+        MIMI_LOGE(TAG, "SOCKS5 connect rejected ver=%u rep=%u", resp_head[0], resp_head[1]);
+        return OPRT_COM_ERROR;
+    }
+
+    int addr_tail_len = 0;
+    if (resp_head[3] == 0x01) {
+        addr_tail_len = 4 + 2;
+    } else if (resp_head[3] == 0x04) {
+        addr_tail_len = 16 + 2;
+    } else if (resp_head[3] == 0x03) {
+        uint8_t name_len = 0;
+        if (proxy_read_exact_tcp(conn->tcp, &name_len, 1, timeout_ms) != 1) {
+            return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
+        }
+        addr_tail_len = name_len + 2;
+    } else {
+        MIMI_LOGE(TAG, "SOCKS5 unknown atyp=%u", resp_head[3]);
+        return OPRT_COM_ERROR;
+    }
+
+    if (addr_tail_len > 0) {
+        uint8_t tmp[300] = {0};
+        if (addr_tail_len > (int)sizeof(tmp)) {
+            return OPRT_BUFFER_NOT_ENOUGH;
+        }
+        if (proxy_read_exact_tcp(conn->tcp, tmp, addr_tail_len, timeout_ms) != addr_tail_len) {
+            return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
+        }
+    }
+
+    return OPRT_OK;
+}
+
 OPERATE_RET http_proxy_init(void)
 {
     if (MIMI_SECRET_PROXY_HOST[0] != '\0') {
@@ -101,12 +294,31 @@ OPERATE_RET http_proxy_init(void)
         s_proxy_port = (uint16_t)atoi(MIMI_SECRET_PROXY_PORT);
     }
 
+    if (proxy_type_valid(MIMI_SECRET_PROXY_TYPE)) {
+        proxy_type_set(MIMI_SECRET_PROXY_TYPE);
+    }
+
     char tmp[64] = {0};
     if (mimi_kv_get_string(MIMI_NVS_PROXY, MIMI_NVS_KEY_PROXY_HOST, tmp, sizeof(tmp)) == OPRT_OK) {
         snprintf(s_proxy_host, sizeof(s_proxy_host), "%s", tmp);
     }
+
+    memset(tmp, 0, sizeof(tmp));
     if (mimi_kv_get_string(MIMI_NVS_PROXY, MIMI_NVS_KEY_PROXY_PORT, tmp, sizeof(tmp)) == OPRT_OK) {
         s_proxy_port = (uint16_t)atoi(tmp);
+    }
+
+    memset(tmp, 0, sizeof(tmp));
+    if (mimi_kv_get_string(MIMI_NVS_PROXY, MIMI_NVS_KEY_PROXY_TYPE, tmp, sizeof(tmp)) == OPRT_OK) {
+        if (proxy_type_valid(tmp)) {
+            proxy_type_set(tmp);
+        }
+    }
+
+    if (http_proxy_is_enabled()) {
+        MIMI_LOGI(TAG, "proxy configured: %s:%u (%s)", s_proxy_host, s_proxy_port, s_proxy_type);
+    } else {
+        MIMI_LOGI(TAG, "proxy not configured");
     }
 
     return OPRT_OK;
@@ -117,14 +329,20 @@ bool http_proxy_is_enabled(void)
     return s_proxy_host[0] != '\0' && s_proxy_port > 0;
 }
 
-OPERATE_RET http_proxy_set(const char *host, uint16_t port)
+OPERATE_RET http_proxy_set(const char *host, uint16_t port, const char *type)
 {
     if (!host || port == 0) {
         return OPRT_INVALID_PARM;
     }
 
+    const char *proxy_type = type ? type : "http";
+    if (!proxy_type_valid(proxy_type)) {
+        return OPRT_INVALID_PARM;
+    }
+
     snprintf(s_proxy_host, sizeof(s_proxy_host), "%s", host);
     s_proxy_port = port;
+    proxy_type_set(proxy_type);
 
     char port_buf[16] = {0};
     snprintf(port_buf, sizeof(port_buf), "%u", (unsigned)port);
@@ -134,16 +352,23 @@ OPERATE_RET http_proxy_set(const char *host, uint16_t port)
         return rt;
     }
 
-    return mimi_kv_set_string(MIMI_NVS_PROXY, MIMI_NVS_KEY_PROXY_PORT, port_buf);
+    rt = mimi_kv_set_string(MIMI_NVS_PROXY, MIMI_NVS_KEY_PROXY_PORT, port_buf);
+    if (rt != OPRT_OK) {
+        return rt;
+    }
+
+    return mimi_kv_set_string(MIMI_NVS_PROXY, MIMI_NVS_KEY_PROXY_TYPE, proxy_type);
 }
 
 OPERATE_RET http_proxy_clear(void)
 {
     s_proxy_host[0] = '\0';
     s_proxy_port = 0;
+    proxy_type_set("http");
 
     (void)mimi_kv_del(MIMI_NVS_PROXY, MIMI_NVS_KEY_PROXY_HOST);
     (void)mimi_kv_del(MIMI_NVS_PROXY, MIMI_NVS_KEY_PROXY_PORT);
+    (void)mimi_kv_del(MIMI_NVS_PROXY, MIMI_NVS_KEY_PROXY_TYPE);
     return OPRT_OK;
 }
 
@@ -162,64 +387,20 @@ proxy_conn_t *proxy_conn_open(const char *host, int port, int timeout_ms)
         return NULL;
     }
 
-    conn->tcp = tuya_transporter_create(TRANSPORT_TYPE_TCP, NULL);
-    if (!conn->tcp) {
-        MIMI_LOGE(TAG, "create tcp transporter failed");
-        free(conn);
-        return NULL;
-    }
-
-    tuya_tcp_config_t cfg = {0};
-    cfg.isReuse = TRUE;
-    cfg.isDisableNagle = TRUE;
-    cfg.sendTimeoutMs = timeout_ms;
-    cfg.recvTimeoutMs = timeout_ms;
-    (void)tuya_transporter_ctrl(conn->tcp, TUYA_TRANSPORTER_SET_TCP_CONFIG, &cfg);
-
-    OPERATE_RET rt = tuya_transporter_connect(conn->tcp, s_proxy_host, s_proxy_port, timeout_ms);
+    OPERATE_RET rt = proxy_open_transport(conn, timeout_ms);
     if (rt != OPRT_OK) {
-        MIMI_LOGE(TAG, "connect proxy failed %s:%u rt=%d", s_proxy_host, s_proxy_port, rt);
-        tuya_transporter_destroy(conn->tcp);
         free(conn);
         return NULL;
     }
 
-    char req[512] = {0};
-    int req_len = snprintf(req, sizeof(req),
-                           "CONNECT %s:%d HTTP/1.1\r\n"
-                           "Host: %s:%d\r\n"
-                           "Proxy-Connection: Keep-Alive\r\n"
-                           "Connection: Keep-Alive\r\n\r\n",
-                           host, port, host, port);
-    if (req_len <= 0 || req_len >= (int)sizeof(req)) {
-        MIMI_LOGE(TAG, "build connect request failed");
-        tuya_transporter_close(conn->tcp);
-        tuya_transporter_destroy(conn->tcp);
-        free(conn);
-        return NULL;
+    if (proxy_type_is_socks5()) {
+        rt = open_socks5_tunnel(conn, host, port, timeout_ms);
+    } else {
+        rt = open_http_connect_tunnel(conn, host, port, timeout_ms);
     }
 
-    if (proxy_write_all_tcp(conn->tcp, req, req_len, timeout_ms) != req_len) {
-        MIMI_LOGE(TAG, "send CONNECT failed");
-        tuya_transporter_close(conn->tcp);
-        tuya_transporter_destroy(conn->tcp);
-        free(conn);
-        return NULL;
-    }
-
-    char header[1024] = {0};
-    int hdr_len = proxy_read_headers(conn->tcp, header, sizeof(header), timeout_ms);
-    if (hdr_len <= 0) {
-        MIMI_LOGE(TAG, "read CONNECT response failed");
-        tuya_transporter_close(conn->tcp);
-        tuya_transporter_destroy(conn->tcp);
-        free(conn);
-        return NULL;
-    }
-
-    int code = parse_http_status(header);
-    if (code != 200) {
-        MIMI_LOGE(TAG, "CONNECT rejected code=%d", code);
+    if (rt != OPRT_OK) {
+        MIMI_LOGE(TAG, "open %s tunnel failed host=%s:%d rt=%d", s_proxy_type, host, port, rt);
         tuya_transporter_close(conn->tcp);
         tuya_transporter_destroy(conn->tcp);
         free(conn);
@@ -298,7 +479,7 @@ proxy_conn_t *proxy_conn_open(const char *host, int port, int timeout_ms)
         return NULL;
     }
 
-    MIMI_LOGI(TAG, "CONNECT+TLS tunnel ready %s:%d via %s:%u", host, port, s_proxy_host, s_proxy_port);
+    MIMI_LOGI(TAG, "proxy tunnel ready %s:%d via %s:%u (%s)", host, port, s_proxy_host, s_proxy_port, s_proxy_type);
     return conn;
 }
 

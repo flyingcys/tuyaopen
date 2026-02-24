@@ -6,7 +6,7 @@ typedef struct proxy_conn proxy_conn_t;
 
 OPERATE_RET http_proxy_init(void);
 bool http_proxy_is_enabled(void);
-OPERATE_RET http_proxy_set(const char *host, uint16_t port);
+OPERATE_RET http_proxy_set(const char *host, uint16_t port, const char *type);
 OPERATE_RET http_proxy_clear(void);
 
 proxy_conn_t *proxy_conn_open(const char *host, int port, int timeout_ms);

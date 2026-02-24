@@ -35,7 +35,7 @@ static void mimi_runtime_init(void)
     }
 
     cJSON_InitHooks(&(cJSON_Hooks){.malloc_fn = tal_malloc, .free_fn = tal_free});
-    (void)tal_log_init(TAL_LOG_LEVEL_DEBUG, 1024, (TAL_LOG_OUTPUT_CB)tkl_log_output);
+    (void)tal_log_init(TAL_LOG_LEVEL_INFO, 1024, (TAL_LOG_OUTPUT_CB)tkl_log_output);
 
     // LittleFS mount happens inside tal_kv_init(). We must call this before any tal_fs_* APIs.
     (void)tal_kv_init(&(tal_kv_cfg_t){
@@ -105,9 +105,17 @@ static void outbound_dispatch_task(void *arg)
         }
 
         if (strcmp(msg.channel, MIMI_CHAN_TELEGRAM) == 0) {
-            (void)telegram_send_message(msg.chat_id, msg.content ? msg.content : "");
+            OPERATE_RET send_rt = telegram_send_message(msg.chat_id, msg.content ? msg.content : "");
+            if (send_rt != OPRT_OK) {
+                MIMI_LOGE(TAG, "telegram send failed chat=%s rt=%d", msg.chat_id, send_rt);
+            }
         } else if (strcmp(msg.channel, MIMI_CHAN_WEBSOCKET) == 0) {
-            (void)ws_server_send(msg.chat_id, msg.content ? msg.content : "");
+            OPERATE_RET ws_rt = ws_server_send(msg.chat_id, msg.content ? msg.content : "");
+            if (ws_rt != OPRT_OK) {
+                MIMI_LOGW(TAG, "websocket send failed chat=%s rt=%d", msg.chat_id, ws_rt);
+            }
+        } else if (strcmp(msg.channel, MIMI_CHAN_SYSTEM) == 0) {
+            MIMI_LOGI(TAG, "system message [%s]: %.128s", msg.chat_id, msg.content ? msg.content : "");
         } else {
             MIMI_LOGW(TAG, "unknown outbound channel: %s", msg.channel);
         }
@@ -156,11 +164,9 @@ static void mimi_network_init(void)
 
 static void start_online_services(const char *mode)
 {
-    OPERATE_RET rt = telegram_bot_start();
-    if (rt == OPRT_NOT_FOUND) {
-        MIMI_LOGW(TAG, "telegram token missing, telegram service disabled");
-    } else if (rt != OPRT_OK) {
-        MIMI_LOGW(TAG, "telegram_bot_start failed: %d", rt);
+    OPERATE_RET rt = start_outbound_dispatcher();
+    if (rt != OPRT_OK) {
+        MIMI_LOGW(TAG, "start_outbound_dispatcher failed: %d", rt);
     }
 
     rt = agent_loop_start();
@@ -168,14 +174,16 @@ static void start_online_services(const char *mode)
         MIMI_LOGW(TAG, "agent_loop_start failed: %d", rt);
     }
 
+    rt = telegram_bot_start();
+    if (rt == OPRT_NOT_FOUND) {
+        MIMI_LOGW(TAG, "telegram token missing, telegram service disabled");
+    } else if (rt != OPRT_OK) {
+        MIMI_LOGW(TAG, "telegram_bot_start failed: %d", rt);
+    }
+
     rt = ws_server_start();
     if (rt != OPRT_OK) {
         MIMI_LOGW(TAG, "ws_server_start failed: %d", rt);
-    }
-
-    rt = start_outbound_dispatcher();
-    if (rt != OPRT_OK) {
-        MIMI_LOGW(TAG, "start_outbound_dispatcher failed: %d", rt);
     }
 
     MIMI_LOGI(TAG, "online services started in %s mode", mode ? mode : "unknown");

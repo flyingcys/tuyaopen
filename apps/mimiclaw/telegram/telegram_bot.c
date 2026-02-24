@@ -7,9 +7,13 @@
 #include "proxy/http_proxy.h"
 #include "tls_cert_bundle.h"
 
+#include <inttypes.h>
+
 static const char *TAG = "telegram";
 static char s_bot_token[128] = {0};
 static int64_t s_update_offset = 0;
+static int64_t s_last_saved_offset = -1;
+static uint32_t s_last_offset_save_ms = 0;
 static THREAD_HANDLE s_poll_thread = NULL;
 static uint8_t *s_tg_cacert = NULL;
 static uint16_t s_tg_cacert_len = 0;
@@ -20,6 +24,13 @@ static uint16_t s_tg_cacert_len = 0;
 #define TG_PROXY_READ_SLICE_MS 1000
 #define TG_PROXY_READ_TOTAL_MS ((MIMI_TG_POLL_TIMEOUT_S + 20) * 1000)
 #define TG_PROXY_LONGPOLL_TIMEOUT_S 20
+#define TG_OFFSET_NVS_KEY "update_offset"
+#define TG_DEDUP_CACHE_SIZE 64
+#define TG_OFFSET_SAVE_INTERVAL_MS (5 * 1000)
+#define TG_OFFSET_SAVE_STEP 10
+
+static uint64_t s_seen_msg_keys[TG_DEDUP_CACHE_SIZE] = {0};
+static size_t s_seen_msg_idx = 0;
 
 static const char *json_string_or_default(cJSON *obj, const char *key, const char *fallback)
 {
@@ -49,6 +60,71 @@ static void safe_copy(char *dst, size_t dst_size, const char *src)
         return;
     }
     snprintf(dst, dst_size, "%s", src);
+}
+
+static uint64_t fnv1a64(const char *s)
+{
+    uint64_t h = 1469598103934665603ULL;
+    if (!s) {
+        return h;
+    }
+    while (*s) {
+        h ^= (unsigned char)(*s++);
+        h *= 1099511628211ULL;
+    }
+    return h;
+}
+
+static uint64_t make_msg_key(const char *chat_id, int msg_id)
+{
+    uint64_t h = fnv1a64(chat_id);
+    return (h << 16) ^ (uint64_t)(msg_id & 0xFFFF) ^ ((uint64_t)msg_id << 32);
+}
+
+static bool seen_msg_contains(uint64_t key)
+{
+    for (size_t i = 0; i < TG_DEDUP_CACHE_SIZE; i++) {
+        if (s_seen_msg_keys[i] == key) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void seen_msg_insert(uint64_t key)
+{
+    s_seen_msg_keys[s_seen_msg_idx] = key;
+    s_seen_msg_idx = (s_seen_msg_idx + 1) % TG_DEDUP_CACHE_SIZE;
+}
+
+static void save_update_offset_if_needed(bool force)
+{
+    if (s_update_offset <= 0) {
+        return;
+    }
+
+    uint32_t now_ms = tal_system_get_millisecond();
+    bool should_save = force;
+    if (!should_save && s_last_saved_offset >= 0) {
+        if ((s_update_offset - s_last_saved_offset) >= TG_OFFSET_SAVE_STEP) {
+            should_save = true;
+        } else if ((int)(now_ms - s_last_offset_save_ms) >= TG_OFFSET_SAVE_INTERVAL_MS) {
+            should_save = true;
+        }
+    } else if (!should_save) {
+        should_save = true;
+    }
+
+    if (!should_save) {
+        return;
+    }
+
+    char offset_buf[24] = {0};
+    snprintf(offset_buf, sizeof(offset_buf), "%lld", (long long)s_update_offset);
+    if (mimi_kv_set_string(MIMI_NVS_TG, TG_OFFSET_NVS_KEY, offset_buf) == OPRT_OK) {
+        s_last_saved_offset = s_update_offset;
+        s_last_offset_save_ms = now_ms;
+    }
 }
 
 static OPERATE_RET ensure_tg_cert(void)
@@ -267,8 +343,11 @@ static OPERATE_RET tg_http_call(const char *path, const char *post_data,
     return tg_http_call_direct(path, post_data, resp_buf, resp_buf_size, status_code);
 }
 
-static bool tg_response_ok(const char *json_str)
+static bool tg_response_is_ok(const char *json_str, const char **out_desc)
 {
+    if (out_desc) {
+        *out_desc = NULL;
+    }
     if (!json_str || json_str[0] == '\0') {
         return false;
     }
@@ -278,9 +357,21 @@ static bool tg_response_ok(const char *json_str)
     if (root) {
         cJSON *ok_field = cJSON_GetObjectItem(root, "ok");
         ok = cJSON_IsTrue(ok_field);
+        if (!ok && out_desc) {
+            cJSON *desc = cJSON_GetObjectItem(root, "description");
+            if (cJSON_IsString(desc) && desc->valuestring) {
+                *out_desc = desc->valuestring;
+            }
+        }
         cJSON_Delete(root);
+        return ok;
     }
-    return ok;
+
+    if (strstr(json_str, "\"ok\":true") != NULL) {
+        return true;
+    }
+
+    return false;
 }
 
 static void process_updates(const char *json_str)
@@ -299,12 +390,17 @@ static void process_updates(const char *json_str)
 
     cJSON *update = NULL;
     cJSON_ArrayForEach(update, result) {
+        int64_t uid = -1;
         cJSON *update_id = cJSON_GetObjectItem(update, "update_id");
         if (cJSON_IsNumber(update_id)) {
-            int64_t uid = (int64_t)update_id->valuedouble;
-            if (uid >= s_update_offset) {
-                s_update_offset = uid + 1;
+            uid = (int64_t)update_id->valuedouble;
+        }
+        if (uid >= 0) {
+            if (uid < s_update_offset) {
+                continue;
             }
+            s_update_offset = uid + 1;
+            save_update_offset_if_needed(false);
         }
 
         cJSON *message = cJSON_GetObjectItem(update, "message");
@@ -323,10 +419,26 @@ static void process_updates(const char *json_str)
             continue;
         }
 
+        int msg_id_val = -1;
+        cJSON *message_id = cJSON_GetObjectItem(message, "message_id");
+        if (cJSON_IsNumber(message_id)) {
+            msg_id_val = (int)message_id->valuedouble;
+        }
+        if (msg_id_val >= 0) {
+            uint64_t msg_key = make_msg_key(chat_id_str, msg_id_val);
+            if (seen_msg_contains(msg_key)) {
+                MIMI_LOGW(TAG, "drop duplicate update_id=%" PRId64 " chat=%s message_id=%d",
+                          uid, chat_id_str, msg_id_val);
+                continue;
+            }
+            seen_msg_insert(msg_key);
+        }
+
         cJSON *text = cJSON_GetObjectItem(message, "text");
         if (cJSON_IsString(text) && text->valuestring) {
-            MIMI_LOGI(TAG, "rx text chat=%s len=%u text=%s", chat_id_str, (unsigned)strlen(text->valuestring),
-                      text->valuestring);
+            MIMI_LOGI(TAG,
+                      "rx text chat=%s update_id=%" PRId64 " message_id=%d len=%u text=%s",
+                      chat_id_str, uid, msg_id_val, (unsigned)strlen(text->valuestring), text->valuestring);
         }
 
         cJSON *document = cJSON_GetObjectItem(message, "document");
@@ -360,6 +472,7 @@ static void process_updates(const char *json_str)
         }
     }
 
+    save_update_offset_if_needed(false);
     cJSON_Delete(root);
 }
 
@@ -428,6 +541,16 @@ OPERATE_RET telegram_bot_init(void)
         safe_copy(s_bot_token, sizeof(s_bot_token), tmp);
     }
 
+    memset(tmp, 0, sizeof(tmp));
+    if (mimi_kv_get_string(MIMI_NVS_TG, TG_OFFSET_NVS_KEY, tmp, sizeof(tmp)) == OPRT_OK && tmp[0] != '\0') {
+        long long offset = strtoll(tmp, NULL, 10);
+        if (offset > 0) {
+            s_update_offset = offset;
+            s_last_saved_offset = offset;
+            MIMI_LOGI(TAG, "loaded telegram update offset: %lld", offset);
+        }
+    }
+
     MIMI_LOGI(TAG, "telegram init token=%s", s_bot_token[0] ? "configured" : "empty");
     return OPRT_OK;
 }
@@ -469,6 +592,7 @@ OPERATE_RET telegram_send_message(const char *chat_id, const char *text)
 
     size_t text_len = strlen(text);
     size_t offset = 0;
+    bool all_ok = true;
 
     while (offset < text_len || (text_len == 0 && offset == 0)) {
         size_t chunk = text_len - offset;
@@ -517,12 +641,24 @@ OPERATE_RET telegram_send_message(const char *chat_id, const char *text)
 
         uint16_t status = 0;
         OPERATE_RET rt = OPRT_MALLOC_FAILED;
+        bool sent_ok = false;
+        bool markdown_failed = false;
+        const char *desc = NULL;
+
         if (json) {
+            MIMI_LOGI(TAG, "send telegram chunk chat=%s bytes=%u", chat_id, (unsigned)chunk);
             rt = tg_http_call(path, json, resp, TG_HTTP_RESP_BUF_SIZE, &status);
+            if (rt == OPRT_OK && status == 200) {
+                sent_ok = tg_response_is_ok(resp, &desc);
+                if (!sent_ok) {
+                    markdown_failed = true;
+                    MIMI_LOGI(TAG, "markdown rejected chat=%s desc=%s", chat_id, desc ? desc : "unknown");
+                }
+            }
         }
         cJSON_free(json);
 
-        if (rt != OPRT_OK || status != 200 || !tg_response_ok(resp)) {
+        if (!sent_ok) {
             cJSON *body2 = cJSON_CreateObject();
             if (!body2) {
                 tal_free(resp);
@@ -542,13 +678,26 @@ OPERATE_RET telegram_send_message(const char *chat_id, const char *text)
 
             memset(resp, 0, TG_HTTP_RESP_BUF_SIZE);
             status = 0;
+            desc = NULL;
             rt = tg_http_call(path, json2, resp, TG_HTTP_RESP_BUF_SIZE, &status);
             cJSON_free(json2);
-            if (rt != OPRT_OK || status != 200 || !tg_response_ok(resp)) {
-                tal_free(resp);
-                free(segment);
-                return OPRT_COM_ERROR;
+            if (rt == OPRT_OK && status == 200) {
+                sent_ok = tg_response_is_ok(resp, &desc);
             }
+            if (!sent_ok) {
+                MIMI_LOGE(TAG, "plain send failed chat=%s rt=%d status=%u desc=%s",
+                          chat_id, rt, status, desc ? desc : "unknown");
+                MIMI_LOGE(TAG, "telegram raw response: %.300s", resp);
+                all_ok = false;
+            } else if (markdown_failed) {
+                MIMI_LOGI(TAG, "plain-text fallback succeeded chat=%s", chat_id);
+            }
+        }
+
+        if (sent_ok) {
+            MIMI_LOGI(TAG, "telegram send success chat=%s bytes=%u", chat_id, (unsigned)chunk);
+        } else {
+            all_ok = false;
         }
 
         tal_free(resp);
@@ -559,7 +708,7 @@ OPERATE_RET telegram_send_message(const char *chat_id, const char *text)
         offset += chunk;
     }
 
-    return OPRT_OK;
+    return all_ok ? OPRT_OK : OPRT_COM_ERROR;
 }
 
 OPERATE_RET telegram_set_token(const char *token)
@@ -570,5 +719,8 @@ OPERATE_RET telegram_set_token(const char *token)
 
     safe_copy(s_bot_token, sizeof(s_bot_token), token);
     s_update_offset = 0;
+    s_last_saved_offset = -1;
+    s_last_offset_save_ms = 0;
+    (void)mimi_kv_del(MIMI_NVS_TG, TG_OFFSET_NVS_KEY);
     return mimi_kv_set_string(MIMI_NVS_TG, MIMI_NVS_KEY_TG_TOKEN, token);
 }

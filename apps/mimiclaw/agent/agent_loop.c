@@ -61,6 +61,28 @@ static cJSON *build_assistant_content(const llm_response_t *resp)
     return content;
 }
 
+static void append_turn_context_prompt(char *prompt, size_t size, const mimi_msg_t *msg)
+{
+    if (!prompt || size == 0 || !msg) {
+        return;
+    }
+
+    size_t off = strnlen(prompt, size - 1);
+    if (off >= size - 1) {
+        return;
+    }
+
+    int n = snprintf(prompt + off, size - off,
+                     "\n## Current Turn Context\n"
+                     "- source_channel: %s\n"
+                     "- source_chat_id: %s\n",
+                     msg->channel[0] ? msg->channel : "(unknown)",
+                     msg->chat_id[0] ? msg->chat_id : "(empty)");
+    if (n < 0 || (size_t)n >= (size - off)) {
+        prompt[size - 1] = '\0';
+    }
+}
+
 static cJSON *build_tool_results(const llm_response_t *resp, char *tool_output, size_t tool_output_size)
 {
     cJSON *content = cJSON_CreateArray();
@@ -97,9 +119,14 @@ static void agent_loop_task(void *arg)
 {
     (void)arg;
 
-    const char *working_phrases[] = {"mimi is working...", "mimi is thinking...", "mimi is pondering...",
-                                     "mimi is on it...", "mimi is cooking..."};
-    const int phrase_count = (int)(sizeof(working_phrases) / sizeof(working_phrases[0]));
+    const char *working_phrases[] = {
+        "mimi is working...",
+        "mimi is thinking...",
+        "mimi is pondering...",
+        "mimi is on it...",
+        "mimi is cooking...",
+    };
+    const uint32_t phrase_count = (uint32_t)(sizeof(working_phrases) / sizeof(working_phrases[0]));
 
     char *system_prompt = calloc(1, MIMI_CONTEXT_BUF_SIZE);
     char *history_json = calloc(1, MIMI_LLM_STREAM_BUF_SIZE);
@@ -128,6 +155,8 @@ static void agent_loop_task(void *arg)
             free(in_msg.content);
             continue;
         }
+        append_turn_context_prompt(system_prompt, MIMI_CONTEXT_BUF_SIZE, &in_msg);
+        MIMI_LOGI(TAG, "llm turn context channel=%s chat_id=%s", in_msg.channel, in_msg.chat_id);
 
         if (session_get_history_json(in_msg.chat_id, history_json, MIMI_LLM_STREAM_BUF_SIZE, MIMI_AGENT_MAX_HISTORY) !=
             OPRT_OK) {
@@ -148,18 +177,26 @@ static void agent_loop_task(void *arg)
 
         char *final_text = NULL;
         int iteration = 0;
+        bool sent_working_status = false;
 
         while (iteration < MIMI_AGENT_MAX_TOOL_ITER) {
-            mimi_msg_t status = {0};
-            strncpy(status.channel, in_msg.channel, sizeof(status.channel) - 1);
-            strncpy(status.chat_id, in_msg.chat_id, sizeof(status.chat_id) - 1);
-            uint32_t phrase_index = bounded_random_index((uint32_t)phrase_count);
-            status.content = strdup(working_phrases[phrase_index]);
-            if (status.content) {
-                if (message_bus_push_outbound(&status) != OPRT_OK) {
-                    free(status.content);
+#if MIMI_AGENT_SEND_WORKING_STATUS
+            if (!sent_working_status && strcmp(in_msg.channel, MIMI_CHAN_SYSTEM) != 0) {
+                mimi_msg_t status = {0};
+                strncpy(status.channel, in_msg.channel, sizeof(status.channel) - 1);
+                strncpy(status.chat_id, in_msg.chat_id, sizeof(status.chat_id) - 1);
+                uint32_t phrase_index = bounded_random_index(phrase_count);
+                status.content = strdup(working_phrases[phrase_index]);
+                if (status.content) {
+                    if (message_bus_push_outbound(&status) != OPRT_OK) {
+                        MIMI_LOGW(TAG, "drop working status: outbound queue full");
+                        free(status.content);
+                    } else {
+                        sent_working_status = true;
+                    }
                 }
             }
+#endif
 
             llm_response_t resp;
             OPERATE_RET rt = llm_chat_tools(system_prompt, messages, tools_json, &resp);
@@ -195,14 +232,19 @@ static void agent_loop_task(void *arg)
         cJSON_Delete(messages);
 
         if (final_text && final_text[0] != '\0') {
-            (void)session_append(in_msg.chat_id, "user", user_text);
-            (void)session_append(in_msg.chat_id, "assistant", final_text);
+            OPERATE_RET save_user_rt = session_append(in_msg.chat_id, "user", user_text);
+            OPERATE_RET save_asst_rt = session_append(in_msg.chat_id, "assistant", final_text);
+            if (save_user_rt != OPRT_OK || save_asst_rt != OPRT_OK) {
+                MIMI_LOGW(TAG, "session save failed chat=%s user_rt=%d asst_rt=%d",
+                          in_msg.chat_id, save_user_rt, save_asst_rt);
+            }
 
             mimi_msg_t out_msg = {0};
             strncpy(out_msg.channel, in_msg.channel, sizeof(out_msg.channel) - 1);
             strncpy(out_msg.chat_id, in_msg.chat_id, sizeof(out_msg.chat_id) - 1);
             out_msg.content = final_text;
             if (message_bus_push_outbound(&out_msg) != OPRT_OK) {
+                MIMI_LOGW(TAG, "drop final response: outbound queue full");
                 free(out_msg.content);
             } else {
                 final_text = NULL;
@@ -214,6 +256,7 @@ static void agent_loop_task(void *arg)
             out_msg.content = strdup("Sorry, I encountered an error.");
             if (out_msg.content) {
                 if (message_bus_push_outbound(&out_msg) != OPRT_OK) {
+                    MIMI_LOGW(TAG, "drop error response: outbound queue full");
                     free(out_msg.content);
                 }
             }
