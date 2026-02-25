@@ -14,6 +14,7 @@
 
 #include <ctype.h>
 #include <inttypes.h>
+#include <limits.h>
 
 static const char *TAG = "feishu";
 
@@ -23,7 +24,7 @@ static char s_allow_from[512] = {0};
 static char s_tenant_token[512] = {0};
 static uint32_t s_tenant_expire_ms = 0;
 static uint8_t *s_fs_cacert = NULL;
-static uint16_t s_fs_cacert_len = 0;
+static size_t s_fs_cacert_len = 0;
 static THREAD_HANDLE s_ws_thread = NULL;
 
 #define FS_HOST MIMI_FS_API_HOST
@@ -248,15 +249,13 @@ static OPERATE_RET ensure_fs_cert(const char *host)
 
         OPERATE_RET rt = mimi_tls_query_domain_certs(host, &s_fs_cacert, &s_fs_cacert_len);
         if (rt != OPRT_OK || !s_fs_cacert || s_fs_cacert_len == 0) {
-#if OPERATING_SYSTEM == SYSTEM_LINUX
+            if (s_fs_cacert) {
+                tal_free(s_fs_cacert);
+            }
             s_fs_cacert = NULL;
             s_fs_cacert_len = 0;
-            MIMI_LOGW(TAG, "cert unavailable for %s, fallback to Linux TLS no-verify mode", host);
+            MIMI_LOGW(TAG, "cert unavailable for %s, fallback to TLS no-verify mode rt=%d", host, rt);
             return OPRT_OK;
-#else
-            MIMI_LOGE(TAG, "query cert failed host=%s rt=%d", host, rt);
-            return (rt == OPRT_OK) ? OPRT_COM_ERROR : rt;
-#endif
         }
         return OPRT_OK;
     }
@@ -404,7 +403,7 @@ static OPERATE_RET fs_http_call_direct(const char *host, const char *path, const
     size_t body_len = body ? strlen(body) : 0;
 
     const uint8_t *cacert = NULL;
-    uint16_t cacert_len = 0;
+    size_t cacert_len = 0;
     if (strcmp(host, FS_HOST) == 0) {
         cacert = s_fs_cacert;
         cacert_len = s_fs_cacert_len;
@@ -835,22 +834,18 @@ static OPERATE_RET fs_direct_open(fs_ws_conn_t *conn, const char *host, int port
     }
 
     uint8_t *cacert = NULL;
-    uint16_t cacert_len = 0;
+    size_t cacert_len = 0;
     bool verify_peer = false;
 
     rt = mimi_tls_query_domain_certs(host, &cacert, &cacert_len);
     if (rt == OPRT_OK && cacert && cacert_len > 0) {
         verify_peer = true;
     } else {
-#if OPERATING_SYSTEM == SYSTEM_LINUX
-        MIMI_LOGW(TAG, "ws cert unavailable for %s, fallback to no-verify mode", host);
-#else
-        MIMI_LOGE(TAG, "ws tls query cert failed host=%s rt=%d", host, rt);
-        if (cacert) {
-            tal_free(cacert);
-        }
-        return (rt == OPRT_OK) ? OPRT_COM_ERROR : rt;
-#endif
+        MIMI_LOGW(TAG, "ws cert unavailable for %s, fallback to no-verify mode rt=%d", host, rt);
+    }
+    if (verify_peer && cacert_len > (size_t)INT_MAX) {
+        MIMI_LOGW(TAG, "ws cert too large for tuya_tls host=%s len=%zu, fallback to no-verify", host, cacert_len);
+        verify_peer = false;
     }
 
     conn->tls = tuya_tls_connect_create();
@@ -873,7 +868,7 @@ static OPERATE_RET fs_direct_open(fs_ws_conn_t *conn, const char *host, int port
         .timeout = (uint32_t)timeout_s,
         .verify = verify_peer,
         .ca_cert = verify_peer ? (char *)cacert : NULL,
-        .ca_cert_size = verify_peer ? cacert_len : 0,
+        .ca_cert_size = verify_peer ? (int)cacert_len : 0,
     };
     (void)tuya_tls_config_set(conn->tls, &cfg_tls);
 
@@ -2250,15 +2245,6 @@ static void log_feishu_inbound_message(const char *chat_id, const char *sender_o
                                        const char *msg_type, const char *chat_type,
                                        const char *text, const char *content_json)
 {
-    MIMI_LOGI(TAG, "rx feishu inbound chat=%s sender=%s event=%s message_id=%s type=%s chat_type=%s len=%u text=%s",
-              log_str(chat_id),
-              log_str(sender_open_id),
-              log_str(event_type),
-              log_str(message_id),
-              log_str(msg_type),
-              log_str(chat_type),
-              (unsigned)strlen(log_str(text)),
-              log_str(text));
     MIMI_LOGI(TAG, "rx inbound_text channel=%s chat=%s len=%u text=%s",
               MIMI_CHAN_FEISHU,
               log_str(chat_id),

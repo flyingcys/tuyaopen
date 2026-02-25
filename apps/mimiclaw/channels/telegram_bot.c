@@ -16,7 +16,8 @@ static int64_t s_last_saved_offset = -1;
 static uint32_t s_last_offset_save_ms = 0;
 static THREAD_HANDLE s_poll_thread = NULL;
 static uint8_t *s_tg_cacert = NULL;
-static uint16_t s_tg_cacert_len = 0;
+static size_t s_tg_cacert_len = 0;
+static bool s_tg_tls_no_verify = false;
 
 #define TG_HOST MIMI_TG_API_HOST
 #define TG_HTTP_TIMEOUT_MS ((MIMI_TG_POLL_TIMEOUT_S + 5) * 1000)
@@ -130,22 +131,23 @@ static void save_update_offset_if_needed(bool force)
 static OPERATE_RET ensure_tg_cert(void)
 {
     if (s_tg_cacert && s_tg_cacert_len > 0) {
+        s_tg_tls_no_verify = false;
         return OPRT_OK;
     }
 
     OPERATE_RET rt = mimi_tls_query_domain_certs(TG_HOST, &s_tg_cacert, &s_tg_cacert_len);
     if (rt != OPRT_OK || !s_tg_cacert || s_tg_cacert_len == 0) {
-#if OPERATING_SYSTEM == SYSTEM_LINUX
+        if (s_tg_cacert) {
+            tal_free(s_tg_cacert);
+        }
         s_tg_cacert = NULL;
         s_tg_cacert_len = 0;
-        MIMI_LOGW(TAG, "cert unavailable for %s, fallback to Linux TLS no-verify mode", TG_HOST);
+        s_tg_tls_no_verify = true;
+        MIMI_LOGD(TAG, "cert unavailable for %s, fallback to TLS no-verify mode", TG_HOST);
         return OPRT_OK;
-#else
-        MIMI_LOGE(TAG, "query cert failed rt=%d", rt);
-        return (rt == OPRT_OK) ? OPRT_COM_ERROR : rt;
-#endif
     }
 
+    s_tg_tls_no_verify = false;
     return OPRT_OK;
 }
 
@@ -298,6 +300,7 @@ static OPERATE_RET tg_http_call_direct(const char *path, const char *post_data,
         &(const http_client_request_t){
             .cacert = s_tg_cacert,
             .cacert_len = s_tg_cacert_len,
+            .tls_no_verify = s_tg_tls_no_verify,
             .host = TG_HOST,
             .port = 443,
             .method = post_data ? "POST" : "GET",
@@ -437,9 +440,6 @@ static void process_updates(const char *json_str)
         cJSON *text = cJSON_GetObjectItem(message, "text");
         if (cJSON_IsString(text) && text->valuestring) {
             MIMI_LOGI(TAG,
-                      "rx text chat=%s update_id=%" PRId64 " message_id=%d len=%u text=%s",
-                      chat_id_str, uid, msg_id_val, (unsigned)strlen(text->valuestring), text->valuestring);
-            MIMI_LOGI(TAG,
                       "rx inbound_text channel=%s chat=%s len=%u text=%s",
                       MIMI_CHAN_TELEGRAM, chat_id_str, (unsigned)strlen(text->valuestring), text->valuestring);
         }
@@ -517,7 +517,7 @@ static void telegram_poll_task(void *arg)
         uint16_t status = 0;
         OPERATE_RET rt = tg_http_call(path, NULL, resp, TG_HTTP_RESP_BUF_SIZE, &status);
         if (rt != OPRT_OK || status != 200) {
-            MIMI_LOGW(TAG, "getUpdates failed rt=%d http=%u retry_in_ms=%u", rt, status, fail_delay_ms);
+            MIMI_LOGD(TAG, "getUpdates failed rt=%d http=%u retry_in_ms=%u", rt, status, fail_delay_ms);
             tal_system_sleep(fail_delay_ms);
             if (fail_delay_ms < MIMI_TG_FAIL_MAX_MS) {
                 uint32_t next_delay = fail_delay_ms << 1;
@@ -649,7 +649,7 @@ OPERATE_RET telegram_send_message(const char *chat_id, const char *text)
         const char *desc = NULL;
 
         if (json) {
-            MIMI_LOGI(TAG, "send telegram chunk chat=%s bytes=%u", chat_id, (unsigned)chunk);
+            MIMI_LOGD(TAG, "send telegram chunk chat=%s bytes=%u", chat_id, (unsigned)chunk);
             rt = tg_http_call(path, json, resp, TG_HTTP_RESP_BUF_SIZE, &status);
             if (rt == OPRT_OK && status == 200) {
                 sent_ok = tg_response_is_ok(resp, &desc);
@@ -698,7 +698,7 @@ OPERATE_RET telegram_send_message(const char *chat_id, const char *text)
         }
 
         if (sent_ok) {
-            MIMI_LOGI(TAG, "telegram send success chat=%s bytes=%u", chat_id, (unsigned)chunk);
+            MIMI_LOGD(TAG, "telegram send success chat=%s bytes=%u", chat_id, (unsigned)chunk);
         } else {
             all_ok = false;
         }

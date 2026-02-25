@@ -15,9 +15,9 @@ static char s_model[LLM_MODEL_MAX_LEN] = MIMI_LLM_DEFAULT_MODEL;
 static char s_provider[32] = MIMI_LLM_PROVIDER_DEFAULT;
 
 static uint8_t *s_openai_cacert = NULL;
-static uint16_t s_openai_cacert_len = 0;
+static size_t s_openai_cacert_len = 0;
 static uint8_t *s_anthropic_cacert = NULL;
-static uint16_t s_anthropic_cacert_len = 0;
+static size_t s_anthropic_cacert_len = 0;
 
 typedef struct {
     bool parsed;
@@ -159,7 +159,7 @@ static const char *llm_api_path(void)
     return endpoint->path;
 }
 
-static void get_provider_cert(uint8_t **cert, uint16_t **cert_len)
+static void get_provider_cert(uint8_t **cert, size_t **cert_len)
 {
     if (provider_is_openai()) {
         *cert = s_openai_cacert;
@@ -173,7 +173,7 @@ static void get_provider_cert(uint8_t **cert, uint16_t **cert_len)
 static OPERATE_RET ensure_provider_cert(void)
 {
     uint8_t *cert = NULL;
-    uint16_t *cert_len = NULL;
+    size_t *cert_len = NULL;
     get_provider_cert(&cert, &cert_len);
 
     if (cert && cert_len && *cert_len > 0) {
@@ -192,14 +192,12 @@ static OPERATE_RET ensure_provider_cert(void)
 
     OPERATE_RET rt = mimi_tls_query_domain_certs(host, &cert, cert_len);
     if (rt != OPRT_OK || !cert || *cert_len == 0) {
-#if OPERATING_SYSTEM == SYSTEM_LINUX
-        MIMI_LOGW(TAG, "cert unavailable for %s, fallback to Linux TLS no-verify mode", host);
+        if (cert) {
+            tal_free(cert);
+        }
         cert = NULL;
         *cert_len = 0;
-#else
-        MIMI_LOGE(TAG, "query cert failed host=%s rt=%d", host, rt);
-        return (rt == OPRT_OK) ? OPRT_COM_ERROR : rt;
-#endif
+        MIMI_LOGW(TAG, "cert unavailable for %s, fallback to TLS no-verify mode rt=%d", host, rt);
     }
 
     if (provider_is_openai()) {
@@ -492,20 +490,14 @@ static OPERATE_RET llm_http_call(const char *post_data, char *resp_buf, size_t r
     }
 
     uint8_t *cacert = NULL;
-    uint16_t *cacert_len = NULL;
+    size_t *cacert_len = NULL;
     get_provider_cert(&cacert, &cacert_len);
     if (!cacert_len) {
         return OPRT_COM_ERROR;
     }
-#if OPERATING_SYSTEM == SYSTEM_LINUX
     if (!cacert || *cacert_len == 0) {
-        MIMI_LOGW(TAG, "llm host=%s use Linux TLS no-verify mode", llm_api_host() ? llm_api_host() : "");
+        MIMI_LOGW(TAG, "llm host=%s use TLS no-verify mode", llm_api_host() ? llm_api_host() : "");
     }
-#else
-    if (!cacert || *cacert_len == 0) {
-        return OPRT_COM_ERROR;
-    }
-#endif
 
     const char *host = llm_api_host();
     const char *path = llm_api_path();

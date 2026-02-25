@@ -13,6 +13,7 @@
 
 #include <errno.h>
 #include <inttypes.h>
+#include <limits.h>
 
 static const char *TAG = "discord";
 
@@ -128,22 +129,18 @@ static OPERATE_RET dc_direct_open(dc_gateway_conn_t *conn, const char *host, int
     }
 
     uint8_t *cacert = NULL;
-    uint16_t cacert_len = 0;
+    size_t cacert_len = 0;
     bool verify_peer = false;
 
     rt = mimi_tls_query_domain_certs(host, &cacert, &cacert_len);
     if (rt == OPRT_OK && cacert && cacert_len > 0) {
         verify_peer = true;
     } else {
-#if OPERATING_SYSTEM == SYSTEM_LINUX
-        MIMI_LOGW(TAG, "tls cert unavailable for %s, fallback to no-verify mode", host);
-#else
-        MIMI_LOGE(TAG, "gateway tls query cert failed host=%s rt=%d", host, rt);
-        if (cacert) {
-            tal_free(cacert);
-        }
-        return (rt == OPRT_OK) ? OPRT_COM_ERROR : rt;
-#endif
+        MIMI_LOGD(TAG, "tls cert unavailable for %s, fallback to TLS no-verify mode rt=%d", host, rt);
+    }
+    if (verify_peer && cacert_len > (size_t)INT_MAX) {
+        MIMI_LOGW(TAG, "tls cert too large for tuya_tls host=%s len=%zu, fallback to no-verify", host, cacert_len);
+        verify_peer = false;
     }
 
     conn->tls = tuya_tls_connect_create();
@@ -166,7 +163,7 @@ static OPERATE_RET dc_direct_open(dc_gateway_conn_t *conn, const char *host, int
         .timeout = (uint32_t)timeout_s,
         .verify = verify_peer,
         .ca_cert = verify_peer ? (char *)cacert : NULL,
-        .ca_cert_size = verify_peer ? cacert_len : 0,
+        .ca_cert_size = verify_peer ? (int)cacert_len : 0,
     };
     (void)tuya_tls_config_set(conn->tls, &cfg_tls);
 
@@ -685,8 +682,6 @@ static void handle_message_create_event(cJSON *event)
     }
 
     if (content && content[0] != '\0') {
-        MIMI_LOGI(TAG, "rx text chat=%s message_id=%s len=%u text=%s",
-                  channel_id, message_id ? message_id : "", (unsigned)strlen(content), content);
         MIMI_LOGI(TAG, "rx inbound_text channel=%s chat=%s len=%u text=%s",
                   MIMI_CHAN_DISCORD, channel_id, (unsigned)strlen(content), content);
     }

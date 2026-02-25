@@ -83,21 +83,26 @@ http_client_status_t http_client_request(const http_client_request_t *request, h
 
     /* TLS pre init */
     NetworkContext_t network;
-    TUYA_TRANSPORT_TYPE_E transport_type = (request->cacert == NULL) ? TRANSPORT_TYPE_TCP : TRANSPORT_TYPE_TLS;
+    bool use_tls = (request->cacert != NULL) || request->tls_no_verify;
+    TUYA_TRANSPORT_TYPE_E transport_type = use_tls ? TRANSPORT_TYPE_TLS : TRANSPORT_TYPE_TCP;
     network = tuya_transporter_create(transport_type, NULL);
     if (NULL == network) {
         return HTTP_CLIENT_MALLOC_FAULT;
     }
 
     if (transport_type == TRANSPORT_TYPE_TLS) {
+        bool verify_peer = !request->tls_no_verify;
+        if (request->tls_no_verify) {
+            log_debug("TLS no-verify fallback enabled for host=%s", request->host);
+        }
         tuya_tls_config_t tls_config = {
-            .ca_cert = (char *)request->cacert,
-            .ca_cert_size = request->cacert_len,
+            .ca_cert = request->cacert ? (char *)request->cacert : NULL,
+            .ca_cert_size = request->cacert ? request->cacert_len : 0,
             .hostname = (char *)request->host,
             .port = (request->port == 0) ? DEFAULT_HTTPS_PORT : request->port,
             .timeout = request->timeout_ms,
             .mode = TUYA_TLS_SERVER_CERT_MODE,
-            .verify = true,
+            .verify = verify_peer,
         };
 
         ret = tuya_transporter_ctrl(network, TUYA_TRANSPORTER_SET_TLS_CONFIG, &tls_config);

@@ -16,7 +16,7 @@ static const char *TAG = "tool_time";
 #define TIME_SYNC_TIMEOUT_MS (10 * 1000)
 
 static uint8_t *s_time_cacert = NULL;
-static uint16_t s_time_cacert_len = 0;
+static size_t s_time_cacert_len = 0;
 static bool s_tz_inited = false;
 
 static const char *k_months[] = {
@@ -254,15 +254,13 @@ static OPERATE_RET ensure_time_cert(void)
 
     OPERATE_RET rt = mimi_tls_query_domain_certs(TIME_SYNC_HOST, &s_time_cacert, &s_time_cacert_len);
     if (rt != OPRT_OK || !s_time_cacert || s_time_cacert_len == 0) {
-#if OPERATING_SYSTEM == SYSTEM_LINUX
+        if (s_time_cacert) {
+            tal_free(s_time_cacert);
+        }
         s_time_cacert = NULL;
         s_time_cacert_len = 0;
-        MIMI_LOGW(TAG, "cert unavailable for %s, fallback to Linux TLS no-verify mode", TIME_SYNC_HOST);
+        MIMI_LOGD(TAG, "cert unavailable for %s, fallback to TLS no-verify mode rt=%d", TIME_SYNC_HOST, rt);
         return OPRT_OK;
-#else
-        MIMI_LOGE(TAG, "query cert failed host=%s rt=%d", TIME_SYNC_HOST, rt);
-        return (rt == OPRT_OK) ? OPRT_COM_ERROR : rt;
-#endif
     }
 
     return OPRT_OK;

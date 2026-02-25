@@ -192,6 +192,11 @@ static const cli_help_item_t s_cli_help_items[] = {
         .verbose = 0,
     },
     {
+        .name = "memory_clear",
+        .summary_1 = "Clear MEMORY.md",
+        .verbose = 0,
+    },
+    {
         .name = "file_list",
         .summary_1 = "List /spiffs entries",
         .verbose = 0,
@@ -713,6 +718,18 @@ static void cmd_memory_write(int argc, char *argv[])
     tal_free(content);
 }
 
+static void cmd_memory_clear(int argc, char *argv[])
+{
+    (void)argv;
+    if (argc != 1) {
+        cli_echof("usage: memory_clear");
+        return;
+    }
+
+    OPERATE_RET rt = memory_write_long_term("");
+    cli_echof("memory_clear rt=%d", rt);
+}
+
 typedef struct {
     uint32_t idx;
     const char *base_dir;
@@ -968,11 +985,12 @@ static const cli_cmd_t s_mimi_cli_cmds[] = {
     {.name = "set_api_key", .help = "Set LLM API key", .func = cmd_set_api_key},
     {.name = "set_model", .help = "Set LLM model", .func = cmd_set_model},
     {.name = "set_model_provider", .help = "Set LLM model provider", .func = cmd_set_model_provider},
-    {.name = "memory_read", .help = "Read MEMORY.md", .func = cmd_memory_read},
     {.name = "file_read", .help = "Read a text file from /spiffs", .func = cmd_file_read},
     {.name = "file_list", .help = "List /spiffs entries", .func = cmd_file_list},
     {.name = "file_clear", .help = "Delete a file from /spiffs", .func = cmd_file_clear},
+    {.name = "memory_read", .help = "Read MEMORY.md", .func = cmd_memory_read},
     {.name = "memory_write", .help = "Write to MEMORY.md", .func = cmd_memory_write},
+    {.name = "memory_clear", .help = "Clear MEMORY.md", .func = cmd_memory_clear},
     {.name = "session_list", .help = "List sessions only", .func = cmd_session_list},
     {.name = "session_clear", .help = "Clear a session only", .func = cmd_session_clear},
     {.name = "session_clear_all", .help = "Clear all sessions", .func = cmd_session_clear_all},

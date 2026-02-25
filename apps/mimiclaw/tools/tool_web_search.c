@@ -7,7 +7,7 @@
 
 static char s_search_key[128] = {0};
 static uint8_t *s_search_cacert = NULL;
-static uint16_t s_search_cacert_len = 0;
+static size_t s_search_cacert_len = 0;
 
 static const char *TAG = "web_search";
 
@@ -37,15 +37,13 @@ static OPERATE_RET ensure_search_cert(void)
 
     OPERATE_RET rt = mimi_tls_query_domain_certs(SEARCH_HOST, &s_search_cacert, &s_search_cacert_len);
     if (rt != OPRT_OK || !s_search_cacert || s_search_cacert_len == 0) {
-#if OPERATING_SYSTEM == SYSTEM_LINUX
+        if (s_search_cacert) {
+            tal_free(s_search_cacert);
+        }
         s_search_cacert = NULL;
         s_search_cacert_len = 0;
-        MIMI_LOGW(TAG, "cert unavailable for %s, fallback to Linux TLS no-verify mode", SEARCH_HOST);
+        MIMI_LOGW(TAG, "cert unavailable for %s, fallback to TLS no-verify mode rt=%d", SEARCH_HOST, rt);
         return OPRT_OK;
-#else
-        MIMI_LOGE(TAG, "query cert failed rt=%d", rt);
-        return (rt == OPRT_OK) ? OPRT_COM_ERROR : rt;
-#endif
     }
 
     return OPRT_OK;
