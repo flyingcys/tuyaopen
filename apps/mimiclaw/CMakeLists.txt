@@ -21,11 +21,15 @@ set(APP_SRCS
     ${APP_PATH}/gateway/ws_server.c
     ${APP_PATH}/cli/serial_cli.c
     ${APP_PATH}/proxy/http_proxy.c
+    ${APP_PATH}/cron/cron_service.c
+    ${APP_PATH}/heartbeat/heartbeat.c
     ${APP_PATH}/tls_cert_bundle.c
     ${APP_PATH}/tools/tool_registry.c
+    ${APP_PATH}/tools/tool_cron.c
     ${APP_PATH}/tools/tool_web_search.c
     ${APP_PATH}/tools/tool_get_time.c
     ${APP_PATH}/tools/tool_files.c
+    ${APP_PATH}/skills/skill_loader.c
 )
 
 set(APP_INC

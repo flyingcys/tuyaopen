@@ -1,6 +1,7 @@
 #include "tool_registry.h"
 
 #include "tools/tool_files.h"
+#include "tools/tool_cron.h"
 #include "tools/tool_get_time.h"
 #include "tools/tool_web_search.h"
 
@@ -8,7 +9,7 @@
 
 static const char *TAG = "tools";
 
-#define MAX_TOOLS 8
+#define MAX_TOOLS 12
 
 static mimi_tool_t s_tools[MAX_TOOLS];
 static int s_tool_count = 0;
@@ -104,6 +105,39 @@ OPERATE_RET tool_registry_init(void)
         .input_schema_json =
             "{\"type\":\"object\",\"properties\":{\"prefix\":{\"type\":\"string\"}}}",
         .execute = tool_list_dir_execute,
+    });
+
+    register_tool(&(mimi_tool_t){
+        .name = "cron_add",
+        .description = "Schedule a recurring or one-shot task. The message will trigger an agent turn when the job fires.",
+        .input_schema_json =
+            "{\"type\":\"object\","
+            "\"properties\":{"
+            "\"name\":{\"type\":\"string\",\"description\":\"Short name for the job\"},"
+            "\"schedule_type\":{\"type\":\"string\",\"description\":\"'every' for recurring interval or 'at' for one-shot at a unix timestamp\"},"
+            "\"interval_s\":{\"type\":\"integer\",\"description\":\"Interval in seconds (required for 'every')\"},"
+            "\"at_epoch\":{\"type\":\"integer\",\"description\":\"Unix timestamp to fire at (required for 'at')\"},"
+            "\"message\":{\"type\":\"string\",\"description\":\"Message to inject when the job fires, triggering an agent turn\"},"
+            "\"channel\":{\"type\":\"string\",\"description\":\"Optional reply channel (e.g. 'telegram'). If omitted, current turn channel is used when available\"},"
+            "\"chat_id\":{\"type\":\"string\",\"description\":\"Optional reply chat_id. Required when channel='telegram'. If omitted during a Telegram turn, current chat_id is used\"}"
+            "},"
+            "\"required\":[\"name\",\"schedule_type\",\"message\"]}",
+        .execute = tool_cron_add_execute,
+    });
+
+    register_tool(&(mimi_tool_t){
+        .name = "cron_list",
+        .description = "List all scheduled cron jobs with their status, schedule, and IDs.",
+        .input_schema_json = "{\"type\":\"object\",\"properties\":{},\"required\":[]}",
+        .execute = tool_cron_list_execute,
+    });
+
+    register_tool(&(mimi_tool_t){
+        .name = "cron_remove",
+        .description = "Remove a scheduled cron job by its ID.",
+        .input_schema_json =
+            "{\"type\":\"object\",\"properties\":{\"job_id\":{\"type\":\"string\",\"description\":\"The 8-character job ID to remove\"}},\"required\":[\"job_id\"]}",
+        .execute = tool_cron_remove_execute,
     });
 
     build_tools_json();

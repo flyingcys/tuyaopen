@@ -5,12 +5,15 @@
 #include "cli/serial_cli.h"
 #include "channels/discord_bot.h"
 #include "channels/feishu_bot.h"
+#include "cron/cron_service.h"
 #include "gateway/ws_server.h"
+#include "heartbeat/heartbeat.h"
 #include "llm/llm_proxy.h"
 #include "memory/memory_store.h"
 #include "memory/session_mgr.h"
 #include "mimi_config.h"
 #include "proxy/http_proxy.h"
+#include "skills/skill_loader.h"
 #include "channels/telegram_bot.h"
 #include "tools/tool_registry.h"
 #include "tuya_register_center.h"
@@ -123,7 +126,7 @@ static void mimi_runtime_init(void)
     }
 
     cJSON_InitHooks(&(cJSON_Hooks){.malloc_fn = tal_malloc, .free_fn = tal_free});
-    (void)tal_log_init(TAL_LOG_LEVEL_DEBUG, 1024, (TAL_LOG_OUTPUT_CB)tkl_log_output);
+    (void)tal_log_init(TAL_LOG_LEVEL_INFO, 1024, (TAL_LOG_OUTPUT_CB)tkl_log_output);
 
     // LittleFS mount happens inside tal_kv_init(). We must call this before any tal_fs_* APIs.
     (void)tal_kv_init(&(tal_kv_cfg_t){
@@ -173,6 +176,11 @@ static OPERATE_RET init_storage(void)
     }
 
     rt = ensure_dir(MIMI_SPIFFS_SESSION_DIR);
+    if (rt != OPRT_OK) {
+        return rt;
+    }
+
+    rt = ensure_dir(MIMI_SPIFFS_SKILLS_DIR);
     if (rt != OPRT_OK) {
         return rt;
     }
@@ -282,6 +290,16 @@ static void start_online_services(const char *mode)
         MIMI_LOGW(TAG, "agent_loop_start failed: %d", rt);
     }
 
+    rt = cron_service_start();
+    if (rt != OPRT_OK) {
+        MIMI_LOGW(TAG, "cron_service_start failed: %d", rt);
+    }
+
+    rt = heartbeat_start();
+    if (rt != OPRT_OK) {
+        MIMI_LOGW(TAG, "heartbeat_start failed: %d", rt);
+    }
+
     if (enable_tg) {
         rt = telegram_bot_start();
         if (rt == OPRT_NOT_FOUND) {
@@ -334,6 +352,7 @@ void mimi_app_main(void)
     (void)init_storage();
     (void)message_bus_init();
     (void)memory_store_init();
+    (void)skill_loader_init();
     (void)session_mgr_init();
 #if defined(ENABLE_WIFI) && (ENABLE_WIFI == 1)
     (void)wifi_manager_init();
@@ -344,6 +363,8 @@ void mimi_app_main(void)
     (void)feishu_bot_init();
     (void)llm_proxy_init();
     (void)tool_registry_init();
+    (void)cron_service_init();
+    (void)heartbeat_init();
     (void)agent_loop_init();
 
 #if OPERATING_SYSTEM == SYSTEM_LINUX

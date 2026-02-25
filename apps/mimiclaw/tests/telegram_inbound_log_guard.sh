@@ -15,6 +15,11 @@ if ! grep -q 'rx text chat=' "${TG_C}"; then
   exit 1
 fi
 
+if ! grep -q 'rx inbound_text channel=%s chat=%s len=%u text=%s' "${TG_C}"; then
+  echo "FAIL: telegram unified inbound text log is missing" >&2
+  exit 1
+fi
+
 if ! grep -q 'rx document chat=' "${TG_C}"; then
   echo "FAIL: telegram document inbound log is missing" >&2
   exit 1

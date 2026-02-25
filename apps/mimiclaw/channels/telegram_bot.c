@@ -439,6 +439,9 @@ static void process_updates(const char *json_str)
             MIMI_LOGI(TAG,
                       "rx text chat=%s update_id=%" PRId64 " message_id=%d len=%u text=%s",
                       chat_id_str, uid, msg_id_val, (unsigned)strlen(text->valuestring), text->valuestring);
+            MIMI_LOGI(TAG,
+                      "rx inbound_text channel=%s chat=%s len=%u text=%s",
+                      MIMI_CHAN_TELEGRAM, chat_id_str, (unsigned)strlen(text->valuestring), text->valuestring);
         }
 
         cJSON *document = cJSON_GetObjectItem(message, "document");

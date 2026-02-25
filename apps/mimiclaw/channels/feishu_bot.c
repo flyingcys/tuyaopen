@@ -1072,7 +1072,7 @@ static OPERATE_RET fs_ws_handshake(fs_ws_conn_t *conn, const char *host, const c
         conn->rx_len = remain;
     }
 
-    MIMI_LOGI(TAG, "feishu ws handshake success host=%s path=%s", host, path);
+    MIMI_LOGI(TAG, "feishu ws handshake success!");
     return OPRT_OK;
 }
 
@@ -2164,6 +2164,37 @@ static void publish_inbound_feishu(const char *chat_id, const char *text)
     }
 }
 
+static const char *log_str(const char *s)
+{
+    return (s && s[0] != '\0') ? s : "";
+}
+
+static void log_feishu_inbound_message(const char *chat_id, const char *sender_open_id,
+                                       const char *event_type, const char *message_id,
+                                       const char *msg_type, const char *chat_type,
+                                       const char *text, const char *content_json)
+{
+    MIMI_LOGI(TAG, "rx feishu inbound chat=%s sender=%s event=%s message_id=%s type=%s chat_type=%s len=%u text=%s",
+              log_str(chat_id),
+              log_str(sender_open_id),
+              log_str(event_type),
+              log_str(message_id),
+              log_str(msg_type),
+              log_str(chat_type),
+              (unsigned)strlen(log_str(text)),
+              log_str(text));
+    MIMI_LOGI(TAG, "rx inbound_text channel=%s chat=%s len=%u text=%s",
+              MIMI_CHAN_FEISHU,
+              log_str(chat_id),
+              (unsigned)strlen(log_str(text)),
+              log_str(text));
+
+    if (content_json && content_json[0] != '\0') {
+        MIMI_LOGI(TAG, "rx feishu raw message_id=%s content=%.512s",
+                  log_str(message_id), content_json);
+    }
+}
+
 static void handle_event_payload(const uint8_t *payload, size_t payload_len)
 {
     if (!payload || payload_len == 0) {
@@ -2254,13 +2285,8 @@ static void handle_event_payload(const uint8_t *payload, size_t payload_len)
         return;
     }
 
-    MIMI_LOGI(TAG, "rx feishu event=%s chat=%s sender=%s type=%s len=%u text=%s",
-              event_type,
-              reply_to,
-              sender_open_id,
-              msg_type ? msg_type : "",
-              (unsigned)strlen(text),
-              text);
+    log_feishu_inbound_message(reply_to, sender_open_id, event_type, message_id,
+                               msg_type, chat_type, text, content_json);
 
     publish_inbound_feishu(reply_to, text);
 
@@ -2432,7 +2458,7 @@ static void feishu_ws_task(void *arg)
         uint32_t ping_interval_ms = conf.ping_interval_ms ? conf.ping_interval_ms : FS_WS_DEFAULT_PING_MS;
         uint32_t next_ping_ms = tal_system_get_millisecond() + ping_interval_ms;
 
-        MIMI_LOGI(TAG, "feishu ws online host=%s path=%s", ws_host, ws_path);
+        MIMI_LOGI(TAG, "feishu ws online!");
 
         while (1) {
             uint32_t now = tal_system_get_millisecond();

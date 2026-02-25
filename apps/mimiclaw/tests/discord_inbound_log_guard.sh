@@ -10,9 +10,19 @@ if [[ ! -f "${DC_C}" ]]; then
   exit 1
 fi
 
-if ! grep -q 'rx discord event=MESSAGE_CREATE channel=%s id=%s len=%u text=%s' "${DC_C}"; then
-  echo "FAIL: discord inbound log does not include message content" >&2
+if ! grep -q 'rx text chat=' "${DC_C}"; then
+  echo "FAIL: discord text inbound log is missing" >&2
   exit 1
 fi
 
-echo "PASS: discord inbound log includes message content."
+if ! grep -q 'rx inbound_text channel=%s chat=%s len=%u text=%s' "${DC_C}"; then
+  echo "FAIL: discord unified inbound text log is missing" >&2
+  exit 1
+fi
+
+if ! grep -q 'rx attachment chat=' "${DC_C}"; then
+  echo "FAIL: discord attachment inbound log is missing" >&2
+  exit 1
+fi
+
+echo "PASS: discord inbound text/attachment logs are present."

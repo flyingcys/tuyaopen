@@ -10,9 +10,19 @@ if [[ ! -f "${FS_C}" ]]; then
   exit 1
 fi
 
-if ! grep -q 'rx feishu event=%s chat=%s sender=%s type=%s len=%u text=%s' "${FS_C}"; then
-  echo "FAIL: feishu inbound log does not include message content" >&2
+if ! grep -q 'rx feishu inbound chat=%s sender=%s event=%s message_id=%s type=%s chat_type=%s len=%u text=%s' "${FS_C}"; then
+  echo "FAIL: feishu structured inbound log is missing key fields" >&2
   exit 1
 fi
 
-echo "PASS: feishu inbound log includes message content."
+if ! grep -q 'rx inbound_text channel=%s chat=%s len=%u text=%s' "${FS_C}"; then
+  echo "FAIL: feishu unified inbound text log is missing" >&2
+  exit 1
+fi
+
+if ! grep -q 'rx feishu raw message_id=%s content=%.512s' "${FS_C}"; then
+  echo "FAIL: feishu raw inbound content preview log is missing" >&2
+  exit 1
+fi
+
+echo "PASS: feishu inbound logs include structured and raw content previews."

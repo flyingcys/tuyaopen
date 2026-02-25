@@ -61,6 +61,16 @@ static cJSON *build_assistant_content(const llm_response_t *resp)
     return content;
 }
 
+static void json_set_string(cJSON *obj, const char *key, const char *value)
+{
+    if (!obj || !key || !value) {
+        return;
+    }
+
+    cJSON_DeleteItemFromObject(obj, key);
+    cJSON_AddStringToObject(obj, key, value);
+}
+
 static void append_turn_context_prompt(char *prompt, size_t size, const mimi_msg_t *msg)
 {
     if (!prompt || size == 0 || !msg) {
@@ -75,7 +85,9 @@ static void append_turn_context_prompt(char *prompt, size_t size, const mimi_msg
     int n = snprintf(prompt + off, size - off,
                      "\n## Current Turn Context\n"
                      "- source_channel: %s\n"
-                     "- source_chat_id: %s\n",
+                     "- source_chat_id: %s\n"
+                     "- If using cron_add for Telegram in this turn, set channel='telegram' and chat_id to source_chat_id.\n"
+                     "- Never use chat_id 'cron' for Telegram messages.\n",
                      msg->channel[0] ? msg->channel : "(unknown)",
                      msg->chat_id[0] ? msg->chat_id : "(empty)");
     if (n < 0 || (size_t)n >= (size - off)) {
@@ -83,7 +95,56 @@ static void append_turn_context_prompt(char *prompt, size_t size, const mimi_msg
     }
 }
 
-static cJSON *build_tool_results(const llm_response_t *resp, char *tool_output, size_t tool_output_size)
+static char *patch_tool_input_with_context(const llm_tool_call_t *call, const mimi_msg_t *msg)
+{
+    if (!call || !msg || strcmp(call->name, "cron_add") != 0) {
+        return NULL;
+    }
+
+    cJSON *root = cJSON_Parse(call->input ? call->input : "{}");
+    if (!root || !cJSON_IsObject(root)) {
+        cJSON_Delete(root);
+        root = cJSON_CreateObject();
+    }
+    if (!root) {
+        return NULL;
+    }
+
+    bool changed = false;
+    cJSON *channel_item = cJSON_GetObjectItem(root, "channel");
+    const char *channel = cJSON_IsString(channel_item) ? channel_item->valuestring : NULL;
+
+    if ((!channel || channel[0] == '\0') && msg->channel[0] != '\0') {
+        json_set_string(root, "channel", msg->channel);
+        channel = msg->channel;
+        changed = true;
+    }
+
+    if (channel && strcmp(channel, MIMI_CHAN_TELEGRAM) == 0 &&
+        strcmp(msg->channel, MIMI_CHAN_TELEGRAM) == 0 &&
+        msg->chat_id[0] != '\0') {
+        cJSON *chat_item = cJSON_GetObjectItem(root, "chat_id");
+        const char *chat_id = cJSON_IsString(chat_item) ? chat_item->valuestring : NULL;
+        if (!chat_id || chat_id[0] == '\0' || strcmp(chat_id, "cron") == 0) {
+            json_set_string(root, "chat_id", msg->chat_id);
+            changed = true;
+        }
+    }
+
+    char *patched = NULL;
+    if (changed) {
+        patched = cJSON_PrintUnformatted(root);
+        if (patched) {
+            MIMI_LOGI(TAG, "patched cron_add target to %s:%s", msg->channel, msg->chat_id);
+        }
+    }
+
+    cJSON_Delete(root);
+    return patched;
+}
+
+static cJSON *build_tool_results(const llm_response_t *resp, const mimi_msg_t *msg,
+                                 char *tool_output, size_t tool_output_size)
 {
     cJSON *content = cJSON_CreateArray();
     if (!content || !resp || !tool_output || tool_output_size == 0) {
@@ -92,12 +153,19 @@ static cJSON *build_tool_results(const llm_response_t *resp, char *tool_output, 
 
     for (int i = 0; i < resp->call_count; i++) {
         const llm_tool_call_t *call = &resp->calls[i];
+        const char *tool_input = call->input ? call->input : "{}";
+        char *patched_input = patch_tool_input_with_context(call, msg);
+        if (patched_input) {
+            tool_input = patched_input;
+        }
+
         tool_output[0] = '\0';
 
-        OPERATE_RET rt = tool_registry_execute(call->name, call->input, tool_output, tool_output_size);
+        OPERATE_RET rt = tool_registry_execute(call->name, tool_input, tool_output, tool_output_size);
         if (rt != OPRT_OK && tool_output[0] == '\0') {
             snprintf(tool_output, tool_output_size, "Tool execute failed: %d", rt);
         }
+        cJSON_free(patched_input);
 
         MIMI_LOGI(TAG, "tool=%s result_bytes=%u", call->name, (unsigned)strlen(tool_output));
 
@@ -222,7 +290,7 @@ static void agent_loop_task(void *arg)
 
             cJSON *result_msg = cJSON_CreateObject();
             cJSON_AddStringToObject(result_msg, "role", "user");
-            cJSON_AddItemToObject(result_msg, "content", build_tool_results(&resp, tool_output, TOOL_OUTPUT_SIZE));
+            cJSON_AddItemToObject(result_msg, "content", build_tool_results(&resp, &in_msg, tool_output, TOOL_OUTPUT_SIZE));
             cJSON_AddItemToArray(messages, result_msg);
 
             llm_response_free(&resp);

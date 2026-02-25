@@ -54,6 +54,21 @@ static void safe_copy(char *dst, size_t dst_size, const char *src)
     snprintf(dst, dst_size, "%s", src);
 }
 
+static const char *json_string_or_default(cJSON *obj, const char *key, const char *fallback)
+{
+    cJSON *item = obj ? cJSON_GetObjectItem(obj, key) : NULL;
+    return (cJSON_IsString(item) && item->valuestring) ? item->valuestring : fallback;
+}
+
+static uint32_t json_uint_or_default(cJSON *obj, const char *key, uint32_t fallback)
+{
+    cJSON *item = obj ? cJSON_GetObjectItem(obj, key) : NULL;
+    if (!cJSON_IsNumber(item) || item->valuedouble < 0) {
+        return fallback;
+    }
+    return (uint32_t)item->valuedouble;
+}
+
 static uint16_t parse_http_status_code(const char *raw_resp)
 {
     if (!raw_resp || strncmp(raw_resp, "HTTP/", 5) != 0) {
@@ -618,14 +633,32 @@ static void handle_message_create_event(cJSON *event)
     const char *channel_id = cJSON_GetStringValue(cJSON_GetObjectItem(event, "channel_id"));
     const char *message_id = cJSON_GetStringValue(cJSON_GetObjectItem(event, "id"));
     const char *content = cJSON_GetStringValue(cJSON_GetObjectItem(event, "content"));
+    cJSON *attachments = cJSON_GetObjectItem(event, "attachments");
+    bool has_attachments = cJSON_IsArray(attachments) && cJSON_GetArraySize(attachments) > 0;
 
     if (!channel_id || channel_id[0] == '\0') {
         return;
     }
 
+    if (content && content[0] != '\0') {
+        MIMI_LOGI(TAG, "rx text chat=%s message_id=%s len=%u text=%s",
+                  channel_id, message_id ? message_id : "", (unsigned)strlen(content), content);
+        MIMI_LOGI(TAG, "rx inbound_text channel=%s chat=%s len=%u text=%s",
+                  MIMI_CHAN_DISCORD, channel_id, (unsigned)strlen(content), content);
+    }
+
+    if (has_attachments) {
+        cJSON *first = cJSON_GetArrayItem(attachments, 0);
+        const char *file_name = json_string_or_default(first, "filename", "<empty>");
+        const char *mime_type = json_string_or_default(first, "content_type", "<empty>");
+        const char *url = json_string_or_default(first, "url", "<empty>");
+        uint32_t file_size = json_uint_or_default(first, "size", 0);
+        MIMI_LOGI(TAG, "rx attachment chat=%s message_id=%s name=%s mime=%s size=%u url=%s",
+                  channel_id, message_id ? message_id : "", file_name, mime_type, (unsigned)file_size, url);
+    }
+
     if (!content || content[0] == '\0') {
-        cJSON *attachments = cJSON_GetObjectItem(event, "attachments");
-        if (cJSON_IsArray(attachments) && cJSON_GetArraySize(attachments) > 0) {
+        if (has_attachments) {
             content = "[non-text message]";
         } else {
             return;
@@ -633,9 +666,6 @@ static void handle_message_create_event(cJSON *event)
     }
 
     safe_copy(s_channel_id, sizeof(s_channel_id), channel_id);
-    MIMI_LOGI(TAG, "rx discord event=MESSAGE_CREATE channel=%s id=%s len=%u text=%s",
-              channel_id, message_id ? message_id : "", (unsigned)strlen(content), content);
-
     publish_inbound_discord(channel_id, content);
 }
 
