@@ -203,7 +203,7 @@ OPERATE_RET tool_web_search_init(void)
         safe_copy(s_search_key, sizeof(s_search_key), tmp);
     }
 
-    MIMI_LOGI(TAG, "web search init key=%s", s_search_key[0] ? "configured" : "empty");
+    MIMI_LOGI(TAG, "web search init credential=%s", s_search_key[0] ? "configured" : "empty");
     return OPRT_OK;
 }
 

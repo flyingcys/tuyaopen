@@ -443,7 +443,7 @@ static OPERATE_RET dc_ws_handshake(dc_gateway_conn_t *conn)
 
     uint16_t status = parse_http_status_code(header);
     if (status != 101) {
-        MIMI_LOGE(TAG, "discord gateway handshake failed http=%u resp=%.256s", status, header);
+        MIMI_LOGE(TAG, "discord gateway handshake failed http=%u", status);
         return OPRT_COM_ERROR;
     }
 
@@ -457,7 +457,7 @@ static OPERATE_RET dc_ws_handshake(dc_gateway_conn_t *conn)
         conn->rx_len = remain;
     }
 
-    MIMI_LOGI(TAG, "discord gateway handshake success host=%s path=%s", MIMI_DC_GATEWAY_HOST, MIMI_DC_GATEWAY_PATH);
+    MIMI_LOGI(TAG, "discord gateway handshake success");
     return OPRT_OK;
 }
 
@@ -682,18 +682,17 @@ static void handle_message_create_event(cJSON *event)
     }
 
     if (content && content[0] != '\0') {
-        MIMI_LOGI(TAG, "rx inbound_text channel=%s chat=%s len=%u text=%s",
-                  MIMI_CHAN_DISCORD, channel_id, (unsigned)strlen(content), content);
+        MIMI_LOGI(TAG, "rx inbound_text channel=%s chat=%s len=%u",
+                  MIMI_CHAN_DISCORD, channel_id, (unsigned)strlen(content));
     }
 
     if (has_attachments) {
         cJSON *first = cJSON_GetArrayItem(attachments, 0);
         const char *file_name = json_string_or_default(first, "filename", "<empty>");
         const char *mime_type = json_string_or_default(first, "content_type", "<empty>");
-        const char *url = json_string_or_default(first, "url", "<empty>");
         uint32_t file_size = json_uint_or_default(first, "size", 0);
-        MIMI_LOGI(TAG, "rx attachment chat=%s message_id=%s name=%s mime=%s size=%u url=%s",
-                  channel_id, message_id ? message_id : "", file_name, mime_type, (unsigned)file_size, url);
+        MIMI_LOGI(TAG, "rx attachment chat=%s message_id=%s name=%s mime=%s size=%u",
+                  channel_id, message_id ? message_id : "", file_name, mime_type, (unsigned)file_size);
     }
 
     if (!content || content[0] == '\0') {
@@ -782,7 +781,7 @@ static void discord_gateway_task(void *arg)
 {
     (void)arg;
 
-    MIMI_LOGI(TAG, "discord gateway task started host=%s path=%s", MIMI_DC_GATEWAY_HOST, MIMI_DC_GATEWAY_PATH);
+    MIMI_LOGI(TAG, "discord gateway task started");
 
     while (1) {
         if (s_bot_token[0] == '\0') {
@@ -1210,7 +1209,7 @@ OPERATE_RET discord_bot_init(void)
         safe_copy(s_channel_id, sizeof(s_channel_id), tmp);
     }
 
-    MIMI_LOGI(TAG, "discord init token=%s default_channel=%s",
+    MIMI_LOGI(TAG, "discord init credential=%s default_channel=%s",
               s_bot_token[0] ? "configured" : "empty",
               s_channel_id[0] ? "configured" : "empty");
     return OPRT_OK;
@@ -1329,12 +1328,10 @@ OPERATE_RET discord_send_message(const char *channel_id, const char *text)
             } else {
                 all_ok = false;
                 MIMI_LOGE(TAG, "discord send failed channel=%s rt=%d http=%u", target_channel, rt, status);
-                MIMI_LOGE(TAG, "discord raw response: %.300s", resp);
             }
         } else {
             all_ok = false;
             MIMI_LOGE(TAG, "discord send failed channel=%s rt=%d http=%u", target_channel, rt, status);
-            MIMI_LOGE(TAG, "discord raw response: %.300s", resp);
         }
 
         tal_free(resp);

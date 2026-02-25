@@ -10,19 +10,24 @@ if [[ ! -f "${TG_C}" ]]; then
   exit 1
 fi
 
-if ! grep -q 'rx text chat=' "${TG_C}"; then
-  echo "FAIL: telegram text inbound log is missing" >&2
+if ! grep -q 'rx inbound_text channel=%s chat=%s len=%u' "${TG_C}"; then
+  echo "FAIL: telegram sanitized inbound text log is missing" >&2
   exit 1
 fi
 
-if ! grep -q 'rx inbound_text channel=%s chat=%s len=%u text=%s' "${TG_C}"; then
-  echo "FAIL: telegram unified inbound text log is missing" >&2
+if grep -q 'rx inbound_text channel=%s chat=%s len=%u text=%s' "${TG_C}"; then
+  echo "FAIL: telegram inbound text log still prints raw text" >&2
   exit 1
 fi
 
-if ! grep -q 'rx document chat=' "${TG_C}"; then
-  echo "FAIL: telegram document inbound log is missing" >&2
+if ! grep -q 'rx document chat=%s name=%s mime=%s size=%u' "${TG_C}"; then
+  echo "FAIL: telegram sanitized document log is missing" >&2
   exit 1
 fi
 
-echo "PASS: telegram inbound text/document logs are present."
+if grep -q 'file_id=%s caption=%s' "${TG_C}"; then
+  echo "FAIL: telegram document log still prints file_id/caption" >&2
+  exit 1
+fi
+
+echo "PASS: telegram inbound logs are sanitized (no raw text/file_id/caption)."

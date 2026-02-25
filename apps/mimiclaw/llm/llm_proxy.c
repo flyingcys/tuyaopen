@@ -7,8 +7,6 @@ static const char *TAG = "llm";
 
 #define LLM_API_KEY_MAX_LEN 320
 #define LLM_MODEL_MAX_LEN   64
-#define LLM_DUMP_MAX_BYTES   (16 * 1024)
-#define LLM_DUMP_CHUNK_BYTES 320
 
 static char s_api_key[LLM_API_KEY_MAX_LEN] = {0};
 static char s_model[LLM_MODEL_MAX_LEN] = MIMI_LLM_DEFAULT_MODEL;
@@ -30,49 +28,8 @@ static llm_endpoint_t s_anthropic_endpoint = {0};
 
 static void llm_log_payload(const char *label, const char *payload)
 {
-    if (!payload) {
-        MIMI_LOGI(TAG, "%s: <null>", label);
-        return;
-    }
-
-    size_t total = strlen(payload);
-#if MIMI_LLM_LOG_VERBOSE_PAYLOAD
-    size_t shown = total > LLM_DUMP_MAX_BYTES ? LLM_DUMP_MAX_BYTES : total;
-    MIMI_LOGI(TAG, "%s (%u bytes)%s",
-              label,
-              (unsigned)total,
-              (shown < total) ? " [truncated]" : "");
-
-    char chunk[LLM_DUMP_CHUNK_BYTES + 1];
-    for (size_t off = 0; off < shown; off += LLM_DUMP_CHUNK_BYTES) {
-        size_t n = shown - off;
-        if (n > LLM_DUMP_CHUNK_BYTES) {
-            n = LLM_DUMP_CHUNK_BYTES;
-        }
-        memcpy(chunk, payload + off, n);
-        chunk[n] = '\0';
-        MIMI_LOGI(TAG, "%s[%u]: %s", label, (unsigned)off, chunk);
-    }
-#else
-    if (MIMI_LLM_LOG_PREVIEW_BYTES > 0) {
-        size_t shown = total > MIMI_LLM_LOG_PREVIEW_BYTES ? MIMI_LLM_LOG_PREVIEW_BYTES : total;
-        char preview[MIMI_LLM_LOG_PREVIEW_BYTES + 1];
-        memcpy(preview, payload, shown);
-        preview[shown] = '\0';
-        for (size_t i = 0; i < shown; i++) {
-            if (preview[i] == '\n' || preview[i] == '\r' || preview[i] == '\t') {
-                preview[i] = ' ';
-            }
-        }
-        MIMI_LOGI(TAG, "%s (%u bytes): %s%s",
-                  label,
-                  (unsigned)total,
-                  preview,
-                  (shown < total) ? " ..." : "");
-    } else {
-        MIMI_LOGI(TAG, "%s (%u bytes)", label, (unsigned)total);
-    }
-#endif
+    size_t total = payload ? strlen(payload) : 0;
+    MIMI_LOGI(TAG, "%s (%u bytes)", label ? label : "llm payload", (unsigned)total);
 }
 
 static void safe_copy(char *dst, size_t dst_size, const char *src)
@@ -599,8 +556,8 @@ OPERATE_RET llm_proxy_init(void)
         safe_copy(s_provider, sizeof(s_provider), provider_tmp);
     }
 
-    MIMI_LOGI(TAG, "llm init provider=%s model=%s host=%s path=%s key=%s", s_provider, s_model,
-              llm_api_host() ? llm_api_host() : "<invalid>", llm_api_path(),
+    MIMI_LOGI(TAG, "llm init provider=%s model=%s endpoint=%s credential=%s",
+              s_provider, s_model, llm_api_host() ? "valid" : "invalid",
               s_api_key[0] ? "configured" : "empty");
     return OPRT_OK;
 }

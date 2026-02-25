@@ -440,20 +440,18 @@ static void process_updates(const char *json_str)
         cJSON *text = cJSON_GetObjectItem(message, "text");
         if (cJSON_IsString(text) && text->valuestring) {
             MIMI_LOGI(TAG,
-                      "rx inbound_text channel=%s chat=%s len=%u text=%s",
-                      MIMI_CHAN_TELEGRAM, chat_id_str, (unsigned)strlen(text->valuestring), text->valuestring);
+                      "rx inbound_text channel=%s chat=%s len=%u",
+                      MIMI_CHAN_TELEGRAM, chat_id_str, (unsigned)strlen(text->valuestring));
         }
 
         cJSON *document = cJSON_GetObjectItem(message, "document");
         if (cJSON_IsObject(document)) {
             const char *file_name = json_string_or_default(document, "file_name", "<empty>");
             const char *mime_type = json_string_or_default(document, "mime_type", "<empty>");
-            const char *file_id = json_string_or_default(document, "file_id", "<empty>");
             uint32_t file_size = json_uint_or_default(document, "file_size", 0);
-            const char *caption = json_string_or_default(message, "caption", "");
             MIMI_LOGI(TAG,
-                      "rx document chat=%s name=%s mime=%s size=%u file_id=%s caption=%s",
-                      chat_id_str, file_name, mime_type, (unsigned)file_size, file_id, caption);
+                      "rx document chat=%s name=%s mime=%s size=%u",
+                      chat_id_str, file_name, mime_type, (unsigned)file_size);
         }
 
         if (!cJSON_IsString(text) || !text->valuestring) {
@@ -554,7 +552,7 @@ OPERATE_RET telegram_bot_init(void)
         }
     }
 
-    MIMI_LOGI(TAG, "telegram init token=%s", s_bot_token[0] ? "configured" : "empty");
+    MIMI_LOGI(TAG, "telegram init credential=%s", s_bot_token[0] ? "configured" : "empty");
     return OPRT_OK;
 }
 
@@ -649,13 +647,13 @@ OPERATE_RET telegram_send_message(const char *chat_id, const char *text)
         const char *desc = NULL;
 
         if (json) {
-            MIMI_LOGD(TAG, "send telegram chunk chat=%s bytes=%u", chat_id, (unsigned)chunk);
+            MIMI_LOGD(TAG, "send telegram chunk bytes=%u", (unsigned)chunk);
             rt = tg_http_call(path, json, resp, TG_HTTP_RESP_BUF_SIZE, &status);
             if (rt == OPRT_OK && status == 200) {
                 sent_ok = tg_response_is_ok(resp, &desc);
                 if (!sent_ok) {
                     markdown_failed = true;
-                    MIMI_LOGI(TAG, "markdown rejected chat=%s desc=%s", chat_id, desc ? desc : "unknown");
+                    MIMI_LOGI(TAG, "markdown rejected rt=%d status=%u", rt, status);
                 }
             }
         }
@@ -688,17 +686,15 @@ OPERATE_RET telegram_send_message(const char *chat_id, const char *text)
                 sent_ok = tg_response_is_ok(resp, &desc);
             }
             if (!sent_ok) {
-                MIMI_LOGE(TAG, "plain send failed chat=%s rt=%d status=%u desc=%s",
-                          chat_id, rt, status, desc ? desc : "unknown");
-                MIMI_LOGE(TAG, "telegram raw response: %.300s", resp);
+                MIMI_LOGE(TAG, "plain send failed rt=%d status=%u", rt, status);
                 all_ok = false;
             } else if (markdown_failed) {
-                MIMI_LOGI(TAG, "plain-text fallback succeeded chat=%s", chat_id);
+                MIMI_LOGI(TAG, "plain-text fallback succeeded");
             }
         }
 
         if (sent_ok) {
-            MIMI_LOGD(TAG, "telegram send success chat=%s bytes=%u", chat_id, (unsigned)chunk);
+            MIMI_LOGD(TAG, "telegram send success bytes=%u", (unsigned)chunk);
         } else {
             all_ok = false;
         }

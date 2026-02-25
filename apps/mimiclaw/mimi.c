@@ -221,7 +221,8 @@ static void outbound_dispatch_task(void *arg)
                 MIMI_LOGW(TAG, "websocket send failed chat=%s rt=%d", msg.chat_id, ws_rt);
             }
         } else if (strcmp(msg.channel, MIMI_CHAN_SYSTEM) == 0) {
-            MIMI_LOGI(TAG, "system message [%s]: %.128s", msg.chat_id, msg.content ? msg.content : "");
+            MIMI_LOGI(TAG, "system message delivered bytes=%u",
+                      (unsigned)strlen(msg.content ? msg.content : ""));
         } else {
             MIMI_LOGW(TAG, "unknown outbound channel: %s", msg.channel);
         }
@@ -303,7 +304,7 @@ static void start_online_services(const char *mode)
     if (enable_tg) {
         rt = telegram_bot_start();
         if (rt == OPRT_NOT_FOUND) {
-            MIMI_LOGW(TAG, "telegram token missing, telegram service disabled");
+            MIMI_LOGW(TAG, "telegram credential missing, telegram service disabled");
         } else if (rt != OPRT_OK) {
             MIMI_LOGW(TAG, "telegram_bot_start failed: %d", rt);
         }
@@ -314,7 +315,7 @@ static void start_online_services(const char *mode)
     if (enable_dc) {
         rt = discord_bot_start();
         if (rt == OPRT_NOT_FOUND) {
-            MIMI_LOGW(TAG, "discord token missing, discord service disabled");
+            MIMI_LOGW(TAG, "discord credential missing, discord service disabled");
         } else if (rt != OPRT_OK) {
             MIMI_LOGW(TAG, "discord_bot_start failed: %d", rt);
         }
@@ -388,11 +389,11 @@ void mimi_app_main(void)
             MIMI_LOGI(TAG, "WiFi connected: %s", wifi_manager_get_ip());
             start_online_services("wifi");
         } else {
-            MIMI_LOGW(TAG, "WiFi connection timeout. Check MIMI_SECRET_WIFI_SSID in mimi_secrets.h");
+            MIMI_LOGW(TAG, "WiFi connection timeout. Check WiFi SSID configuration");
         }
     } else {
         if (wifi_rt == OPRT_NOT_FOUND) {
-            MIMI_LOGW(TAG, "No WiFi credentials. Set MIMI_SECRET_WIFI_SSID in mimi_secrets.h");
+            MIMI_LOGW(TAG, "No WiFi credentials. Set WiFi SSID configuration");
         } else {
             MIMI_LOGW(TAG, "wifi_manager_start failed: %d", wifi_rt);
         }

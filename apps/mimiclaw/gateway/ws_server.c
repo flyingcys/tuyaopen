@@ -233,7 +233,7 @@ static OPERATE_RET ws_do_handshake_locked(ws_client_t *client)
 
     char ws_key[128] = {0};
     if (!ws_get_header_value(hdr, "Sec-WebSocket-Key", ws_key, sizeof(ws_key))) {
-        MIMI_LOGW(TAG, "handshake missing key fd=%d", client->fd);
+        MIMI_LOGW(TAG, "handshake missing websocket header fd=%d", client->fd);
         return OPRT_CJSON_GET_ERR;
     }
 

@@ -1117,7 +1117,7 @@ static OPERATE_RET fs_ws_handshake(fs_ws_conn_t *conn, const char *host, const c
 
     uint16_t status = parse_http_status_code(header);
     if (status != 101) {
-        MIMI_LOGE(TAG, "feishu ws handshake failed http=%u resp=%.256s", status, header);
+        MIMI_LOGE(TAG, "feishu ws handshake failed http=%u", status);
         return OPRT_COM_ERROR;
     }
 
@@ -2247,16 +2247,16 @@ static void log_feishu_inbound_message(const char *chat_id, const char *sender_o
                                        const char *msg_type, const char *chat_type,
                                        const char *text, const char *content_json)
 {
-    MIMI_LOGI(TAG, "rx inbound_text channel=%s chat=%s len=%u text=%s",
+    MIMI_LOGI(TAG, "rx inbound_text channel=%s chat=%s event=%s type=%s len=%u",
               MIMI_CHAN_FEISHU,
               log_str(chat_id),
-              (unsigned)strlen(log_str(text)),
-              log_str(text));
-
-    if (content_json && content_json[0] != '\0') {
-        MIMI_LOGI(TAG, "rx feishu raw message_id=%s content=%.512s",
-                  log_str(message_id), content_json);
-    }
+              log_str(event_type),
+              log_str(msg_type),
+              (unsigned)strlen(log_str(text)));
+    (void)sender_open_id;
+    (void)message_id;
+    (void)chat_type;
+    (void)content_json;
 }
 
 static void handle_event_payload(const uint8_t *payload, size_t payload_len)
@@ -2499,7 +2499,7 @@ static void feishu_ws_task(void *arg)
 
         OPERATE_RET rt = ensure_tenant_token();
         if (rt != OPRT_OK) {
-            MIMI_LOGW(TAG, "ensure_tenant_token failed rt=%d", rt);
+            MIMI_LOGW(TAG, "ensure tenant credential failed rt=%d", rt);
             tal_system_sleep(FS_WS_DEFAULT_RECONNECT_MS);
             continue;
         }
@@ -2519,7 +2519,7 @@ static void feishu_ws_task(void *arg)
 
         rt = fs_parse_ws_url(conf.url, ws_host, sizeof(ws_host), &ws_port, ws_path, sizeof(ws_path), &service_id);
         if (rt != OPRT_OK) {
-            MIMI_LOGW(TAG, "parse ws url failed rt=%d url=%s", rt, conf.url);
+            MIMI_LOGW(TAG, "parse ws endpoint failed rt=%d", rt);
             tal_system_sleep(conf.reconnect_interval_ms ? conf.reconnect_interval_ms : FS_WS_DEFAULT_RECONNECT_MS);
             continue;
         }
@@ -2665,7 +2665,7 @@ OPERATE_RET feishu_bot_start(void)
 
     OPERATE_RET rt = ensure_tenant_token();
     if (rt != OPRT_OK) {
-        MIMI_LOGW(TAG, "initial tenant token fetch failed rt=%d", rt);
+        MIMI_LOGW(TAG, "initial tenant credential fetch failed rt=%d", rt);
         return rt;
     }
 
@@ -2757,9 +2757,8 @@ OPERATE_RET feishu_send_message(const char *chat_id, const char *text)
     cJSON_free(body_json);
 
     if (!ok) {
-        MIMI_LOGE(TAG, "feishu send failed rid=%s type=%s rt=%d http=%u msg=%s",
-                  chat_id, rid_type, rt, status, err_msg ? err_msg : "unknown");
-        MIMI_LOGE(TAG, "feishu raw response: %.300s", resp);
+        MIMI_LOGE(TAG, "feishu send failed rid=%s type=%s rt=%d http=%u",
+                  chat_id, rid_type, rt, status);
     } else {
         MIMI_LOGI(TAG, "feishu send success rid=%s type=%s bytes=%u", chat_id, rid_type, (unsigned)strlen(text));
     }

@@ -10,19 +10,24 @@ if [[ ! -f "${DC_C}" ]]; then
   exit 1
 fi
 
-if ! grep -q 'rx text chat=' "${DC_C}"; then
-  echo "FAIL: discord text inbound log is missing" >&2
+if ! grep -q 'rx inbound_text channel=%s chat=%s len=%u' "${DC_C}"; then
+  echo "FAIL: discord sanitized inbound text log is missing" >&2
   exit 1
 fi
 
-if ! grep -q 'rx inbound_text channel=%s chat=%s len=%u text=%s' "${DC_C}"; then
-  echo "FAIL: discord unified inbound text log is missing" >&2
+if grep -q 'rx inbound_text channel=%s chat=%s len=%u text=%s' "${DC_C}"; then
+  echo "FAIL: discord inbound text log still prints raw text" >&2
   exit 1
 fi
 
-if ! grep -q 'rx attachment chat=' "${DC_C}"; then
-  echo "FAIL: discord attachment inbound log is missing" >&2
+if ! grep -q 'rx attachment chat=%s message_id=%s name=%s mime=%s size=%u' "${DC_C}"; then
+  echo "FAIL: discord sanitized attachment log is missing" >&2
   exit 1
 fi
 
-echo "PASS: discord inbound text/attachment logs are present."
+if grep -q 'url=%s' "${DC_C}"; then
+  echo "FAIL: discord attachment log still prints URL" >&2
+  exit 1
+fi
+
+echo "PASS: discord inbound logs are sanitized (no raw text/url)."
