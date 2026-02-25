@@ -7,6 +7,8 @@
 #include "tal_fs.h"
 
 static const char *TAG = "context";
+/* Reused scratch buffer for memory/skills blocks to keep stack usage low. */
+#define CONTEXT_TMP_BUF_SIZE 4096
 
 static size_t append_file(char *buf, size_t size, size_t offset, const char *path, const char *header)
 {
@@ -82,24 +84,31 @@ OPERATE_RET context_build_system_prompt(char *buf, size_t size)
     off = append_file(buf, size, off, MIMI_SOUL_FILE, "Personality");
     off = append_file(buf, size, off, MIMI_USER_FILE, "User Info");
 
-    char mem_buf[4096] = {0};
-    if (memory_read_long_term(mem_buf, sizeof(mem_buf)) == OPRT_OK && mem_buf[0]) {
-        off += snprintf(buf + off, size - off, "\n## Long-term Memory\n\n%s\n", mem_buf);
+    char *tmp_buf = tal_malloc(CONTEXT_TMP_BUF_SIZE);
+    if (!tmp_buf) {
+        return OPRT_MALLOC_FAILED;
     }
 
-    char recent_buf[4096] = {0};
-    if (memory_read_recent(recent_buf, sizeof(recent_buf), 3) == OPRT_OK && recent_buf[0]) {
-        off += snprintf(buf + off, size - off, "\n## Recent Notes\n\n%s\n", recent_buf);
+    memset(tmp_buf, 0, CONTEXT_TMP_BUF_SIZE);
+    if (memory_read_long_term(tmp_buf, CONTEXT_TMP_BUF_SIZE) == OPRT_OK && tmp_buf[0]) {
+        off += snprintf(buf + off, size - off, "\n## Long-term Memory\n\n%s\n", tmp_buf);
     }
 
-    char skills_buf[2048] = {0};
-    size_t skills_len = skill_loader_build_summary(skills_buf, sizeof(skills_buf));
+    memset(tmp_buf, 0, CONTEXT_TMP_BUF_SIZE);
+    if (memory_read_recent(tmp_buf, CONTEXT_TMP_BUF_SIZE, 3) == OPRT_OK && tmp_buf[0]) {
+        off += snprintf(buf + off, size - off, "\n## Recent Notes\n\n%s\n", tmp_buf);
+    }
+
+    memset(tmp_buf, 0, CONTEXT_TMP_BUF_SIZE);
+    size_t skills_len = skill_loader_build_summary(tmp_buf, CONTEXT_TMP_BUF_SIZE);
     if (skills_len > 0) {
         off += snprintf(buf + off, size - off,
                         "\n## Available Skills\n\n"
                         "Available skills (use read_file to load full instructions):\n%s\n",
-                        skills_buf);
+                        tmp_buf);
     }
+
+    tal_free(tmp_buf);
 
     MIMI_LOGI(TAG, "system prompt bytes=%u", (unsigned)off);
     return OPRT_OK;

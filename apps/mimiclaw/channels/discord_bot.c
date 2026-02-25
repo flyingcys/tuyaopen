@@ -32,7 +32,8 @@ typedef struct {
     tuya_transporter_t tcp;
     tuya_tls_hander tls;
     int socket_fd;
-    uint8_t rx_buf[MIMI_DC_GATEWAY_RX_BUF_SIZE];
+    uint8_t *rx_buf;
+    size_t rx_cap;
     size_t rx_len;
 } dc_gateway_conn_t;
 
@@ -181,6 +182,31 @@ static OPERATE_RET dc_direct_open(dc_gateway_conn_t *conn, const char *host, int
     return OPRT_OK;
 }
 
+static OPERATE_RET dc_conn_ensure_rx_buf(dc_gateway_conn_t *conn, size_t min_cap)
+{
+    if (!conn || min_cap == 0) {
+        return OPRT_INVALID_PARM;
+    }
+
+    if (conn->rx_buf && conn->rx_cap >= min_cap) {
+        return OPRT_OK;
+    }
+
+    uint8_t *buf = tal_malloc(min_cap);
+    if (!buf) {
+        return OPRT_MALLOC_FAILED;
+    }
+
+    if (conn->rx_buf) {
+        tal_free(conn->rx_buf);
+    }
+
+    conn->rx_buf = buf;
+    conn->rx_cap = min_cap;
+    conn->rx_len = 0;
+    return OPRT_OK;
+}
+
 static void dc_conn_close(dc_gateway_conn_t *conn)
 {
     if (!conn) {
@@ -207,6 +233,11 @@ static void dc_conn_close(dc_gateway_conn_t *conn)
     }
 
     conn->mode = DC_CONN_NONE;
+    if (conn->rx_buf) {
+        tal_free(conn->rx_buf);
+        conn->rx_buf = NULL;
+    }
+    conn->rx_cap = 0;
     conn->rx_len = 0;
 }
 
@@ -363,6 +394,11 @@ static OPERATE_RET dc_ws_handshake(dc_gateway_conn_t *conn)
         return OPRT_INVALID_PARM;
     }
 
+    OPERATE_RET rt = dc_conn_ensure_rx_buf(conn, MIMI_DC_GATEWAY_RX_BUF_SIZE);
+    if (rt != OPRT_OK) {
+        return rt;
+    }
+
     const char *ws_key = "dGhlIHNhbXBsZSBub25jZQ==";
     char req[768] = {0};
     int req_len = snprintf(req, sizeof(req),
@@ -417,7 +453,7 @@ static OPERATE_RET dc_ws_handshake(dc_gateway_conn_t *conn)
     size_t remain = (size_t)(total - header_end);
     conn->rx_len = 0;
     if (remain > 0) {
-        if (remain > sizeof(conn->rx_buf)) {
+        if (remain > conn->rx_cap) {
             return OPRT_BUFFER_NOT_ENOUGH;
         }
         memcpy(conn->rx_buf, header + header_end, remain);
@@ -435,6 +471,9 @@ static OPERATE_RET dc_ws_decode_one_frame(dc_gateway_conn_t *conn,
                                           size_t *consumed)
 {
     if (!conn || !opcode || !payload || !payload_len || !consumed) {
+        return OPRT_INVALID_PARM;
+    }
+    if (!conn->rx_buf || conn->rx_cap == 0) {
         return OPRT_INVALID_PARM;
     }
 
@@ -468,7 +507,7 @@ static OPERATE_RET dc_ws_decode_one_frame(dc_gateway_conn_t *conn,
         return OPRT_RESOURCE_NOT_READY;
     }
 
-    if (plen > (uint64_t)(MIMI_DC_GATEWAY_RX_BUF_SIZE - 16)) {
+    if (conn->rx_cap <= 16 || plen > (uint64_t)(conn->rx_cap - 16)) {
         return OPRT_MSG_OUT_OF_LIMIT;
     }
 
@@ -528,6 +567,11 @@ static OPERATE_RET dc_ws_poll_frame(dc_gateway_conn_t *conn,
         return OPRT_INVALID_PARM;
     }
 
+    OPERATE_RET ensure_rt = dc_conn_ensure_rx_buf(conn, MIMI_DC_GATEWAY_RX_BUF_SIZE);
+    if (ensure_rt != OPRT_OK) {
+        return ensure_rt;
+    }
+
     *payload = NULL;
     *payload_len = 0;
 
@@ -550,7 +594,7 @@ static OPERATE_RET dc_ws_poll_frame(dc_gateway_conn_t *conn,
         return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
     }
 
-    if (conn->rx_len + (size_t)n > sizeof(conn->rx_buf)) {
+    if (conn->rx_len + (size_t)n > conn->rx_cap) {
         return OPRT_BUFFER_NOT_ENOUGH;
     }
 
@@ -751,18 +795,25 @@ static void discord_gateway_task(void *arg)
             continue;
         }
 
-        dc_gateway_conn_t conn;
-        OPERATE_RET rt = dc_conn_open(&conn, MIMI_DC_GATEWAY_HOST, 443, DC_HTTP_TIMEOUT_MS);
-        if (rt != OPRT_OK) {
-            MIMI_LOGW(TAG, "discord gateway connect failed rt=%d", rt);
+        dc_gateway_conn_t *conn = calloc(1, sizeof(dc_gateway_conn_t));
+        if (!conn) {
             tal_system_sleep(MIMI_DC_GATEWAY_RECONNECT_MS);
             continue;
         }
 
-        rt = dc_ws_handshake(&conn);
+        OPERATE_RET rt = dc_conn_open(conn, MIMI_DC_GATEWAY_HOST, 443, DC_HTTP_TIMEOUT_MS);
+        if (rt != OPRT_OK) {
+            MIMI_LOGW(TAG, "discord gateway connect failed rt=%d", rt);
+            free(conn);
+            tal_system_sleep(MIMI_DC_GATEWAY_RECONNECT_MS);
+            continue;
+        }
+
+        rt = dc_ws_handshake(conn);
         if (rt != OPRT_OK) {
             MIMI_LOGW(TAG, "discord gateway handshake failed rt=%d", rt);
-            dc_conn_close(&conn);
+            dc_conn_close(conn);
+            free(conn);
             tal_system_sleep(MIMI_DC_GATEWAY_RECONNECT_MS);
             continue;
         }
@@ -775,7 +826,7 @@ static void discord_gateway_task(void *arg)
             if (heartbeat_ms > 0) {
                 uint32_t now = tal_system_get_millisecond();
                 if ((int32_t)(now - next_heartbeat_ms) >= 0) {
-                    OPERATE_RET hb_rt = dc_gateway_send_heartbeat(&conn, seq);
+                    OPERATE_RET hb_rt = dc_gateway_send_heartbeat(conn, seq);
                     if (hb_rt != OPRT_OK) {
                         MIMI_LOGW(TAG, "discord gateway heartbeat failed rt=%d", hb_rt);
                         break;
@@ -787,7 +838,7 @@ static void discord_gateway_task(void *arg)
             uint8_t opcode = 0;
             uint8_t *payload = NULL;
             size_t payload_len = 0;
-            rt = dc_ws_poll_frame(&conn, 500, &opcode, &payload, &payload_len);
+            rt = dc_ws_poll_frame(conn, 500, &opcode, &payload, &payload_len);
             if (rt == OPRT_RESOURCE_NOT_READY) {
                 continue;
             }
@@ -799,7 +850,7 @@ static void discord_gateway_task(void *arg)
 
             if (opcode == 0x1) {
                 if (payload && payload_len > 0) {
-                    OPERATE_RET hrt = handle_gateway_payload(&conn, (const char *)payload,
+                    OPERATE_RET hrt = handle_gateway_payload(conn, (const char *)payload,
                                                             &seq, &heartbeat_ms, &next_heartbeat_ms);
                     if (hrt != OPRT_OK) {
                         free(payload);
@@ -819,13 +870,14 @@ static void discord_gateway_task(void *arg)
                 MIMI_LOGW(TAG, "discord gateway closed by peer code=%d reason=%.120s", close_code, close_reason);
                 break;
             } else if (opcode == 0x9) {
-                (void)dc_ws_send_frame(&conn, 0xA, payload, payload_len);
+                (void)dc_ws_send_frame(conn, 0xA, payload, payload_len);
             }
 
             free(payload);
         }
 
-        dc_conn_close(&conn);
+        dc_conn_close(conn);
+        free(conn);
         tal_system_sleep(MIMI_DC_GATEWAY_RECONNECT_MS);
     }
 }
@@ -950,9 +1002,14 @@ static OPERATE_RET dc_http_call_via_proxy(const char *path, const char *method, 
 static OPERATE_RET dc_http_call_direct(const char *path, const char *method, const char *post_data,
                                        char *resp_buf, size_t resp_buf_size, uint16_t *status_code)
 {
-    dc_gateway_conn_t conn;
-    OPERATE_RET rt = dc_direct_open(&conn, DC_HOST, 443, DC_HTTP_TIMEOUT_MS);
+    dc_gateway_conn_t *conn = calloc(1, sizeof(dc_gateway_conn_t));
+    if (!conn) {
+        return OPRT_MALLOC_FAILED;
+    }
+
+    OPERATE_RET rt = dc_direct_open(conn, DC_HOST, 443, DC_HTTP_TIMEOUT_MS);
     if (rt != OPRT_OK) {
+        free(conn);
         return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
     }
 
@@ -979,16 +1036,19 @@ static OPERATE_RET dc_http_call_direct(const char *path, const char *method, con
                            method, path, DC_HOST, s_bot_token, body_len);
     }
     if (req_len <= 0 || req_len >= (int)sizeof(req_header)) {
-        dc_conn_close(&conn);
+        dc_conn_close(conn);
+        free(conn);
         return OPRT_BUFFER_NOT_ENOUGH;
     }
 
-    if (dc_conn_write(&conn, (const uint8_t *)req_header, req_len) != req_len) {
-        dc_conn_close(&conn);
+    if (dc_conn_write(conn, (const uint8_t *)req_header, req_len) != req_len) {
+        dc_conn_close(conn);
+        free(conn);
         return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
     }
-    if (body_len > 0 && dc_conn_write(&conn, (const uint8_t *)post_data, body_len) != body_len) {
-        dc_conn_close(&conn);
+    if (body_len > 0 && dc_conn_write(conn, (const uint8_t *)post_data, body_len) != body_len) {
+        dc_conn_close(conn);
+        free(conn);
         return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
     }
 
@@ -996,7 +1056,8 @@ static OPERATE_RET dc_http_call_direct(const char *path, const char *method, con
     size_t raw_len = 0;
     char *raw = calloc(1, raw_cap);
     if (!raw) {
-        dc_conn_close(&conn);
+        dc_conn_close(conn);
+        free(conn);
         return OPRT_MALLOC_FAILED;
     }
 
@@ -1007,18 +1068,20 @@ static OPERATE_RET dc_http_call_direct(const char *path, const char *method, con
             char *tmp = realloc(raw, new_cap);
             if (!tmp) {
                 free(raw);
-                dc_conn_close(&conn);
+                dc_conn_close(conn);
+                free(conn);
                 return OPRT_MALLOC_FAILED;
             }
             raw = tmp;
             raw_cap = new_cap;
         }
 
-        int n = dc_conn_read(&conn, (uint8_t *)raw + raw_len, (int)(raw_cap - raw_len - 1), DC_PROXY_READ_SLICE_MS);
+        int n = dc_conn_read(conn, (uint8_t *)raw + raw_len, (int)(raw_cap - raw_len - 1), DC_PROXY_READ_SLICE_MS);
         if (n == OPRT_RESOURCE_NOT_READY) {
             if ((int)(tal_system_get_millisecond() - wait_begin_ms) >= DC_PROXY_READ_TOTAL_MS) {
                 free(raw);
-                dc_conn_close(&conn);
+                dc_conn_close(conn);
+                free(conn);
                 return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
             }
             continue;
@@ -1028,7 +1091,8 @@ static OPERATE_RET dc_http_call_direct(const char *path, const char *method, con
                 break;
             }
             free(raw);
-            dc_conn_close(&conn);
+            dc_conn_close(conn);
+            free(conn);
             return OPRT_LINK_CORE_HTTP_CLIENT_SEND_ERROR;
         }
         if (n == 0) {
@@ -1039,7 +1103,8 @@ static OPERATE_RET dc_http_call_direct(const char *path, const char *method, con
         raw[raw_len] = '\0';
         wait_begin_ms = tal_system_get_millisecond();
     }
-    dc_conn_close(&conn);
+    dc_conn_close(conn);
+    free(conn);
 
     if (raw_len == 0) {
         free(raw);
