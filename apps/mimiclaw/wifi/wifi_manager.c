@@ -3,6 +3,14 @@
 #include "mimi_config.h"
 
 static const char *TAG = "wifi";
+static wifi_scan_result_cb_t s_scan_result_cb = NULL;
+static void *s_scan_result_cb_ctx = NULL;
+
+void wifi_manager_set_scan_result_cb(wifi_scan_result_cb_t cb, void *user_data)
+{
+    s_scan_result_cb = cb;
+    s_scan_result_cb_ctx = user_data;
+}
 
 #if defined(ENABLE_WIFI) && (ENABLE_WIFI == 1)
 
@@ -336,6 +344,11 @@ OPERATE_RET wifi_manager_scan_and_print(void)
 
         MIMI_LOGI(TAG, "ap[%u] ssid=%s ch=%u rssi=%d sec=%u bssid=%s", (unsigned)i, ssid[0] ? ssid : "<hidden>",
                   (unsigned)ap->channel, (int)ap->rssi, (unsigned)ap->security, bssid);
+
+        if (s_scan_result_cb) {
+            s_scan_result_cb(i, ap_num, ssid[0] ? ssid : "<hidden>", ap->channel, (int)ap->rssi, ap->security, bssid,
+                             s_scan_result_cb_ctx);
+        }
     }
 
     (void)tal_wifi_release_ap(ap_list);

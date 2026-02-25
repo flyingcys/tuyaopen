@@ -8,6 +8,7 @@
 #include "channels/discord_bot.h"
 #include "channels/feishu_bot.h"
 #include "tal_cli.h"
+#include "tal_fs.h"
 #include "channels/telegram_bot.h"
 #include "tools/tool_web_search.h"
 #include "wifi/wifi_manager.h"
@@ -154,7 +155,7 @@ static const cli_help_item_t s_cli_help_items[] = {
         .name = "set_fs_allow",
         .usage = "<open_id_csv>",
         .summary_1 = "Set Feishu allow_from open_id CSV (empty = allow all)",
-        .arg_1 = "<open_id_csv>  Comma-separated sender open_id allowlist",
+        .arg_1 = " <open_id_csv>  Comma-separated sender open_id allowlist",
         .verbose = 0,
     },
     {
@@ -191,6 +192,25 @@ static const cli_help_item_t s_cli_help_items[] = {
         .verbose = 0,
     },
     {
+        .name = "file_list",
+        .summary_1 = "List /spiffs entries",
+        .verbose = 0,
+    },
+    {
+        .name = "file_read",
+        .usage = "<path>",
+        .summary_1 = "Read a text file under /spiffs/",
+        .arg_1 = "        <path>  File path, e.g. /spiffs/sessions/xxx.jsonl",
+        .verbose = 0,
+    },
+    {
+        .name = "file_clear",
+        .usage = "<path>",
+        .summary_1 = "Delete a file under /spiffs/",
+        .arg_1 = "        <path>  File path, e.g. /spiffs/memory/daily_note.md",
+        .verbose = 0,
+    },
+    {
         .name = "session_list",
         .summary_1 = "List all sessions",
         .verbose = 0,
@@ -198,8 +218,13 @@ static const cli_help_item_t s_cli_help_items[] = {
     {
         .name = "session_clear",
         .usage = "<chat_id>",
-        .summary_1 = "Clear a session",
-        .arg_1 = "     <chat_id>  Chat ID to clear",
+        .summary_1 = "Clear a session only",
+        .arg_1 = "     <chat_id>  Chat ID or tg_*.jsonl file name",
+        .verbose = 0,
+    },
+    {
+        .name = "session_clear_all",
+        .summary_1 = "Clear all session files",
         .verbose = 0,
     },
     {
@@ -395,12 +420,23 @@ static void cmd_wifi_status(int argc, char *argv[])
     cli_echof("ip: %s", wifi_manager_get_ip());
 }
 
+static void cli_wifi_scan_result_cb(uint32_t index, uint32_t total, const char *ssid, uint8_t channel, int rssi,
+                                    uint8_t security, const char *bssid, void *user_data)
+{
+    (void)total;
+    (void)user_data;
+    cli_echof("ap[%u] ssid=%s ch=%u rssi=%d sec=%u bssid=%s", (unsigned)index, ssid ? ssid : "<hidden>",
+              (unsigned)channel, rssi, (unsigned)security, bssid ? bssid : "-");
+}
+
 static void cmd_wifi_scan(int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
     cli_echof("wifi_scan start");
+    wifi_manager_set_scan_result_cb(cli_wifi_scan_result_cb, NULL);
     OPERATE_RET rt = wifi_manager_scan_and_print();
+    wifi_manager_set_scan_result_cb(NULL, NULL);
     cli_echof("wifi_scan rt=%d", rt);
 }
 
@@ -571,19 +607,82 @@ static void cmd_set_search_key(int argc, char *argv[])
 
 static void cmd_memory_read(int argc, char *argv[])
 {
-    (void)argc;
     (void)argv;
+    if (argc != 1) {
+        cli_echof("usage: memory_read");
+        return;
+    }
 
-    char buf[4096] = {0};
-    OPERATE_RET rt = memory_read_long_term(buf, sizeof(buf));
+    char *buf = tal_malloc(4096);
+    if (!buf) {
+        cli_echof("memory_read oom");
+        return;
+    }
+    memset(buf, 0, 4096);
+
+    OPERATE_RET rt = memory_read_long_term(buf, 4096);
     if (rt != OPRT_OK || buf[0] == '\0') {
         cli_echof("memory empty rt=%d", rt);
+        tal_free(buf);
         return;
     }
 
     cli_echof("=== MEMORY.md ===");
     cli_echof("%s", buf);
     cli_echof("=================");
+    tal_free(buf);
+}
+
+static void cmd_file_read(int argc, char *argv[])
+{
+    if (argc != 2) {
+        cli_echof("usage: file_read <path>");
+        return;
+    }
+
+    const char *path = argv[1];
+    if (strncmp(path, MIMI_SPIFFS_BASE "/", sizeof(MIMI_SPIFFS_BASE)) != 0) {
+        cli_echof("file_read path must start with /spiffs/");
+        return;
+    }
+
+    char *buf = tal_malloc(4096);
+    if (!buf) {
+        cli_echof("file_read oom");
+        return;
+    }
+    memset(buf, 0, 4096);
+
+    TUYA_FILE f = tal_fopen(path, "r");
+    if (!f) {
+        cli_echof("file_read open failed: %s", path);
+        tal_free(buf);
+        return;
+    }
+
+    int n = tal_fread(buf, 4095, f);
+    tal_fclose(f);
+    if (n < 0) {
+        cli_echof("file_read read failed: %s", path);
+        tal_free(buf);
+        return;
+    }
+    buf[n] = '\0';
+
+    int file_size = tal_fgetsize(path);
+    if (buf[0] == '\0') {
+        cli_echof("file_read empty: %s", path);
+        tal_free(buf);
+        return;
+    }
+
+    cli_echof("=== %s ===", path);
+    cli_echof("%s", buf);
+    if (file_size > n && n > 0) {
+        cli_echof("[truncated] %d/%d B", n, file_size);
+    }
+    cli_echof("=================");
+    tal_free(buf);
 }
 
 static void cmd_memory_write(int argc, char *argv[])
@@ -593,11 +692,17 @@ static void cmd_memory_write(int argc, char *argv[])
         return;
     }
 
-    char content[2048] = {0};
+    char *content = tal_malloc(2048);
+    if (!content) {
+        cli_echof("memory_write oom");
+        return;
+    }
+    memset(content, 0, 2048);
+
     size_t off = 0;
-    for (int i = 1; i < argc && off < sizeof(content) - 1; i++) {
-        int n = snprintf(content + off, sizeof(content) - off, "%s%s", (i == 1) ? "" : " ", argv[i]);
-        if (n < 0 || (size_t)n >= sizeof(content) - off) {
+    for (int i = 1; i < argc && off < 2048 - 1; i++) {
+        int n = snprintf(content + off, 2048 - off, "%s%s", (i == 1) ? "" : " ", argv[i]);
+        if (n < 0 || (size_t)n >= 2048 - off) {
             break;
         }
         off += (size_t)n;
@@ -605,25 +710,183 @@ static void cmd_memory_write(int argc, char *argv[])
 
     OPERATE_RET rt = memory_write_long_term(content);
     cli_echof("memory_write rt=%d", rt);
+    tal_free(content);
+}
+
+typedef struct {
+    uint32_t idx;
+    const char *base_dir;
+} cli_session_list_ctx_t;
+
+static void cli_session_list_cb(const char *name, void *user_data)
+{
+    cli_session_list_ctx_t *ctx = (cli_session_list_ctx_t *)user_data;
+    uint32_t idx = ctx ? ctx->idx++ : 0;
+    const char *base_dir = (ctx && ctx->base_dir) ? ctx->base_dir : MIMI_SPIFFS_SESSION_DIR;
+
+    char path[192] = {0};
+    if (name && name[0] != '\0') {
+        snprintf(path, sizeof(path), "%s/%s", base_dir, name);
+    }
+
+    int size = path[0] ? tal_fgetsize(path) : -1;
+    if (size >= 0) {
+        cli_echof("session[%u]: %s (%d B)", (unsigned)idx, name ? name : "", size);
+    } else {
+        cli_echof("session[%u]: %s", (unsigned)idx, name ? name : "");
+    }
+}
+
+static void cli_list_spiffs_entries(void)
+{
+    uint32_t entry_idx = 0;
+    uint32_t file_count = 0;
+
+    TUYA_DIR root = NULL;
+    if (tal_dir_open(MIMI_SPIFFS_BASE, &root) != OPRT_OK || !root) {
+        cli_echof("/spiffs open failed");
+        return;
+    }
+
+    cli_echof("/spiffs all listing:");
+    while (1) {
+        TUYA_FILEINFO info = NULL;
+        if (tal_dir_read(root, &info) != OPRT_OK || !info) {
+            break;
+        }
+
+        const char *name = NULL;
+        if (tal_dir_name(info, &name) != OPRT_OK || !name || name[0] == '\0') {
+            continue;
+        }
+        if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0) {
+            continue;
+        }
+
+        char path[192] = {0};
+        snprintf(path, sizeof(path), "%s/%s", MIMI_SPIFFS_BASE, name);
+
+        BOOL_T is_regular = FALSE;
+        if (tal_dir_is_regular(info, &is_regular) == OPRT_OK && is_regular) {
+            int size = tal_fgetsize(path);
+            cli_echof("/spiffs[%u]: %s (%d B)", (unsigned)entry_idx++, path, size);
+            file_count++;
+            continue;
+        }
+
+        cli_echof("/spiffs[%u]: %s/ (<dir>)", (unsigned)entry_idx++, path);
+
+        TUYA_DIR sub = NULL;
+        if (tal_dir_open(path, &sub) != OPRT_OK || !sub) {
+            continue;
+        }
+
+        while (1) {
+            TUYA_FILEINFO sub_info = NULL;
+            if (tal_dir_read(sub, &sub_info) != OPRT_OK || !sub_info) {
+                break;
+            }
+
+            const char *sub_name = NULL;
+            if (tal_dir_name(sub_info, &sub_name) != OPRT_OK || !sub_name || sub_name[0] == '\0') {
+                continue;
+            }
+            if (strcmp(sub_name, ".") == 0 || strcmp(sub_name, "..") == 0) {
+                continue;
+            }
+
+            char sub_path[224] = {0};
+            snprintf(sub_path, sizeof(sub_path), "%s/%s", path, sub_name);
+
+            BOOL_T sub_is_regular = FALSE;
+            if (tal_dir_is_regular(sub_info, &sub_is_regular) == OPRT_OK && sub_is_regular) {
+                int sub_size = tal_fgetsize(sub_path);
+                cli_echof("/spiffs[%u]: %s (%d B)", (unsigned)entry_idx++, sub_path, sub_size);
+                file_count++;
+            } else {
+                cli_echof("/spiffs[%u]: %s/ (<dir>)", (unsigned)entry_idx++, sub_path);
+            }
+        }
+
+        tal_dir_close(sub);
+    }
+
+    tal_dir_close(root);
+    cli_echof("file_list done files=%u entries=%u", (unsigned)file_count, (unsigned)entry_idx);
 }
 
 static void cmd_session_list(int argc, char *argv[])
 {
-    (void)argc;
     (void)argv;
-    session_list();
-    cli_echof("session_list done");
+    if (argc != 1) {
+        cli_echof("usage: session_list");
+        return;
+    }
+
+    uint32_t count = 0;
+    cli_session_list_ctx_t ctx = {
+        .idx = 0,
+        .base_dir = MIMI_SPIFFS_SESSION_DIR,
+    };
+    OPERATE_RET rt = session_list(cli_session_list_cb, &ctx, &count);
+    if (rt == OPRT_NOT_FOUND || count == 0) {
+        cli_echof("session_list empty");
+        return;
+    }
+    if (rt != OPRT_OK) {
+        cli_echof("session_list rt=%d", rt);
+        return;
+    }
+
+    cli_echof("session_list done count=%u", (unsigned)count);
+}
+
+static void cmd_file_list(int argc, char *argv[])
+{
+    (void)argv;
+    if (argc != 1) {
+        cli_echof("usage: file_list");
+        return;
+    }
+    cli_list_spiffs_entries();
+}
+
+static void cmd_file_clear(int argc, char *argv[])
+{
+    if (argc != 2) {
+        cli_echof("usage: file_clear <path>");
+        return;
+    }
+
+    const char *path = argv[1];
+    if (strncmp(path, MIMI_SPIFFS_BASE "/", sizeof(MIMI_SPIFFS_BASE)) != 0) {
+        cli_echof("file_clear path must start with /spiffs/");
+        return;
+    }
+
+    OPERATE_RET rt = tal_fs_remove(path);
+    cli_echof("file_clear rt=%d", rt);
 }
 
 static void cmd_session_clear(int argc, char *argv[])
 {
     if (argc < 2) {
-        cli_echof("usage: session_clear <chat_id>");
+        cli_echof("usage: session_clear <chat_id|tg_*.jsonl>");
         return;
     }
 
     OPERATE_RET rt = session_clear(argv[1]);
     cli_echof("session_clear rt=%d", rt);
+}
+
+static void cmd_session_clear_all(int argc, char *argv[])
+{
+    (void)argc;
+    (void)argv;
+
+    uint32_t removed = 0;
+    OPERATE_RET rt = session_clear_all(&removed);
+    cli_echof("session_clear_all rt=%d removed=%u", rt, (unsigned)removed);
 }
 
 static void cmd_heap_info(int argc, char *argv[])
@@ -706,9 +969,13 @@ static const cli_cmd_t s_mimi_cli_cmds[] = {
     {.name = "set_model", .help = "Set LLM model", .func = cmd_set_model},
     {.name = "set_model_provider", .help = "Set LLM model provider", .func = cmd_set_model_provider},
     {.name = "memory_read", .help = "Read MEMORY.md", .func = cmd_memory_read},
+    {.name = "file_read", .help = "Read a text file from /spiffs", .func = cmd_file_read},
+    {.name = "file_list", .help = "List /spiffs entries", .func = cmd_file_list},
+    {.name = "file_clear", .help = "Delete a file from /spiffs", .func = cmd_file_clear},
     {.name = "memory_write", .help = "Write to MEMORY.md", .func = cmd_memory_write},
-    {.name = "session_list", .help = "List all sessions", .func = cmd_session_list},
-    {.name = "session_clear", .help = "Clear a session", .func = cmd_session_clear},
+    {.name = "session_list", .help = "List sessions only", .func = cmd_session_list},
+    {.name = "session_clear", .help = "Clear a session only", .func = cmd_session_clear},
+    {.name = "session_clear_all", .help = "Clear all sessions", .func = cmd_session_clear_all},
     {.name = "heap_info", .help = "Show heap memory usage", .func = cmd_heap_info},
     {.name = "set_search_key", .help = "Set Brave Search API key", .func = cmd_set_search_key},
     {.name = "set_proxy", .help = "Set proxy host/port/type", .func = cmd_set_proxy},

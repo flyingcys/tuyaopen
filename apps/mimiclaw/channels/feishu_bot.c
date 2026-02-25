@@ -118,9 +118,54 @@ static char *trim_ws(char *s)
     return s;
 }
 
-static bool sender_allowed(const char *sender_id)
+static char *strip_optional_quotes(char *s)
 {
-    if (!sender_id || sender_id[0] == '\0') {
+    if (!s) {
+        return s;
+    }
+
+    size_t len = strlen(s);
+    if (len >= 2) {
+        char first = s[0];
+        char last = s[len - 1];
+        if ((first == '"' && last == '"') || (first == '\'' && last == '\'')) {
+            s[len - 1] = '\0';
+            return s + 1;
+        }
+    }
+
+    return s;
+}
+
+static bool sender_allowed_token(const char *allow_id, const char *sender_ids)
+{
+    if (!allow_id || allow_id[0] == '\0' || !sender_ids || sender_ids[0] == '\0') {
+        return false;
+    }
+
+    if (strcmp(allow_id, sender_ids) == 0) {
+        return true;
+    }
+
+    char sender_csv[384] = {0};
+    safe_copy(sender_csv, sizeof(sender_csv), sender_ids);
+
+    char *saveptr = NULL;
+    char *tok = strtok_r(sender_csv, "|", &saveptr);
+    while (tok) {
+        char *id = strip_optional_quotes(trim_ws(tok));
+        if (id[0] != '\0' && strcmp(id, allow_id) == 0) {
+            return true;
+        }
+        tok = strtok_r(NULL, "|", &saveptr);
+    }
+
+    return false;
+}
+
+static bool sender_allowed(const char *sender_ids)
+{
+    if (!sender_ids || sender_ids[0] == '\0') {
         return false;
     }
 
@@ -134,14 +179,31 @@ static bool sender_allowed(const char *sender_id)
     char *saveptr = NULL;
     char *tok = strtok_r(csv, ",", &saveptr);
     while (tok) {
-        char *id = trim_ws(tok);
-        if (id[0] != '\0' && strcmp(id, sender_id) == 0) {
+        char *id = strip_optional_quotes(trim_ws(tok));
+        if (id[0] != '\0' && sender_allowed_token(id, sender_ids)) {
             return true;
         }
         tok = strtok_r(NULL, ",", &saveptr);
     }
 
     return false;
+}
+
+static void append_sender_id(char *sender_ids, size_t sender_ids_size, const char *id)
+{
+    if (!sender_ids || sender_ids_size == 0 || !id || id[0] == '\0') {
+        return;
+    }
+
+    size_t used = strlen(sender_ids);
+    if (used >= sender_ids_size - 1) {
+        return;
+    }
+
+    int n = snprintf(sender_ids + used, sender_ids_size - used, "%s%s", used ? "|" : "", id);
+    if (n < 0) {
+        sender_ids[used] = '\0';
+    }
 }
 
 /* -------- dedup -------- */
@@ -1255,6 +1317,20 @@ static void fs_pb_frame_free(fs_pb_frame_t *f)
     f->payload_len = 0;
 }
 
+static fs_pb_frame_t *fs_pb_frame_new(void)
+{
+    return calloc(1, sizeof(fs_pb_frame_t));
+}
+
+static void fs_pb_frame_delete(fs_pb_frame_t *f)
+{
+    if (!f) {
+        return;
+    }
+    fs_pb_frame_free(f);
+    free(f);
+}
+
 static bool pb_read_varint(const uint8_t *buf, size_t len, size_t *off, uint64_t *out)
 {
     if (!buf || !off || !out) {
@@ -2236,17 +2312,32 @@ static void handle_event_payload(const uint8_t *payload, size_t payload_len)
 
     cJSON *sender_id_obj = cJSON_GetObjectItem(sender, "sender_id");
     const char *sender_open_id = NULL;
+    const char *sender_user_id = NULL;
+    const char *sender_union_id = NULL;
     if (cJSON_IsObject(sender_id_obj)) {
         sender_open_id = json_str2(sender_id_obj, "open_id", NULL);
+        sender_user_id = json_str2(sender_id_obj, "user_id", NULL);
+        sender_union_id = json_str2(sender_id_obj, "union_id", NULL);
     }
+
+    char sender_identity[384] = {0};
+    append_sender_id(sender_identity, sizeof(sender_identity), sender_open_id);
+    append_sender_id(sender_identity, sizeof(sender_identity), sender_user_id);
+    append_sender_id(sender_identity, sizeof(sender_identity), sender_union_id);
+    if (sender_identity[0] == '\0') {
+        MIMI_LOGW(TAG, "feishu sender id missing, drop message");
+        cJSON_Delete(root);
+        return;
+    }
+
     if (!sender_open_id || sender_open_id[0] == '\0') {
         MIMI_LOGW(TAG, "feishu sender open_id missing, drop message");
         cJSON_Delete(root);
         return;
     }
 
-    if (!sender_allowed(sender_open_id)) {
-        MIMI_LOGW(TAG, "feishu access denied sender=%s", sender_open_id);
+    if (!sender_allowed(sender_identity)) {
+        MIMI_LOGW(TAG, "feishu access denied sender=%s", sender_identity);
         cJSON_Delete(root);
         return;
     }
@@ -2314,18 +2405,21 @@ static OPERATE_RET send_pb_frame(fs_ws_conn_t *conn, const fs_pb_frame_t *frame)
 
 static OPERATE_RET send_ping_frame(fs_ws_conn_t *conn, int service_id)
 {
-    fs_pb_frame_t ping;
-    fs_pb_frame_init(&ping);
-    ping.seq_id = 0;
-    ping.log_id = 0;
-    ping.service = service_id;
-    ping.method = 0;
-    ping.header_count = 1;
-    safe_copy(ping.headers[0].key, sizeof(ping.headers[0].key), "type");
-    safe_copy(ping.headers[0].value, sizeof(ping.headers[0].value), "ping");
+    fs_pb_frame_t *ping = fs_pb_frame_new();
+    if (!ping) {
+        return OPRT_MALLOC_FAILED;
+    }
 
-    OPERATE_RET rt = send_pb_frame(conn, &ping);
-    fs_pb_frame_free(&ping);
+    ping->seq_id = 0;
+    ping->log_id = 0;
+    ping->service = service_id;
+    ping->method = 0;
+    ping->header_count = 1;
+    safe_copy(ping->headers[0].key, sizeof(ping->headers[0].key), "type");
+    safe_copy(ping->headers[0].value, sizeof(ping->headers[0].value), "ping");
+
+    OPERATE_RET rt = send_pb_frame(conn, ping);
+    fs_pb_frame_delete(ping);
     return rt;
 }
 
@@ -2376,27 +2470,30 @@ static OPERATE_RET handle_data_pb_frame(fs_ws_conn_t *conn, const fs_pb_frame_t 
     free(payload);
 
     static const char ack_ok[] = "{\"code\":200}";
-    fs_pb_frame_t ack;
-    fs_pb_frame_init(&ack);
-    ack.seq_id = frame->seq_id;
-    ack.log_id = frame->log_id;
-    ack.service = frame->service;
-    ack.method = frame->method;
-    ack.header_count = frame->header_count;
-    if (ack.header_count > FS_WS_FRAME_MAX_HEADERS) {
-        ack.header_count = FS_WS_FRAME_MAX_HEADERS;
+    fs_pb_frame_t *ack = fs_pb_frame_new();
+    if (!ack) {
+        return OPRT_MALLOC_FAILED;
     }
-    for (size_t i = 0; i < ack.header_count; i++) {
-        safe_copy(ack.headers[i].key, sizeof(ack.headers[i].key), frame->headers[i].key);
-        safe_copy(ack.headers[i].value, sizeof(ack.headers[i].value), frame->headers[i].value);
-    }
-    ack.payload = (uint8_t *)ack_ok;
-    ack.payload_len = sizeof(ack_ok) - 1;
 
-    rt = send_pb_frame(conn, &ack);
-    ack.payload = NULL;
-    ack.payload_len = 0;
-    fs_pb_frame_free(&ack);
+    ack->seq_id = frame->seq_id;
+    ack->log_id = frame->log_id;
+    ack->service = frame->service;
+    ack->method = frame->method;
+    ack->header_count = frame->header_count;
+    if (ack->header_count > FS_WS_FRAME_MAX_HEADERS) {
+        ack->header_count = FS_WS_FRAME_MAX_HEADERS;
+    }
+    for (size_t i = 0; i < ack->header_count; i++) {
+        safe_copy(ack->headers[i].key, sizeof(ack->headers[i].key), frame->headers[i].key);
+        safe_copy(ack->headers[i].value, sizeof(ack->headers[i].value), frame->headers[i].value);
+    }
+    ack->payload = (uint8_t *)ack_ok;
+    ack->payload_len = sizeof(ack_ok) - 1;
+
+    rt = send_pb_frame(conn, ack);
+    ack->payload = NULL;
+    ack->payload_len = 0;
+    fs_pb_frame_delete(ack);
     return rt;
 }
 
@@ -2439,18 +2536,25 @@ static void feishu_ws_task(void *arg)
             continue;
         }
 
-        fs_ws_conn_t conn;
-        rt = fs_conn_open(&conn, ws_host, ws_port, FS_HTTP_TIMEOUT_MS);
-        if (rt != OPRT_OK) {
-            MIMI_LOGW(TAG, "feishu ws connect failed rt=%d", rt);
+        fs_ws_conn_t *conn = calloc(1, sizeof(fs_ws_conn_t));
+        if (!conn) {
             tal_system_sleep(conf.reconnect_interval_ms ? conf.reconnect_interval_ms : FS_WS_DEFAULT_RECONNECT_MS);
             continue;
         }
 
-        rt = fs_ws_handshake(&conn, ws_host, ws_path);
+        rt = fs_conn_open(conn, ws_host, ws_port, FS_HTTP_TIMEOUT_MS);
+        if (rt != OPRT_OK) {
+            MIMI_LOGW(TAG, "feishu ws connect failed rt=%d", rt);
+            free(conn);
+            tal_system_sleep(conf.reconnect_interval_ms ? conf.reconnect_interval_ms : FS_WS_DEFAULT_RECONNECT_MS);
+            continue;
+        }
+
+        rt = fs_ws_handshake(conn, ws_host, ws_path);
         if (rt != OPRT_OK) {
             MIMI_LOGW(TAG, "feishu ws handshake failed rt=%d", rt);
-            fs_conn_close(&conn);
+            fs_conn_close(conn);
+            free(conn);
             tal_system_sleep(conf.reconnect_interval_ms ? conf.reconnect_interval_ms : FS_WS_DEFAULT_RECONNECT_MS);
             continue;
         }
@@ -2463,7 +2567,7 @@ static void feishu_ws_task(void *arg)
         while (1) {
             uint32_t now = tal_system_get_millisecond();
             if ((int32_t)(now - next_ping_ms) >= 0) {
-                OPERATE_RET ping_rt = send_ping_frame(&conn, service_id);
+                OPERATE_RET ping_rt = send_ping_frame(conn, service_id);
                 if (ping_rt != OPRT_OK) {
                     MIMI_LOGW(TAG, "feishu ws ping failed rt=%d", ping_rt);
                     break;
@@ -2474,7 +2578,7 @@ static void feishu_ws_task(void *arg)
             uint8_t opcode = 0;
             uint8_t *payload = NULL;
             size_t payload_len = 0;
-            rt = fs_ws_poll_frame(&conn, 500, &opcode, &payload, &payload_len);
+            rt = fs_ws_poll_frame(conn, 500, &opcode, &payload, &payload_len);
             if (rt == OPRT_RESOURCE_NOT_READY) {
                 continue;
             }
@@ -2485,32 +2589,38 @@ static void feishu_ws_task(void *arg)
             }
 
             if (opcode == 0x2 && payload && payload_len > 0) {
-                fs_pb_frame_t pb;
-                if (fs_pb_parse_frame(payload, payload_len, &pb)) {
-                    if (pb.method == 0) {
-                        handle_control_pb_frame(&pb, &ping_interval_ms);
-                    } else if (pb.method == 1) {
-                        OPERATE_RET hrt = handle_data_pb_frame(&conn, &pb);
+                fs_pb_frame_t *pb = fs_pb_frame_new();
+                if (!pb) {
+                    free(payload);
+                    break;
+                }
+
+                if (fs_pb_parse_frame(payload, payload_len, pb)) {
+                    if (pb->method == 0) {
+                        handle_control_pb_frame(pb, &ping_interval_ms);
+                    } else if (pb->method == 1) {
+                        OPERATE_RET hrt = handle_data_pb_frame(conn, pb);
                         if (hrt != OPRT_OK) {
-                            fs_pb_frame_free(&pb);
+                            fs_pb_frame_delete(pb);
                             free(payload);
                             break;
                         }
                     }
-                    fs_pb_frame_free(&pb);
                 }
+                fs_pb_frame_delete(pb);
             } else if (opcode == 0x8) {
                 free(payload);
                 MIMI_LOGW(TAG, "feishu ws closed by peer");
                 break;
             } else if (opcode == 0x9) {
-                (void)fs_ws_send_frame(&conn, 0xA, payload, payload_len);
+                (void)fs_ws_send_frame(conn, 0xA, payload, payload_len);
             }
 
             free(payload);
         }
 
-        fs_conn_close(&conn);
+        fs_conn_close(conn);
+        free(conn);
         tal_system_sleep(conf.reconnect_interval_ms ? conf.reconnect_interval_ms : FS_WS_DEFAULT_RECONNECT_MS);
     }
 }
