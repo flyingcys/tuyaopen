@@ -132,9 +132,9 @@ static const cli_help_item_t s_cli_help_items[] = {
     },
     {
         .name = "set_channel_mode",
-        .usage = "<auto|telegram|discord|feishu|both>",
+        .usage = "<telegram|discord|feishu>",
         .summary_1 = "Set active chat channel mode",
-        .arg_1 = "         <mode>  auto|telegram|discord|feishu|both",
+        .arg_1 = "         <mode>  telegram|discord|feishu",
         .verbose = 0,
     },
     {
@@ -163,6 +163,13 @@ static const cli_help_item_t s_cli_help_items[] = {
         .usage = "<key>",
         .summary_1 = "Set LLM API key",
         .arg_1 = "         <key>  LLM API key",
+        .verbose = 0,
+    },
+    {
+        .name = "set_api_url",
+        .usage = "<url>",
+        .summary_1 = "Set LLM API URL (provider decided by set_model_provider)",
+        .arg_1 = "         <url>  API endpoint URL, e.g. https://api.xxx/v1/chat/completions",
         .verbose = 0,
     },
     {
@@ -461,11 +468,28 @@ static bool is_valid_channel_mode(const char *mode)
         return false;
     }
 
-    return strcmp(mode, "auto") == 0 ||
-           strcmp(mode, "telegram") == 0 ||
+    return strcmp(mode, "telegram") == 0 ||
            strcmp(mode, "discord") == 0 ||
-           strcmp(mode, "feishu") == 0 ||
-           strcmp(mode, "both") == 0;
+           strcmp(mode, "feishu") == 0;
+}
+
+static const char *llm_default_api_url_for_provider(void)
+{
+    const char *provider = MIMI_SECRET_MODEL_PROVIDER;
+    if (!provider || provider[0] == '\0') {
+        provider = MIMI_LLM_PROVIDER_DEFAULT;
+    }
+
+    char provider_kv[32] = {0};
+    if (mimi_kv_get_string(MIMI_NVS_LLM, MIMI_NVS_KEY_PROVIDER, provider_kv, sizeof(provider_kv)) == OPRT_OK &&
+        provider_kv[0] != '\0') {
+        provider = provider_kv;
+    }
+
+    if (strcmp(provider, "openai") == 0) {
+        return MIMI_OPENAI_API_URL;
+    }
+    return MIMI_LLM_API_URL;
 }
 
 static void cmd_set_dc_token(int argc, char *argv[])
@@ -493,12 +517,12 @@ static void cmd_set_dc_channel(int argc, char *argv[])
 static void cmd_set_channel_mode(int argc, char *argv[])
 {
     if (argc < 2) {
-        cli_echof("usage: set_channel_mode <auto|telegram|discord|feishu|both>");
+        cli_echof("usage: set_channel_mode <telegram|discord|feishu>");
         return;
     }
 
     if (!is_valid_channel_mode(argv[1])) {
-        cli_echof("invalid mode: %s (use auto|telegram|discord|feishu|both)", argv[1]);
+        cli_echof("invalid mode: %s (use telegram|discord|feishu)", argv[1]);
         return;
     }
 
@@ -547,6 +571,16 @@ static void cmd_set_api_key(int argc, char *argv[])
     }
     OPERATE_RET rt = llm_set_api_key(argv[1]);
     cli_echof("set_api_key rt=%d", rt);
+}
+
+static void cmd_set_api_url(int argc, char *argv[])
+{
+    if (argc < 2) {
+        cli_echof("usage: set_api_url <url>");
+        return;
+    }
+    OPERATE_RET rt = llm_set_api_url(argv[1]);
+    cli_echof("set_api_url rt=%d", rt);
 }
 
 static void cmd_set_model(int argc, char *argv[])
@@ -928,6 +962,7 @@ static void cmd_config_show(int argc, char *argv[])
     print_config_item("FS Allow", MIMI_NVS_FS, MIMI_NVS_KEY_FS_ALLOW_FROM, MIMI_SECRET_FS_ALLOW_FROM, false);
     print_config_item("ChannelMode", MIMI_NVS_BOT, MIMI_NVS_KEY_CHANNEL_MODE, MIMI_SECRET_CHANNEL_MODE, false);
     print_config_item("API Key", MIMI_NVS_LLM, MIMI_NVS_KEY_API_KEY, MIMI_SECRET_API_KEY, true);
+    print_config_item("API URL", MIMI_NVS_LLM, MIMI_NVS_KEY_API_URL, llm_default_api_url_for_provider(), false);
     print_config_item("Model", MIMI_NVS_LLM, MIMI_NVS_KEY_MODEL, MIMI_SECRET_MODEL, false);
     print_config_item("Provider", MIMI_NVS_LLM, MIMI_NVS_KEY_PROVIDER, MIMI_SECRET_MODEL_PROVIDER, false);
     print_config_item("Proxy Host", MIMI_NVS_PROXY, MIMI_NVS_KEY_PROXY_HOST, MIMI_SECRET_PROXY_HOST, false);
@@ -952,6 +987,7 @@ static void cmd_config_reset(int argc, char *argv[])
     (void)mimi_kv_del(MIMI_NVS_FS, MIMI_NVS_KEY_FS_ALLOW_FROM);
     (void)mimi_kv_del(MIMI_NVS_BOT, MIMI_NVS_KEY_CHANNEL_MODE);
     (void)mimi_kv_del(MIMI_NVS_LLM, MIMI_NVS_KEY_API_KEY);
+    (void)mimi_kv_del(MIMI_NVS_LLM, MIMI_NVS_KEY_API_URL);
     (void)mimi_kv_del(MIMI_NVS_LLM, MIMI_NVS_KEY_MODEL);
     (void)mimi_kv_del(MIMI_NVS_LLM, MIMI_NVS_KEY_PROVIDER);
     (void)mimi_kv_del(MIMI_NVS_PROXY, MIMI_NVS_KEY_PROXY_HOST);
@@ -978,11 +1014,12 @@ static const cli_cmd_t s_mimi_cli_cmds[] = {
     {.name = "set_tg_token", .help = "Set Telegram bot token", .func = cmd_set_tg_token},
     {.name = "set_dc_token", .help = "Set Discord bot token", .func = cmd_set_dc_token},
     {.name = "set_dc_channel", .help = "Set Discord channel ID", .func = cmd_set_dc_channel},
-    {.name = "set_channel_mode", .help = "Set channel mode auto|telegram|discord|feishu|both", .func = cmd_set_channel_mode},
+    {.name = "set_channel_mode", .help = "Set channel mode telegram|discord|feishu", .func = cmd_set_channel_mode},
     {.name = "set_fs_appid", .help = "Set Feishu app_id", .func = cmd_set_fs_appid},
     {.name = "set_fs_appsecret", .help = "Set Feishu app_secret", .func = cmd_set_fs_appsecret},
     {.name = "set_fs_allow", .help = "Set Feishu allow_from open_id CSV", .func = cmd_set_fs_allow},
     {.name = "set_api_key", .help = "Set LLM API key", .func = cmd_set_api_key},
+    {.name = "set_api_url", .help = "Set LLM API URL", .func = cmd_set_api_url},
     {.name = "set_model", .help = "Set LLM model", .func = cmd_set_model},
     {.name = "set_model_provider", .help = "Set LLM model provider", .func = cmd_set_model_provider},
     {.name = "file_read", .help = "Read a text file from /spiffs", .func = cmd_file_read},

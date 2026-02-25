@@ -35,11 +35,9 @@ static const char *TAG = "mimi";
 static THREAD_HANDLE s_outbound_thread = NULL;
 
 typedef enum {
-    MIMI_CHANNEL_MODE_AUTO = 0,
-    MIMI_CHANNEL_MODE_TELEGRAM,
+    MIMI_CHANNEL_MODE_TELEGRAM = 0,
     MIMI_CHANNEL_MODE_DISCORD,
     MIMI_CHANNEL_MODE_FEISHU,
-    MIMI_CHANNEL_MODE_BOTH,
 } mimi_channel_mode_t;
 
 static bool str_ieq(const char *a, const char *b)
@@ -60,7 +58,7 @@ static bool str_ieq(const char *a, const char *b)
 static mimi_channel_mode_t parse_channel_mode(const char *mode)
 {
     if (!mode || mode[0] == '\0') {
-        return MIMI_CHANNEL_MODE_AUTO;
+        return MIMI_CHANNEL_MODE_TELEGRAM;
     }
     if (str_ieq(mode, "telegram")) {
         return MIMI_CHANNEL_MODE_TELEGRAM;
@@ -71,10 +69,7 @@ static mimi_channel_mode_t parse_channel_mode(const char *mode)
     if (str_ieq(mode, "feishu")) {
         return MIMI_CHANNEL_MODE_FEISHU;
     }
-    if (str_ieq(mode, "both")) {
-        return MIMI_CHANNEL_MODE_BOTH;
-    }
-    return MIMI_CHANNEL_MODE_AUTO;
+    return MIMI_CHANNEL_MODE_TELEGRAM;
 }
 
 static const char *channel_mode_str(mimi_channel_mode_t mode)
@@ -86,11 +81,8 @@ static const char *channel_mode_str(mimi_channel_mode_t mode)
         return "discord";
     case MIMI_CHANNEL_MODE_FEISHU:
         return "feishu";
-    case MIMI_CHANNEL_MODE_BOTH:
-        return "both";
-    case MIMI_CHANNEL_MODE_AUTO:
     default:
-        return "auto";
+        return "telegram";
     }
 }
 
@@ -100,7 +92,7 @@ static mimi_channel_mode_t load_channel_mode(void)
     if (MIMI_SECRET_CHANNEL_MODE[0] != '\0') {
         snprintf(mode_buf, sizeof(mode_buf), "%s", MIMI_SECRET_CHANNEL_MODE);
     } else {
-        snprintf(mode_buf, sizeof(mode_buf), "auto");
+        snprintf(mode_buf, sizeof(mode_buf), "telegram");
     }
 
     char kv_mode[24] = {0};
@@ -109,13 +101,16 @@ static mimi_channel_mode_t load_channel_mode(void)
         snprintf(mode_buf, sizeof(mode_buf), "%s", kv_mode);
     }
 
-    mimi_channel_mode_t mode = parse_channel_mode(mode_buf);
-    if (!(str_ieq(mode_buf, "auto") || str_ieq(mode_buf, "telegram") || str_ieq(mode_buf, "discord") ||
-          str_ieq(mode_buf, "feishu") ||
-          str_ieq(mode_buf, "both"))) {
-        MIMI_LOGW(TAG, "invalid channel_mode=%s, fallback to auto", mode_buf);
+    if (str_ieq(mode_buf, "auto") || str_ieq(mode_buf, "both")) {
+        MIMI_LOGW(TAG, "legacy channel_mode=%s mapped to telegram", mode_buf);
+        snprintf(mode_buf, sizeof(mode_buf), "telegram");
+    } else if (!(str_ieq(mode_buf, "telegram") || str_ieq(mode_buf, "discord") ||
+                 str_ieq(mode_buf, "feishu"))) {
+        MIMI_LOGW(TAG, "invalid channel_mode=%s, fallback to telegram", mode_buf);
+        snprintf(mode_buf, sizeof(mode_buf), "telegram");
     }
-    return mode;
+
+    return parse_channel_mode(mode_buf);
 }
 
 static void mimi_runtime_init(void)
@@ -272,14 +267,9 @@ static void mimi_network_init(void)
 static void start_online_services(const char *mode)
 {
     mimi_channel_mode_t channel_mode = load_channel_mode();
-    bool enable_tg = (channel_mode == MIMI_CHANNEL_MODE_AUTO ||
-                      channel_mode == MIMI_CHANNEL_MODE_TELEGRAM ||
-                      channel_mode == MIMI_CHANNEL_MODE_BOTH);
-    bool enable_dc = (channel_mode == MIMI_CHANNEL_MODE_AUTO ||
-                      channel_mode == MIMI_CHANNEL_MODE_DISCORD ||
-                      channel_mode == MIMI_CHANNEL_MODE_BOTH);
-    bool enable_fs = (channel_mode == MIMI_CHANNEL_MODE_AUTO ||
-                      channel_mode == MIMI_CHANNEL_MODE_FEISHU);
+    bool enable_tg = (channel_mode == MIMI_CHANNEL_MODE_TELEGRAM);
+    bool enable_dc = (channel_mode == MIMI_CHANNEL_MODE_DISCORD);
+    bool enable_fs = (channel_mode == MIMI_CHANNEL_MODE_FEISHU);
 
     OPERATE_RET rt = start_outbound_dispatcher();
     if (rt != OPRT_OK) {

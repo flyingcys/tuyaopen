@@ -7,10 +7,12 @@ static const char *TAG = "llm";
 
 #define LLM_API_KEY_MAX_LEN 320
 #define LLM_MODEL_MAX_LEN   64
+#define LLM_API_URL_MAX_LEN 192
 
 static char s_api_key[LLM_API_KEY_MAX_LEN] = {0};
 static char s_model[LLM_MODEL_MAX_LEN] = MIMI_LLM_DEFAULT_MODEL;
 static char s_provider[32] = MIMI_LLM_PROVIDER_DEFAULT;
+static char s_api_url[LLM_API_URL_MAX_LEN] = {0};
 
 static uint8_t *s_openai_cacert = NULL;
 static size_t s_openai_cacert_len = 0;
@@ -18,7 +20,6 @@ static uint8_t *s_anthropic_cacert = NULL;
 static size_t s_anthropic_cacert_len = 0;
 
 typedef struct {
-    bool parsed;
     char host[96];
     char path[160];
 } llm_endpoint_t;
@@ -51,13 +52,41 @@ static bool provider_is_openai(void)
     return strcmp(s_provider, "openai") == 0;
 }
 
+static void free_cached_cert(uint8_t **cert, size_t *cert_len)
+{
+    if (cert && *cert) {
+        tal_free(*cert);
+        *cert = NULL;
+    }
+    if (cert_len) {
+        *cert_len = 0;
+    }
+}
+
+static void clear_endpoint_cache(void)
+{
+    memset(&s_openai_endpoint, 0, sizeof(s_openai_endpoint));
+    memset(&s_anthropic_endpoint, 0, sizeof(s_anthropic_endpoint));
+    free_cached_cert(&s_openai_cacert, &s_openai_cacert_len);
+    free_cached_cert(&s_anthropic_cacert, &s_anthropic_cacert_len);
+}
+
+static const char *llm_default_endpoint_url(void)
+{
+    return provider_is_openai() ? MIMI_OPENAI_API_URL : MIMI_LLM_API_URL;
+}
+
+static const char *llm_active_endpoint_url(void)
+{
+    return (s_api_url[0] != '\0') ? s_api_url : llm_default_endpoint_url();
+}
+
 static void parse_endpoint_url(const char *url, llm_endpoint_t *endpoint)
 {
-    if (!endpoint || endpoint->parsed) {
+    if (!endpoint) {
         return;
     }
 
-    endpoint->parsed = true;
     endpoint->host[0] = '\0';
     snprintf(endpoint->path, sizeof(endpoint->path), "/");
 
@@ -89,13 +118,9 @@ static void parse_endpoint_url(const char *url, llm_endpoint_t *endpoint)
 
 static llm_endpoint_t *llm_current_endpoint(void)
 {
-    if (provider_is_openai()) {
-        parse_endpoint_url(MIMI_OPENAI_API_URL, &s_openai_endpoint);
-        return &s_openai_endpoint;
-    }
-
-    parse_endpoint_url(MIMI_LLM_API_URL, &s_anthropic_endpoint);
-    return &s_anthropic_endpoint;
+    llm_endpoint_t *endpoint = provider_is_openai() ? &s_openai_endpoint : &s_anthropic_endpoint;
+    parse_endpoint_url(llm_active_endpoint_url(), endpoint);
+    return endpoint;
 }
 
 static const char *llm_api_host(void)
@@ -529,6 +554,8 @@ static OPERATE_RET llm_http_call(const char *post_data, char *resp_buf, size_t r
 
 OPERATE_RET llm_proxy_init(void)
 {
+    s_api_url[0] = '\0';
+
     if (MIMI_SECRET_API_KEY[0] != '\0') {
         safe_copy(s_api_key, sizeof(s_api_key), MIMI_SECRET_API_KEY);
     }
@@ -556,8 +583,17 @@ OPERATE_RET llm_proxy_init(void)
         safe_copy(s_provider, sizeof(s_provider), provider_tmp);
     }
 
-    MIMI_LOGI(TAG, "llm init provider=%s model=%s endpoint=%s credential=%s",
+    char api_url_tmp[LLM_API_URL_MAX_LEN] = {0};
+    if (mimi_kv_get_string(MIMI_NVS_LLM, MIMI_NVS_KEY_API_URL, api_url_tmp, sizeof(api_url_tmp)) == OPRT_OK &&
+        api_url_tmp[0] != '\0') {
+        safe_copy(s_api_url, sizeof(s_api_url), api_url_tmp);
+    }
+
+    clear_endpoint_cache();
+
+    MIMI_LOGI(TAG, "llm init provider=%s model=%s endpoint=%s url_src=%s credential=%s",
               s_provider, s_model, llm_api_host() ? "valid" : "invalid",
+              s_api_url[0] ? "nvs" : "config.h",
               s_api_key[0] ? "configured" : "empty");
     return OPRT_OK;
 }
@@ -571,12 +607,30 @@ OPERATE_RET llm_set_api_key(const char *api_key)
     return mimi_kv_set_string(MIMI_NVS_LLM, MIMI_NVS_KEY_API_KEY, api_key);
 }
 
+OPERATE_RET llm_set_api_url(const char *api_url)
+{
+    if (!api_url) {
+        return OPRT_INVALID_PARM;
+    }
+
+    if (api_url[0] == '\0') {
+        s_api_url[0] = '\0';
+        clear_endpoint_cache();
+        return mimi_kv_del(MIMI_NVS_LLM, MIMI_NVS_KEY_API_URL);
+    }
+
+    safe_copy(s_api_url, sizeof(s_api_url), api_url);
+    clear_endpoint_cache();
+    return mimi_kv_set_string(MIMI_NVS_LLM, MIMI_NVS_KEY_API_URL, api_url);
+}
+
 OPERATE_RET llm_set_provider(const char *provider)
 {
     if (!provider) {
         return OPRT_INVALID_PARM;
     }
     safe_copy(s_provider, sizeof(s_provider), provider);
+    clear_endpoint_cache();
     return mimi_kv_set_string(MIMI_NVS_LLM, MIMI_NVS_KEY_PROVIDER, provider);
 }
 

@@ -22,6 +22,7 @@ typedef struct {
 
 OPERATE_RET llm_proxy_init(void);
 OPERATE_RET llm_set_api_key(const char *api_key);
+OPERATE_RET llm_set_api_url(const char *api_url);
 OPERATE_RET llm_set_provider(const char *provider);
 OPERATE_RET llm_set_model(const char *model);
 OPERATE_RET llm_chat(const char *system_prompt, const char *messages_json,
