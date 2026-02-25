@@ -408,12 +408,14 @@ static OPERATE_RET fs_http_call_direct(const char *host, const char *path, const
         cacert = s_fs_cacert;
         cacert_len = s_fs_cacert_len;
     }
+    bool tls_no_verify = (cacert == NULL || cacert_len == 0);
 
     http_client_response_t response = {0};
     http_client_status_t http_rt = http_client_request(
         &(const http_client_request_t){
             .cacert = cacert,
             .cacert_len = cacert_len,
+            .tls_no_verify = tls_no_verify,
             .host = host,
             .port = 443,
             .method = method,

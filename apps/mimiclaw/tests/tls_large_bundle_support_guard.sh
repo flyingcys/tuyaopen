@@ -6,8 +6,9 @@ APP_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 TLS_H="${APP_DIR}/tls_cert_bundle.h"
 TLS_C="${APP_DIR}/tls_cert_bundle.c"
 CFG_H="${APP_DIR}/mimi_config.h"
+CERT_H="${APP_DIR}/certs/ca_bundle_mini.h"
 
-for f in "${TLS_H}" "${TLS_C}" "${CFG_H}"; do
+for f in "${TLS_H}" "${TLS_C}" "${CFG_H}" "${CERT_H}"; do
   if [[ ! -f "${f}" ]]; then
     echo "FAIL: missing file ${f}" >&2
     exit 1
@@ -24,9 +25,19 @@ if grep -q "UINT16_MAX" "${TLS_C}"; then
   exit 1
 fi
 
-if ! grep -q "MIMI_TLS_GLOBAL_CA_BUNDLE_MAX_BYTES" "${CFG_H}"; then
-  echo "FAIL: missing configurable MIMI_TLS_GLOBAL_CA_BUNDLE_MAX_BYTES" >&2
+if grep -q "MIMI_TLS_GLOBAL_CA_BUNDLE_MAX_BYTES" "${CFG_H}"; then
+  echo "FAIL: mimi_config.h still keeps SPIFFS global CA bundle size config" >&2
   exit 1
 fi
 
-echo "PASS: large global CA bundle support wiring exists (size_t path, no uint16 hard cap)."
+if ! grep -q "extern const size_t g_mimi_ca_bundle_mini_pem_len;" "${CERT_H}"; then
+  echo "FAIL: built-in mini CA length symbol is missing or not size_t" >&2
+  exit 1
+fi
+
+if ! grep -q "mimi_tls_load_builtin_ca_bundle(uint8_t \\*\\*cacert, size_t \\*cacert_len)" "${TLS_C}"; then
+  echo "FAIL: tls_cert_bundle.c has no size_t-based built-in CA loader" >&2
+  exit 1
+fi
+
+echo "PASS: built-in CA bundle path uses size_t and has no uint16 hard cap."

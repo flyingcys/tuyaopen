@@ -8,8 +8,12 @@ HTTP_H="${ROOT_DIR}/src/libhttp/include/http_client_interface.h"
 HTTP_C="${ROOT_DIR}/src/libhttp/src/http_client_wrapper.c"
 TG_C="${APP_DIR}/channels/telegram_bot.c"
 DC_C="${APP_DIR}/channels/discord_bot.c"
+LLM_C="${APP_DIR}/llm/llm_proxy.c"
+SEARCH_C="${APP_DIR}/tools/tool_web_search.c"
+TIME_C="${APP_DIR}/tools/tool_get_time.c"
+FS_C="${APP_DIR}/channels/feishu_bot.c"
 
-for f in "${HTTP_H}" "${HTTP_C}" "${TG_C}" "${DC_C}"; do
+for f in "${HTTP_H}" "${HTTP_C}" "${TG_C}" "${DC_C}" "${LLM_C}" "${SEARCH_C}" "${TIME_C}" "${FS_C}"; do
   if [[ ! -f "${f}" ]]; then
     echo "FAIL: missing file ${f}" >&2
     exit 1
@@ -33,6 +37,26 @@ fi
 
 if ! grep -q "fallback to TLS no-verify mode" "${DC_C}"; then
   echo "FAIL: discord direct TLS path has no no-verify fallback log" >&2
+  exit 1
+fi
+
+if ! grep -q "\.tls_no_verify =" "${LLM_C}"; then
+  echo "FAIL: llm_proxy HTTP call does not pass tls_no_verify fallback" >&2
+  exit 1
+fi
+
+if ! grep -q "\.tls_no_verify =" "${SEARCH_C}"; then
+  echo "FAIL: web_search HTTP call does not pass tls_no_verify fallback" >&2
+  exit 1
+fi
+
+if ! grep -q "\.tls_no_verify =" "${TIME_C}"; then
+  echo "FAIL: get_time HTTP call does not pass tls_no_verify fallback" >&2
+  exit 1
+fi
+
+if ! grep -q "\.tls_no_verify =" "${FS_C}"; then
+  echo "FAIL: feishu direct HTTP call does not pass tls_no_verify fallback" >&2
   exit 1
 fi
 

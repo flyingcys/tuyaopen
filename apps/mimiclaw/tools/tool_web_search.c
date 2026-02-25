@@ -8,6 +8,7 @@
 static char s_search_key[128] = {0};
 static uint8_t *s_search_cacert = NULL;
 static size_t s_search_cacert_len = 0;
+static bool s_search_tls_no_verify = false;
 
 static const char *TAG = "web_search";
 
@@ -32,6 +33,7 @@ static void safe_copy(char *dst, size_t dst_size, const char *src)
 static OPERATE_RET ensure_search_cert(void)
 {
     if (s_search_cacert && s_search_cacert_len > 0) {
+        s_search_tls_no_verify = false;
         return OPRT_OK;
     }
 
@@ -42,10 +44,12 @@ static OPERATE_RET ensure_search_cert(void)
         }
         s_search_cacert = NULL;
         s_search_cacert_len = 0;
+        s_search_tls_no_verify = true;
         MIMI_LOGW(TAG, "cert unavailable for %s, fallback to TLS no-verify mode rt=%d", SEARCH_HOST, rt);
         return OPRT_OK;
     }
 
+    s_search_tls_no_verify = false;
     return OPRT_OK;
 }
 
@@ -155,6 +159,7 @@ static OPERATE_RET search_http_call(const char *path, char *resp_buf, size_t res
         &(const http_client_request_t){
             .cacert = s_search_cacert,
             .cacert_len = s_search_cacert_len,
+            .tls_no_verify = s_search_tls_no_verify,
             .host = SEARCH_HOST,
             .port = 443,
             .method = "GET",

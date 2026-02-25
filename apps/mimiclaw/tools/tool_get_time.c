@@ -17,6 +17,7 @@ static const char *TAG = "tool_time";
 
 static uint8_t *s_time_cacert = NULL;
 static size_t s_time_cacert_len = 0;
+static bool s_time_tls_no_verify = false;
 static bool s_tz_inited = false;
 
 static const char *k_months[] = {
@@ -249,6 +250,7 @@ static void format_local_time(TIME_T epoch, char *out, size_t out_size)
 static OPERATE_RET ensure_time_cert(void)
 {
     if (s_time_cacert && s_time_cacert_len > 0) {
+        s_time_tls_no_verify = false;
         return OPRT_OK;
     }
 
@@ -259,10 +261,12 @@ static OPERATE_RET ensure_time_cert(void)
         }
         s_time_cacert = NULL;
         s_time_cacert_len = 0;
+        s_time_tls_no_verify = true;
         MIMI_LOGD(TAG, "cert unavailable for %s, fallback to TLS no-verify mode rt=%d", TIME_SYNC_HOST, rt);
         return OPRT_OK;
     }
 
+    s_time_tls_no_verify = false;
     return OPRT_OK;
 }
 
@@ -291,6 +295,7 @@ static OPERATE_RET fetch_date_direct(char *date_buf, size_t date_buf_size)
             &(const http_client_request_t){
                 .cacert = s_time_cacert,
                 .cacert_len = s_time_cacert_len,
+                .tls_no_verify = s_time_tls_no_verify,
                 .host = TIME_SYNC_HOST,
                 .port = TIME_SYNC_PORT,
                 .method = method,

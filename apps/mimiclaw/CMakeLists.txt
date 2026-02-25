@@ -24,6 +24,7 @@ set(APP_SRCS
     ${APP_PATH}/cron/cron_service.c
     ${APP_PATH}/heartbeat/heartbeat.c
     ${APP_PATH}/tls_cert_bundle.c
+    ${APP_PATH}/certs/ca_bundle_mini.c
     ${APP_PATH}/tools/tool_registry.c
     ${APP_PATH}/tools/tool_cron.c
     ${APP_PATH}/tools/tool_web_search.c

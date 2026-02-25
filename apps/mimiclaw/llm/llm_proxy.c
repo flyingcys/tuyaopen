@@ -495,7 +495,8 @@ static OPERATE_RET llm_http_call(const char *post_data, char *resp_buf, size_t r
     if (!cacert_len) {
         return OPRT_COM_ERROR;
     }
-    if (!cacert || *cacert_len == 0) {
+    bool tls_no_verify = (!cacert || *cacert_len == 0);
+    if (tls_no_verify) {
         MIMI_LOGW(TAG, "llm host=%s use TLS no-verify mode", llm_api_host() ? llm_api_host() : "");
     }
 
@@ -536,6 +537,7 @@ static OPERATE_RET llm_http_call(const char *post_data, char *resp_buf, size_t r
         &(const http_client_request_t){
             .cacert = cacert,
             .cacert_len = *cacert_len,
+            .tls_no_verify = tls_no_verify,
             .host = host,
             .port = 443,
             .method = "POST",
