@@ -26,3 +26,13 @@ dist
 /.set_example
 /dist
 *monitor.log
+
+# Unit test artifacts
+/tests/host_build
+/build/tests
+*.gcda
+*.gcno
+*.gcov
+coverage.info
+coverage_filtered.info
+/coverage_html
