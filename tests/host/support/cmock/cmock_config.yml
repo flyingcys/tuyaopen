@@ -1,5 +1,5 @@
 :cmock:
-  :mock_path: mocks
+  :mock_prefix: mock_
   :plugins:
     - :ignore
     - :expect

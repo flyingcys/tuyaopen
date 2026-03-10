@@ -23,11 +23,21 @@ if(TUYA_ENABLE_UBSAN)
 endif()
 
 add_subdirectory(../vendor/unity tests_vendor_unity)
+add_library(cmock STATIC ${CMAKE_SOURCE_DIR}/../vendor/cmock/src/cmock.c)
+target_include_directories(cmock PUBLIC
+    ${CMAKE_SOURCE_DIR}/../vendor/cmock/src
+    ${CMAKE_SOURCE_DIR}/../vendor/unity/src
+)
+
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/AddTuyaHostTest.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/GenerateMocks.cmake)
 
-add_custom_target(codegen)
+add_custom_target(tuya_codegen)
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/../../src/common/test/host/CMakeLists.txt")
     add_subdirectory(${CMAKE_SOURCE_DIR}/../../src/common/test/host common_host)
+endif()
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/../../src/tal_system/test/host/CMakeLists.txt")
+    add_subdirectory(${CMAKE_SOURCE_DIR}/../../src/tal_system/test/host tal_system_host)
 endif()

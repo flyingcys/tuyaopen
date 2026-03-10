@@ -8,15 +8,14 @@ function(tuya_generate_mock header out_dir out_var)
     endif()
 
     get_filename_component(header_name "${header}" NAME_WE)
-    set(mock_c "${out_dir}/mock_${header_name}.c")
-    set(mock_h "${out_dir}/mock_${header_name}.h")
+    set(mock_c "${out_dir}/mocks/mock_${header_name}.c")
+    set(mock_h "${out_dir}/mocks/mock_${header_name}.h")
 
     add_custom_command(
         OUTPUT "${mock_c}" "${mock_h}"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${out_dir}"
         COMMAND "${TUYA_RUBY_EXECUTABLE}" "${TUYA_CMOCK_SCRIPT}" "-o${TUYA_CMOCK_CONFIG}" "${header}"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_BINARY_DIR}/mock_${header_name}.c" "${mock_c}"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_BINARY_DIR}/mock_${header_name}.h" "${mock_h}"
+        WORKING_DIRECTORY "${out_dir}"
         DEPENDS "${header}" "${TUYA_CMOCK_CONFIG}"
         VERBATIM
     )
