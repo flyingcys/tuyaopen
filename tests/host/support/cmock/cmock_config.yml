@@ -4,3 +4,5 @@
     - :ignore
     - :expect
     - :callback
+    - :return_thru_ptr
+    - :expect_any_args
