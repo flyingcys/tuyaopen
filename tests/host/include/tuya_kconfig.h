@@ -1,0 +1,8 @@
+#ifndef TUYA_KCONFIG_H
+#define TUYA_KCONFIG_H
+
+#define OPERATING_SYSTEM SYSTEM_LINUX
+#define LITTLE_END 1
+#define ENABLE_IPv6 0
+
+#endif
