@@ -60,4 +60,16 @@ Additional options:
 - `--target-app-path <path>`: override the default `test_app/unit_test_app` path
 - `--target-image <path>`: run a specific built image or executable
 - `--target-baudrate <baud>`: set a custom serial baudrate
-- `--flash`: reserve the flashing step in the current skeleton runner
+- `--flash`: execute the configured flash command before opening the serial port
+
+Configure flashing through an environment variable:
+
+```bash
+export TUYA_TARGET_FLASH_CMD='python tools/flash_board.py --image {image} --port {port}'
+```
+
+Supported placeholders:
+
+- `{image}`
+- `{port}`
+- `{project_dir}`

@@ -11,6 +11,7 @@ compile_commands.json
 /tmp
 /.cache
 /cache
+/.worktree
 /output
 /build
 tuyadb/

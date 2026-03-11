@@ -108,6 +108,10 @@ class SerialRunner:
         history = "\n".join(self._history[-20:])
         raise RunnerTimeoutError(f"Timed out waiting for pattern {regex.pattern!r}.\nRecent output:\n{history}")
 
+    @property
+    def history(self) -> list[str]:
+        return list(self._history)
+
     def write(self, data: str) -> None:
         if self._process is not None and self._process.stdin is not None:
             self._process.stdin.write(data)

@@ -5,9 +5,9 @@
 TuyaOpen currently has two unit-test paths:
 
 - `Host` unit tests for fast logic verification with `Unity + CMock + CTest`
-- `Target` unit-test skeleton for `tos.py build` and `pytest`-driven validation
+- `Target` unit-test harness for `tos.py build` and `pytest`-driven validation
 
-At the moment, the stable regression baseline is still the `Host` path. The `Target` path is intentionally kept as a thin skeleton so it can run on `LINUX` locally first and extend to real boards later.
+At the moment, the stable regression baseline is still the `Host` path. The `Target` path now supports named suites on `LINUX` first and keeps the same suite names for future real-board serial execution.
 
 ## Repository Layout
 
@@ -114,7 +114,7 @@ Artifacts:
 
 The current default configuration targets `LINUX/Ubuntu`, so the first validation path is a locally runnable executable.
 
-### Run the Pytest Skeleton
+### Run the Pytest Target Suites
 
 From the repository root:
 
@@ -124,9 +124,21 @@ python -m pytest tests/target/pytest -m target -v
 
 Behavior:
 
-- Without `--target-port`, pytest will try to discover and launch the local `LINUX` executable from `dist/` or `.build/bin/`
+- Without `--target-port`, pytest discovers and launches the local `LINUX` executable from `dist/` or `.build/bin/`
 - With `--target-port`, pytest opens the specified serial device and treats it as the DUT
-- `--flash` is only a reserved skeleton hook for now; image discovery exists, but board flashing is not implemented yet
+- With `--flash`, pytest invokes the flash runner before opening the port
+
+Flash command injection:
+
+```bash
+export TUYA_TARGET_FLASH_CMD='python tools/flash_board.py --image {image} --port {port}'
+```
+
+Supported placeholders:
+
+- `{image}`
+- `{port}`
+- `{project_dir}`
 
 Useful options:
 
@@ -140,6 +152,15 @@ python -m pytest tests/target/pytest -m target -v \
 python -m pytest tests/target/pytest -m target -v \
   --target-port /dev/ttyUSB0 \
   --target-baudrate 115200
+```
+
+The local target executable also supports direct suite control:
+
+```bash
+cd test_app/unit_test_app
+./dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --list
+./dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite smoke
+./dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite tkl_gpio
 ```
 
 ## Common Workflows
@@ -177,6 +198,13 @@ tos.py build
 ```bash
 cd ../..
 python -m pytest tests/target/pytest -m target -v
+```
+
+If you touched a named target suite, also run it directly once:
+
+```bash
+cd test_app/unit_test_app
+./dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite tkl_gpio
 ```
 
 ### 4. Documentation-Only Updates

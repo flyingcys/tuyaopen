@@ -26,6 +26,9 @@
 - `test_app/unit_test_app` Target 单测应用骨架已接入并完成 `LINUX` 构建验证
 - `tests/target/pytest` 调度骨架已接入，本地 `LINUX` smoke 结果为 `1 passed, 1 skipped`
 - 开发者文档、组件模板和 PR 测试检查项已补齐
+- Target app 已支持按 suite 名列举与执行
+- `tkl_gpio` 已成为首个真实 Target suite，本地 `LINUX` Target pytest 结果为 `2 passed`
+- `flash_runner.py` 已支持通过 `TUYA_TARGET_FLASH_CMD` 注入烧录命令模板
 
 当前 Host 测试集结果：
 
@@ -37,7 +40,7 @@
 
 下一阶段：
 
-- 在真实板卡上补 `tkl_gpio` 等首批 Target suite，并把 `flash_runner.py` 从 skeleton 扩展为可执行烧录流程
+- 在真实板卡上验证 `ut_run tkl_gpio` 串口路径，并继续扩展 `tkl_uart`、`tkl_flash` 等 Target suites
 
 ## 2. 参考项目分析后的取舍结论
 

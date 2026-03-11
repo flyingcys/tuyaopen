@@ -69,3 +69,45 @@ def dut(request: pytest.FixtureRequest, target_app_path: Path, target_image: Pat
         yield runner
     finally:
         runner.close()
+
+
+@pytest.fixture()
+def run_target_suite(
+    request: pytest.FixtureRequest,
+    target_app_path: Path,
+    target_image: Path | None,
+):
+    target_port = request.config.getoption("--target-port")
+    flash_first = request.config.getoption("--flash")
+    baudrate = request.config.getoption("--target-baudrate")
+
+    def _run(suite_name: str) -> str:
+        if target_port:
+            if flash_first:
+                flasher = FlashRunner(target_app_path, target_image)
+                flasher.flash(target_port)
+
+            runner = SerialRunner.from_port(target_port, baudrate=baudrate)
+            try:
+                runner.write(f"ut_run {suite_name}\r\n")
+                runner.expect(f"UT_SUITE_BEGIN:{suite_name}")
+                runner.expect(f"UT_SUITE_END:{suite_name}:")
+                return "\n".join(runner.history)
+            finally:
+                runner.close()
+
+        if target_image is None:
+            pytest.skip("No target image found for local suite execution")
+
+        runner = SerialRunner.from_process(
+            [str(target_image), "--suite", suite_name],
+            cwd=target_app_path,
+        )
+        try:
+            runner.expect(f"UT_SUITE_BEGIN:{suite_name}")
+            runner.expect(f"UT_SUITE_END:{suite_name}:")
+            return "\n".join(runner.history)
+        finally:
+            runner.close()
+
+    return _run

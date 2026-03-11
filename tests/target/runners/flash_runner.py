@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import shlex
+import subprocess
 from pathlib import Path
 
 
@@ -33,4 +35,14 @@ class FlashRunner:
         if port is None:
             return self.image_path
 
-        raise RuntimeError("FlashRunner skeleton does not implement board flashing yet")
+        flash_cmd_template = os.environ.get("TUYA_TARGET_FLASH_CMD")
+        if not flash_cmd_template:
+            raise RuntimeError("Flashing requested but TUYA_TARGET_FLASH_CMD is not configured")
+
+        command = flash_cmd_template.format(
+            image=str(self.image_path),
+            port=port,
+            project_dir=str(self.project_dir),
+        )
+        subprocess.run(shlex.split(command), check=True, cwd=str(self.project_dir))
+        return self.image_path
