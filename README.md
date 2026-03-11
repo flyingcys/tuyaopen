@@ -84,6 +84,9 @@ Whether you’re creating smart home products, industrial IoT solutions, or cust
 
 For more TuyaOpen-related documentation, please refer to the [TuyaOpen Developer Guide](https://tuyaopen.ai/docs/about-tuyaopen).
 
+- Unit test guide: [docs/testing/unit-test-guide.md](docs/testing/unit-test-guide.md)
+- Unit test architecture and progress: [tuyaopen_unit_test_scheme.md](tuyaopen_unit_test_scheme.md)
+
 ## License
 
 Distributed under the Apache License Version 2.0. For more information, see `LICENSE`.

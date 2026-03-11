@@ -20,7 +20,20 @@ def copy_pre_commit():
     open_root = params["open_root"]
     tools_root = params["tools_root"]
     source = os.path.join(tools_root, "hooks")
-    target = os.path.join(open_root, ".git", "hooks")
+    try:
+        result = subprocess.run(
+            ["git", "-C", open_root, "rev-parse", "--git-path", "hooks"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=True,
+        )
+        target = result.stdout.strip()
+        if not os.path.isabs(target):
+            target = os.path.join(open_root, target)
+    except subprocess.CalledProcessError:
+        target = os.path.join(open_root, ".git", "hooks")
+
     copy_directory(source, target)
     pass
 

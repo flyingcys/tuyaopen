@@ -12,7 +12,7 @@
 
 这比“只做 Host”更完整，也比“从第一天就强依赖真实硬件”更可落地，最符合 `tuyaopen` 这种跨芯片、跨平台、带明显 `TKL/TAL` 分层的 SDK。
 
-## 1.1 当前落地进展（2026-03-10）
+## 1.1 当前落地进展（2026-03-11）
 
 已完成：
 
@@ -21,6 +21,11 @@
 - `src/tal_system` Host 单测已接入并通过
 - `src/tal_kv` Host 单测已接入并通过
 - `src/tal_network` Host 单测已接入并通过
+- `src/tal_wifi` Host 单测已接入并通过
+- Host 覆盖率脚本、本地执行脚本和 GitHub Actions 工作流已接入
+- `test_app/unit_test_app` Target 单测应用骨架已接入并完成 `LINUX` 构建验证
+- `tests/target/pytest` 调度骨架已接入，本地 `LINUX` smoke 结果为 `1 passed, 1 skipped`
+- 开发者文档、组件模板和 PR 测试检查项已补齐
 
 当前 Host 测试集结果：
 
@@ -28,10 +33,11 @@
 - `test_tal_system_host` PASS
 - `test_tal_kv_host` PASS
 - `test_tal_network_host` PASS
+- `test_tal_wifi_host` PASS
 
 下一阶段：
 
-- 按计划执行 `Task 7-8`（`tal_wifi` + CI/覆盖率）
+- 在真实板卡上补 `tkl_gpio` 等首批 Target suite，并把 `flash_runner.py` 从 skeleton 扩展为可执行烧录流程
 
 ## 2. 参考项目分析后的取舍结论
 

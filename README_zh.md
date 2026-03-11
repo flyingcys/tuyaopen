@@ -79,6 +79,9 @@ TuyaOpen 赋能下一代 AI 智能体硬件：以灵活跨平台 C/C++ SDK 支�
 
 更多 TuyaOpen 相关文档，请参考 [TuyaOpen 开发者指南](https://tuyaopen.ai/docs/about-tuyaopen)。
 
+- 单元测试指南: [docs/testing/unit-test-guide.md](docs/testing/unit-test-guide.md)
+- 单元测试架构与进度: [tuyaopen_unit_test_scheme.md](tuyaopen_unit_test_scheme.md)
+
 ## 许可证
 
 本项目基于 Apache License Version 2.0 发布。更多信息请参见 `LICENSE`。

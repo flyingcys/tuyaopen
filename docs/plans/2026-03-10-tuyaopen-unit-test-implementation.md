@@ -10,7 +10,7 @@
 
 ---
 
-## 执行状态（2026-03-10）
+## 执行状态（2026-03-11）
 
 - [x] Task 1: 建立测试目录和第三方依赖基线
 - [x] Task 2: 建立 Host 测试公共构建能力
@@ -18,12 +18,12 @@
 - [x] Task 4: 建立 `src/tal_system` Host 单元测试
 - [x] Task 5: 建立 `src/tal_kv` Host 单元测试
 - [x] Task 6: 建立 `src/tal_network` Host 单元测试
-- [ ] Task 7: 建立 `src/tal_wifi` Host 单元测试
-- [ ] Task 8: 接入 Host 覆盖率、Sanitizer 和 CI
-- [ ] Task 9: 建立 Target 单元测试应用骨架
-- [ ] Task 10: 建立 Target `pytest` 调度骨架
-- [ ] Task 11: 文档与贡献规范收口
-- [ ] Task 12: 执行顺序与停靠点回收
+- [x] Task 7: 建立 `src/tal_wifi` Host 单元测试
+- [x] Task 8: 接入 Host 覆盖率、Sanitizer 和 CI
+- [x] Task 9: 建立 Target 单元测试应用骨架
+- [x] Task 10: 建立 Target `pytest` 调度骨架
+- [x] Task 11: 文档与贡献规范收口
+- [x] Task 12: 执行顺序与停靠点回收
 
 ### 本轮已落地提交
 
@@ -33,6 +33,8 @@
 - `a5465d96` `test: add host unit tests for tal_system`
 - `cc7666ce` `test: add host unit tests for tal_kv`
 - `c986d3c5` `test: add host unit tests for tal_network`
+- `c096f13f` `test: add host unit tests for tal_wifi`
+- `0971dbba` `ci: add host unit test workflow`
 
 ### 执行偏差记录（与原计划相比）
 
@@ -40,6 +42,10 @@
 - `tal_system` 实现集中在 `src/tal_system/src/tal_system.c`，不存在 `tal_memory.c`。
 - 为了执行 `tal_kv` Host 单测，初始化了 `src/tal_kv/littlefs` 子模块。
 - `CMock` 插件增加了 `expect_any_args` 与 `return_thru_ptr`，用于生成当前测试依赖的 API。
+- `tests/vendor/unity` 与 `tests/vendor/cmock` 作为 Host/Target 共用测试依赖，需要在新 worktree 中显式初始化。
+- Host 基线当前为 `5/5` suites 通过，后续阶段以 `Task 9-12` 为主。
+- `tos.py check` 原先假设 `.git/hooks` 位于工作区目录下；为兼容 git worktree，已改为通过 `git rev-parse --git-path hooks` 解析真实 hooks 路径。
+- 当前环境仓库根目录即项目根，不存在历史说明中的 `/workspace` 路径，相关命令已统一为仓库根执行。
 
 ---
 
@@ -586,6 +592,8 @@ git commit -m "test: add target pytest runner skeleton"
 - Modify: `/home/share/samba/open-github/open-utest/tuyaopen/README_zh.md`
 - Modify: `/home/share/samba/open-github/open-utest/tuyaopen/README.md`
 - Modify: `/home/share/samba/open-github/open-utest/tuyaopen/tuyaopen_unit_test_scheme.md`
+- Modify: `/home/share/samba/open-github/open-utest/tuyaopen/tools/test/README.md`
+- Modify: `/home/share/samba/open-github/open-utest/tuyaopen/.github/pull_request_template.md`
 - Create: `docs/testing/unit-test-guide.md`
 - Create: `docs/testing/component-test-template.md`
 
@@ -611,7 +619,7 @@ git commit -m "test: add target pytest runner skeleton"
 Run:
 
 ```bash
-python tools/check_format.py --debug --files README.md README_zh.md tuyaopen_unit_test_scheme.md docs/testing/unit-test-guide.md docs/testing/component-test-template.md
+python tools/check_format.py --debug --files README.md README_zh.md tuyaopen_unit_test_scheme.md tools/test/README.md .github/pull_request_template.md docs/testing/unit-test-guide.md docs/testing/component-test-template.md
 ```
 
 Expected: 文档格式检查通过。
@@ -619,7 +627,7 @@ Expected: 文档格式检查通过。
 **Step 4: Commit**
 
 ```bash
-git add README.md README_zh.md tuyaopen_unit_test_scheme.md docs/testing
+git add README.md README_zh.md tuyaopen_unit_test_scheme.md tools/test/README.md .github/pull_request_template.md docs/testing
 git commit -m "docs: add unit test developer guide"
 ```
 
