@@ -10,6 +10,39 @@
 
 ---
 
+## 执行状态（2026-03-10）
+
+- [x] Task 1: 建立测试目录和第三方依赖基线
+- [x] Task 2: 建立 Host 测试公共构建能力
+- [x] Task 3: 建立 `src/common` Host 单元测试
+- [x] Task 4: 建立 `src/tal_system` Host 单元测试
+- [x] Task 5: 建立 `src/tal_kv` Host 单元测试
+- [x] Task 6: 建立 `src/tal_network` Host 单元测试
+- [ ] Task 7: 建立 `src/tal_wifi` Host 单元测试
+- [ ] Task 8: 接入 Host 覆盖率、Sanitizer 和 CI
+- [ ] Task 9: 建立 Target 单元测试应用骨架
+- [ ] Task 10: 建立 Target `pytest` 调度骨架
+- [ ] Task 11: 文档与贡献规范收口
+- [ ] Task 12: 执行顺序与停靠点回收
+
+### 本轮已落地提交
+
+- `a9d7245a` `build: add unit test directory and vendor baseline`
+- `48a7d3c0` `build: add host test helpers and options`
+- `04da0538` `test: add host unit tests for common utilities`
+- `a5465d96` `test: add host unit tests for tal_system`
+- `cc7666ce` `test: add host unit tests for tal_kv`
+- `c986d3c5` `test: add host unit tests for tal_network`
+
+### 执行偏差记录（与原计划相比）
+
+- `codegen` 目标名改为 `tuya_codegen`，避免 CMake 保留目标名冲突。
+- `tal_system` 实现集中在 `src/tal_system/src/tal_system.c`，不存在 `tal_memory.c`。
+- 为了执行 `tal_kv` Host 单测，初始化了 `src/tal_kv/littlefs` 子模块。
+- `CMock` 插件增加了 `expect_any_args` 与 `return_thru_ptr`，用于生成当前测试依赖的 API。
+
+---
+
 ### Task 1: 建立测试目录和第三方依赖基线
 
 **Files:**
@@ -638,4 +671,3 @@ Exit criteria:
 Exit criteria:
 
 - 文档、模板、贡献入口完整
-

@@ -1,4 +1,11 @@
-# tuyaopen 单元测试方案
+# tuyaopen 单元测试方案（旧稿）
+
+> 状态：此文档为历史分析稿，不再作为执行基线。
+>
+> 当前唯一执行基线请使用：
+>
+> 1. `tuyaopen_unit_test_scheme.md`
+> 2. `docs/plans/2026-03-10-tuyaopen-unit-test-implementation.md`
 
 基于对 `esp-idf`、`FreeRTOS`、`lwip` 和 `mbedtls` 等主流嵌入式开源项目单元测试方案的深度分析，结合 `tuyaopen` 作为硬件芯片平台框架的特性（高度类似 `esp-idf`，具有明显的硬件抽象层和组件化特征），为其量身定制了以下单元测试方案。
 

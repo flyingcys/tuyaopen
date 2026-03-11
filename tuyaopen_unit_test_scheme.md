@@ -12,6 +12,27 @@
 
 这比“只做 Host”更完整，也比“从第一天就强依赖真实硬件”更可落地，最符合 `tuyaopen` 这种跨芯片、跨平台、带明显 `TKL/TAL` 分层的 SDK。
 
+## 1.1 当前落地进展（2026-03-10）
+
+已完成：
+
+- `tests/host` 基建已建立（`Unity`、`CMock`、`tuya_codegen`、基础 stubs）
+- `src/common` Host 单测已接入并通过
+- `src/tal_system` Host 单测已接入并通过
+- `src/tal_kv` Host 单测已接入并通过
+- `src/tal_network` Host 单测已接入并通过
+
+当前 Host 测试集结果：
+
+- `test_common_host` PASS
+- `test_tal_system_host` PASS
+- `test_tal_kv_host` PASS
+- `test_tal_network_host` PASS
+
+下一阶段：
+
+- 按计划执行 `Task 7-8`（`tal_wifi` + CI/覆盖率）
+
 ## 2. 参考项目分析后的取舍结论
 
 ### 2.1 ESP-IDF
