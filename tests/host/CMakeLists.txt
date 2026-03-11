@@ -49,3 +49,7 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/../../src/tal_network/test/host/CMakeLists.txt")
     add_subdirectory(${CMAKE_SOURCE_DIR}/../../src/tal_network/test/host tal_network_host)
 endif()
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/../../src/tal_wifi/test/host/CMakeLists.txt")
+    add_subdirectory(${CMAKE_SOURCE_DIR}/../../src/tal_wifi/test/host tal_wifi_host)
+endif()
