@@ -1,0 +1,72 @@
+name: Host Unit Tests
+
+on:
+  push:
+    branches:
+      - master
+      - master-utest
+      - develop
+      - dev
+  pull_request:
+
+jobs:
+  host-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ruby lcov python3-pip
+          python3 -m pip install --upgrade pip
+          python3 -m pip install gcovr
+
+      - name: Run host tests
+        run: |
+          bash tools/test/run_host_tests.sh
+
+      - name: Run coverage
+        run: |
+          bash tools/test/run_host_coverage.sh
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: host-coverage-html
+          path: build/tests/host/coverage_html/
+          if-no-files-found: warn
+
+  host-sanitizers:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitize:
+          - asan
+          - ubsan
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ruby
+
+      - name: Build and test with sanitizer
+        run: |
+          if [ "${{ matrix.sanitize }}" = "asan" ]; then
+            SAN_FLAG="-DTUYA_ENABLE_ASAN=ON"
+          else
+            SAN_FLAG="-DTUYA_ENABLE_UBSAN=ON"
+          fi
+          cmake -S tests/host -B build/tests/host-${{ matrix.sanitize }} ${SAN_FLAG}
+          cmake --build build/tests/host-${{ matrix.sanitize }} --target tuya_codegen -j
+          cmake --build build/tests/host-${{ matrix.sanitize }} -j
+          ctest --test-dir build/tests/host-${{ matrix.sanitize }} --output-on-failure

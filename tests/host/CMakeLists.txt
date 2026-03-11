@@ -53,3 +53,9 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/../../src/tal_wifi/test/host/CMakeLists.txt")
     add_subdirectory(${CMAKE_SOURCE_DIR}/../../src/tal_wifi/test/host tal_wifi_host)
 endif()
+
+add_custom_target(coverage
+    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMENT "Run host unit tests for coverage collection"
+)
