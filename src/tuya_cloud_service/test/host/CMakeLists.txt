@@ -169,7 +169,6 @@ target_link_options(test_tuya_cloud_service_matop_host PRIVATE -Wl,--gc-sections
 
 tuya_add_host_test(test_tuya_cloud_service_lan_host
     test_tuya_lan.c
-    ${CMAKE_SOURCE_DIR}/../../src/tuya_cloud_service/lan/tuya_lan.c
     ${CMAKE_SOURCE_DIR}/../../tests/host/support/stubs/tal_log_stub.c
 )
 

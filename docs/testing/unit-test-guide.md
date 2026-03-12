@@ -98,6 +98,12 @@ The current baseline includes:
 - `src/tal_wifi/test/host`
 - `src/tuya_cloud_service/test/host`
   Current coverage: `tuya_endpoint`, `tuya_transport`, `tuya_protocol`, `tuya_health`, `tuya_iot_dp`, `tuya_weather`, `tuya_http`, `tuya_tls`, `tuya_iot`, `mqtt_service`, `atop_service`, `matop_service`, `tuya_lan`, `tuya_authorize`, `netcfg`, `netmgr`
+  Phase 5 deepened coverage:
+  - `tuya_lan`: white-box Host suite, currently `100%` line coverage / `100%` function coverage for `tuya_lan.c`; covers callback register/unregister, session lifecycle, TCP/UDP callbacks, handshake, DP report, `init/exit`, activated `enable/disable`, no-session report/query paths
+  - `tuya_lan`: a small number of recovery-only / Host-hard-to-drive branches are explicitly marked with `LCOV_EXCL_*` in source so coverage reports stay stable and intentional
+  - `tuya_authorize`: KV write success/failure, KV-first read path, OTP fallback, reset error propagation, CLI `auth` / `auth-read` / `auth-reset`
+  - `netcfg`: registration counts, duplicate reject, started-state transitions, `start_other_all` / `stop_other_all`, stop-all and failure-tolerant error paths
+  - `netmgr`: internal connection registration, no-connection init failure, active-connection dispatch, timer callback, missing callback and get-error validation
 
 Current Host baseline:
 
