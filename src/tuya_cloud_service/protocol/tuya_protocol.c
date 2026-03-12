@@ -95,23 +95,23 @@ static OPERATE_RET __parse_data_with_pv23(const DP_CMD_TYPE_E cmd, const uint8_t
         return OPRT_VERSION_FMT_ERR;
     }
 
-    uint8_t *ad_data = (uint8_t *)(data + 0);
+    uint8_t *ad_data  = (uint8_t *)(data + 0);
     uint32_t data_len = len - PV23_EXCEPT_DATA_LEN;
-    size_t ec_len = 0;
-    uint8_t *ec_data = tal_malloc(data_len + 1);
+    size_t   ec_len   = 0;
+    uint8_t *ec_data  = tal_malloc(data_len + 1);
     TUYA_CHECK_NULL_RETURN(ec_data, OPRT_MALLOC_FAILED);
 
     // decrypt data
     op_ret = mbedtls_cipher_auth_decrypt_wrapper(
         &(const cipher_params_t){.cipher_type = MBEDTLS_CIPHER_AES_128_GCM,
-                                 .key = (unsigned char *)key,
-                                 .key_len = 16,
-                                 .nonce = (unsigned char *)(data + PV23_NONCE_OFFSET),
-                                 .nonce_len = PV23_NONCE_LEN,
-                                 .ad = ad_data,
-                                 .ad_len = PV23_AD_DATA_LEN,
-                                 .data = (unsigned char *)(data + PV23_DATA_OFFSET),
-                                 .data_len = data_len},
+                                 .key         = (unsigned char *)key,
+                                 .key_len     = 16,
+                                 .nonce       = (unsigned char *)(data + PV23_NONCE_OFFSET),
+                                 .nonce_len   = PV23_NONCE_LEN,
+                                 .ad          = ad_data,
+                                 .ad_len      = PV23_AD_DATA_LEN,
+                                 .data        = (unsigned char *)(data + PV23_DATA_OFFSET),
+                                 .data_len    = data_len},
         ec_data, &ec_len, (unsigned char *)(data + (len - PV23_TAG_LEN)), PV23_TAG_LEN);
     if (op_ret != OPRT_OK) {
         PR_ERR("mbedtls_cipher_auth_decrypt_wrapper:0x%x", -op_ret);
@@ -143,7 +143,7 @@ static OPERATE_RET __parse_data_with_lpv35(const DP_CMD_TYPE_E cmd, const uint8_
     cmd_from = UNI_NTOHL(cmd_from);
 
     uint8_t *ec_data = NULL;
-    uint32_t ec_len = len - DATA_OFFSET_22_32;
+    uint32_t ec_len  = len - DATA_OFFSET_22_32;
 
     ec_data = tal_malloc(ec_len + 1);
     TUYA_CHECK_NULL_RETURN(ec_data, OPRT_MALLOC_FAILED);
@@ -178,7 +178,7 @@ static OPERATE_RET __parse_data_with_lpv35(const DP_CMD_TYPE_E cmd, const uint8_
 OPERATE_RET tuya_parse_protocol_data(const DP_CMD_TYPE_E cmd, uint8_t *data, const int len, const char *key,
                                      char **out_data)
 {
-    if ((NULL == data) || (len < DATA_OFFSET_22_32)) {
+    if ((NULL == data) || (len < DATA_OFFSET_22_32) || (NULL == out_data)) {
         PR_ERR("data is NULL OR Len Invalid %d", len);
         return OPRT_INVALID_PARM;
     }
@@ -222,8 +222,8 @@ static OPERATE_RET __pack_data_with_cmd_pv23(const DP_CMD_TYPE_E cmd, const char
                                              uint8_t **pack_out, uint32_t *out_len)
 {
     OPERATE_RET op_ret = OPRT_OK;
-    char *out = NULL;
-    int offset = 0;
+    char       *out    = NULL;
+    int         offset = 0;
 
     if (pv == NULL || src == NULL || key == NULL || pack_out == NULL || out_len == NULL) {
         return OPRT_INVALID_PARM;
@@ -232,7 +232,7 @@ static OPERATE_RET __pack_data_with_cmd_pv23(const DP_CMD_TYPE_E cmd, const char
     PR_TRACE("To:%d src:%s pro:%d num:%d", cmd, src, pro, num);
     // make json data
     int len = strlen(src) + 60;
-    out = tal_malloc(len);
+    out     = tal_malloc(len);
     if (NULL == out) {
         PR_ERR("tal_malloc Fails %d", len);
         return OPRT_MALLOC_FAILED;
@@ -251,7 +251,7 @@ static OPERATE_RET __pack_data_with_cmd_pv23(const DP_CMD_TYPE_E cmd, const char
         return OPRT_BUFFER_NOT_ENOUGH;
     }
     out[offset++] = '}';
-    out[offset] = 0;
+    out[offset]   = 0;
 
     PR_TRACE("After Pack:%s offset:%d", out, offset);
 
@@ -284,14 +284,14 @@ static OPERATE_RET __pack_data_with_cmd_pv23(const DP_CMD_TYPE_E cmd, const char
     // AES GCM encrypt
     size_t encrypt_olen = 0;
     op_ret = mbedtls_cipher_auth_encrypt_wrapper(&(const cipher_params_t){.cipher_type = MBEDTLS_CIPHER_AES_128_GCM,
-                                                                          .key = (unsigned char *)key,
-                                                                          .key_len = 16,
-                                                                          .nonce = buf + PV23_NONCE_OFFSET,
-                                                                          .nonce_len = PV23_NONCE_LEN,
-                                                                          .ad = buf,
-                                                                          .ad_len = PV23_AD_DATA_LEN,
-                                                                          .data = (unsigned char *)out,
-                                                                          .data_len = strlen(out)},
+                                                                          .key         = (unsigned char *)key,
+                                                                          .key_len     = 16,
+                                                                          .nonce       = buf + PV23_NONCE_OFFSET,
+                                                                          .nonce_len   = PV23_NONCE_LEN,
+                                                                          .ad          = buf,
+                                                                          .ad_len      = PV23_AD_DATA_LEN,
+                                                                          .data        = (unsigned char *)out,
+                                                                          .data_len    = strlen(out)},
                                                  buf + PV23_DATA_OFFSET, &encrypt_olen, buf + PV23_DATA_OFFSET + offset,
                                                  PV23_TAG_LEN);
     tal_free(out);
@@ -302,7 +302,7 @@ static OPERATE_RET __pack_data_with_cmd_pv23(const DP_CMD_TYPE_E cmd, const char
     }
 
     *pack_out = buf;
-    *out_len = PV23_EXCEPT_DATA_LEN + encrypt_olen;
+    *out_len  = PV23_EXCEPT_DATA_LEN + encrypt_olen;
 
     return OPRT_OK;
 }
@@ -311,8 +311,8 @@ static OPERATE_RET __pack_data_with_cmd_lpv35(const DP_CMD_TYPE_E cmd, const cha
                                               const uint32_t pro, const uint32_t num, const uint8_t *key,
                                               uint8_t **pack_out, uint32_t *out_len)
 {
-    char *out = NULL;
-    int offset = 0;
+    char *out    = NULL;
+    int   offset = 0;
 
     if (pv == NULL || src == NULL || key == NULL || pack_out == NULL || out_len == NULL) {
         return OPRT_INVALID_PARM;
@@ -322,7 +322,7 @@ static OPERATE_RET __pack_data_with_cmd_lpv35(const DP_CMD_TYPE_E cmd, const cha
 
     // make json data
     int len = strlen(src) + 60;
-    out = tal_malloc(len);
+    out     = tal_malloc(len);
     if (NULL == out) {
         PR_ERR("tal_malloc Fails %d", len);
         return OPRT_MALLOC_FAILED;
@@ -341,7 +341,7 @@ static OPERATE_RET __pack_data_with_cmd_lpv35(const DP_CMD_TYPE_E cmd, const cha
         return OPRT_BUFFER_NOT_ENOUGH;
     }
     out[offset++] = '}';
-    out[offset] = 0;
+    out[offset]   = 0;
 
     PR_TRACE("After Pack:%s offset:%d", out, offset);
 
@@ -358,7 +358,7 @@ static OPERATE_RET __pack_data_with_cmd_lpv35(const DP_CMD_TYPE_E cmd, const cha
     tal_free(out);
 
     *pack_out = buf;
-    *out_len = (DATA_OFFSET_22_32 + offset);
+    *out_len  = (DATA_OFFSET_22_32 + offset);
 
     // make head data
     memcpy(buf + PV_OFFSET_22_32, pv, PV_LEN_22_32);
@@ -446,6 +446,10 @@ OPERATE_RET tuya_pack_protocol_data(const DP_CMD_TYPE_E cmd, const char *src, co
  */
 int lpv35_frame_buffer_size_get(lpv35_frame_object_t *frame_obj)
 {
+    if (frame_obj == NULL) {
+        return 0;
+    }
+
     return (LPV35_FRAME_HEAD_SIZE + sizeof(lpv35_additional_data_t) + LPV35_FRAME_NONCE_SIZE + frame_obj->data_len +
             LPV35_FRAME_TAG_SIZE + LPV35_FRAME_TAIL_SIZE);
 }
@@ -475,16 +479,16 @@ OPERATE_RET lpv35_frame_serialize(const uint8_t *key, int key_len, const lpv35_f
     }
 
     OPERATE_RET op_ret = OPRT_OK;
-    int offset = 0;
+    int         offset = 0;
 
     // HEAD
     memcpy(output, LPV35_FRAME_HEAD, LPV35_FRAME_HEAD_SIZE);
     offset += LPV35_FRAME_HEAD_SIZE;
 
     // AD
-    lpv35_additional_data_t ad = {.version = 0,
+    lpv35_additional_data_t ad = {.version  = 0,
                                   .sequence = UNI_HTONL(input->sequence),
-                                  .type = UNI_HTONL(input->type),
+                                  .type     = UNI_HTONL(input->type),
                                   .length = UNI_HTONL(LPV35_FRAME_NONCE_SIZE + input->data_len + LPV35_FRAME_TAG_SIZE)};
     memcpy(output + offset, (uint8_t *)&ad, sizeof(lpv35_additional_data_t));
     offset += sizeof(lpv35_additional_data_t);
@@ -504,13 +508,13 @@ OPERATE_RET lpv35_frame_serialize(const uint8_t *key, int key_len, const lpv35_f
     // AES GCM encrypt
     size_t encrypt_olen = 0;
     op_ret = mbedtls_cipher_auth_encrypt_wrapper(&(const cipher_params_t){.cipher_type = MBEDTLS_CIPHER_AES_128_GCM,
-                                                                          .key = (unsigned char *)key,
-                                                                          .key_len = key_len,
-                                                                          .nonce = nonce,
-                                                                          .nonce_len = LPV35_FRAME_NONCE_SIZE,
-                                                                          .ad = (uint8_t *)(&ad),
-                                                                          .ad_len = sizeof(lpv35_additional_data_t),
-                                                                          .data = input->data,
+                                                                          .key         = (unsigned char *)key,
+                                                                          .key_len     = key_len,
+                                                                          .nonce       = nonce,
+                                                                          .nonce_len   = LPV35_FRAME_NONCE_SIZE,
+                                                                          .ad          = (uint8_t *)(&ad),
+                                                                          .ad_len   = sizeof(lpv35_additional_data_t),
+                                                                          .data     = input->data,
                                                                           .data_len = input->data_len},
                                                  output + offset, &encrypt_olen, tag, LPV35_FRAME_TAG_SIZE);
     if (op_ret != OPRT_OK) {
@@ -556,7 +560,7 @@ OPERATE_RET lpv35_frame_parse(const uint8_t *key, int key_len, const uint8_t *in
                               lpv35_frame_object_t *output)
 {
     OPERATE_RET op_ret = OPRT_OK;
-    int offset = 0;
+    int         offset = 0;
 
     if (key == NULL || key_len == 0 || input == NULL || ilen == 0 || output == NULL) {
         PR_ERR("PARAM ERROR");
@@ -612,7 +616,7 @@ OPERATE_RET lpv35_frame_parse(const uint8_t *key, int key_len, const uint8_t *in
     offset += LPV35_FRAME_NONCE_SIZE;
 
     // encryption data
-    uint8_t *data = (uint8_t *)(input + offset);
+    uint8_t *data    = (uint8_t *)(input + offset);
     output->data_len = length - LPV35_FRAME_NONCE_SIZE - LPV35_FRAME_TAG_SIZE;
     offset += output->data_len;
 
@@ -630,13 +634,13 @@ OPERATE_RET lpv35_frame_parse(const uint8_t *key, int key_len, const uint8_t *in
     memset(output->data, 0, output->data_len + 1);
     size_t decrypt_olen = 0;
     op_ret = mbedtls_cipher_auth_decrypt_wrapper(&(const cipher_params_t){.cipher_type = MBEDTLS_CIPHER_AES_128_GCM,
-                                                                          .key = (unsigned char *)key,
-                                                                          .key_len = key_len,
-                                                                          .nonce = nonce,
-                                                                          .nonce_len = LPV35_FRAME_NONCE_SIZE,
-                                                                          .ad = (uint8_t *)(&ad),
-                                                                          .ad_len = sizeof(lpv35_additional_data_t),
-                                                                          .data = data,
+                                                                          .key         = (unsigned char *)key,
+                                                                          .key_len     = key_len,
+                                                                          .nonce       = nonce,
+                                                                          .nonce_len   = LPV35_FRAME_NONCE_SIZE,
+                                                                          .ad          = (uint8_t *)(&ad),
+                                                                          .ad_len   = sizeof(lpv35_additional_data_t),
+                                                                          .data     = data,
                                                                           .data_len = output->data_len},
                                                  output->data, &decrypt_olen, tag, LPV35_FRAME_TAG_SIZE);
     if (op_ret != OPRT_OK) {

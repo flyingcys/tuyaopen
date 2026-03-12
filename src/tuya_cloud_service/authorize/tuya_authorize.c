@@ -48,7 +48,7 @@ static void cli_authorize_read(int argc, char *argv[]);
 static void cli_authorize_reset(int argc, char *argv[]);
 
 /*============================ LOCAL VARIABLES ===============================*/
-static char UUID_BUF[UUID_LENGTH + 1] = {0};
+static char UUID_BUF[UUID_LENGTH + 1]       = {0};
 static char AUTHKEY_BUF[AUTHKEY_LENGTH + 1] = {0};
 
 static const cli_cmd_t s_cli_cmd[] = {
@@ -103,8 +103,12 @@ OPERATE_RET tuya_authorize_write(const char *uuid, const char *authkey)
  */
 OPERATE_RET tuya_authorize_read(tuya_iot_license_t *license)
 {
-    char *uuid = NULL;
-    char *authkey = NULL;
+    if (license == NULL) {
+        return OPRT_INVALID_PARM;
+    }
+
+    char  *uuid    = NULL;
+    char  *authkey = NULL;
     size_t readlen = 0;
 
     if ((OPRT_OK == tal_kv_get(KVKEY_TYOPEN_UUID, (uint8_t **)&uuid, &readlen)) &&
@@ -114,8 +118,8 @@ OPERATE_RET tuya_authorize_read(tuya_iot_license_t *license)
         UUID_BUF[UUID_LENGTH] = '\0';
         memcpy(AUTHKEY_BUF, authkey, AUTHKEY_LENGTH);
         AUTHKEY_BUF[AUTHKEY_LENGTH] = '\0';
-        license->uuid = UUID_BUF;
-        license->authkey = AUTHKEY_BUF;
+        license->uuid               = UUID_BUF;
+        license->authkey            = AUTHKEY_BUF;
         tal_kv_free((uint8_t *)uuid);
         tal_kv_free((uint8_t *)authkey);
         PR_INFO("Authorization read succeeds.");
@@ -170,10 +174,10 @@ static void cli_authorize(int argc, char *argv[])
         return;
     }
 
-    char *uuid = argv[1];
-    char *authkey = argv[2];
-    int uuid_len = strlen(uuid);
-    int authkey_len = strlen(authkey);
+    char *uuid        = argv[1];
+    char *authkey     = argv[2];
+    int   uuid_len    = strlen(uuid);
+    int   authkey_len = strlen(authkey);
     PR_DEBUG("uuid:%s(%d)", uuid, uuid_len);
     PR_DEBUG("authkey:%s(%d)", authkey, authkey_len);
 
@@ -192,7 +196,7 @@ static void cli_authorize(int argc, char *argv[])
 
 static void cli_authorize_read(int argc, char *argv[])
 {
-    OPERATE_RET ret = OPRT_OK;
+    OPERATE_RET        ret = OPRT_OK;
     tuya_iot_license_t license;
 
     ret = tuya_authorize_read(&license);

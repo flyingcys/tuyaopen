@@ -44,8 +44,8 @@ static int matop_service_data_receive_cb(void *context, const uint8_t *input, si
         return OPRT_CJSON_GET_ERR;
     }
 
-    uint16_t id = cJSON_GetObjectItem(root, "id")->valueint;
-    cJSON *data = cJSON_GetObjectItem(root, "data");
+    uint16_t id   = cJSON_GetObjectItem(root, "id")->valueint;
+    cJSON   *data = cJSON_GetObjectItem(root, "data");
 
     /* found message id */
     mqtt_atop_message_t *target_message = matop->message_list;
@@ -63,18 +63,18 @@ static int matop_service_data_receive_cb(void *context, const uint8_t *input, si
     }
 
     /* result parse */
-    bool success = false;
-    cJSON *result = NULL;
+    bool   success = false;
+    cJSON *result  = NULL;
 
     if (cJSON_GetObjectItem(data, "result")) {
-        result = cJSON_GetObjectItem(data, "result");
+        result  = cJSON_GetObjectItem(data, "result");
         success = cJSON_IsTrue(cJSON_GetObjectItem(result, "success"));
-        result = cJSON_GetObjectItem(result, "result");
+        result  = cJSON_GetObjectItem(result, "result");
     }
 
-    atop_base_response_t response = {.success = success,
-                                     .result = result,
-                                     .t = success ? cJSON_GetObjectItem(data, "t")->valueint : 0,
+    atop_base_response_t response = {.success   = success,
+                                     .result    = result,
+                                     .t         = success ? cJSON_GetObjectItem(data, "t")->valueint : 0,
                                      .user_data = target_message->user_data};
 
     if (target_message->notify_cb) {
@@ -124,12 +124,12 @@ static int matop_service_file_rawdata_receive_cb(void *context, const uint8_t *i
     }
 
     atop_base_response_t response = {
-        .success = true,
-        .result = NULL,
-        .t = 0,
-        .raw_data = (uint8_t *)(input + sizeof(uint32_t)),
+        .success      = true,
+        .result       = NULL,
+        .t            = 0,
+        .raw_data     = (uint8_t *)(input + sizeof(uint32_t)),
         .raw_data_len = ilen - sizeof(uint32_t),
-        .user_data = target_message->user_data,
+        .user_data    = target_message->user_data,
     };
 
     if (target_message->notify_cb) {
@@ -187,7 +187,11 @@ static int matop_request_send(matop_context_t *context, const uint8_t *data, siz
  */
 int matop_serice_init(matop_context_t *context, const matop_config_t *config)
 {
-    int ret;
+    if (context == NULL || config == NULL) {
+        return OPRT_INVALID_PARM;
+    }
+
+    int  ret;
     char topic_buffer[48];
 
     memset(context, 0, sizeof(matop_context_t));
@@ -277,7 +281,7 @@ int matop_serice_destory(matop_context_t *context)
         return OPRT_INVALID_PARM;
     }
 
-    int ret;
+    int  ret;
     char topic_buffer[48];
 
     int written = snprintf(topic_buffer, sizeof(topic_buffer), "rpc/rsp/%s", context->config.devid);
@@ -300,7 +304,7 @@ int matop_serice_destory(matop_context_t *context)
     mqtt_atop_message_t **current;
     for (current = &context->message_list; *current;) {
         mqtt_atop_message_t *entry = *current;
-        *current = entry->next;
+        *current                   = entry->next;
         tal_free(entry);
     }
 
@@ -330,7 +334,7 @@ int matop_service_request_async(matop_context_t *context, const mqtt_atop_reques
         return OPRT_INVALID_PARM;
     }
 
-    int rt = OPRT_OK;
+    int              rt    = OPRT_OK;
     matop_context_t *matop = context;
 
     /* handle init */
@@ -340,15 +344,15 @@ int matop_service_request_async(matop_context_t *context, const mqtt_atop_reques
         return OPRT_MALLOC_FAILED;
     }
     message_handle->next = NULL;
-    message_handle->id = ++matop->id_cnt;
+    message_handle->id   = ++matop->id_cnt;
     message_handle->timeout =
         tal_system_get_millisecond() + (request->timeout == 0 ? MATOP_TIMEOUT_MS_DEFAULT : request->timeout);
     message_handle->notify_cb = notify_cb;
     message_handle->user_data = user_data;
 
     /* request buffer make */
-    size_t request_datalen = 0;
-    const char *data_ptr = request->data ? (const char *)request->data : "{}";
+    size_t      request_datalen = 0;
+    const char *data_ptr        = request->data ? (const char *)request->data : "{}";
     size_t data_len = request->data ? (request->data_len ? request->data_len : strlen(data_ptr)) : strlen(data_ptr);
 
     if (data_len > (size_t)INT_MAX) {
@@ -357,8 +361,8 @@ int matop_service_request_async(matop_context_t *context, const mqtt_atop_reques
     }
 
     int posix_time = tal_time_get_posix();
-    int base_len = snprintf(NULL, 0, "{\"id\":%d,\"a\":\"%s\",\"t\":%d,\"data\":%.*s", message_handle->id,
-                            request->api, posix_time, (int)data_len, data_ptr);
+    int base_len = snprintf(NULL, 0, "{\"id\":%d,\"a\":\"%s\",\"t\":%d,\"data\":%.*s", message_handle->id, request->api,
+                            posix_time, (int)data_len, data_ptr);
     if (base_len < 0) {
         tal_free(message_handle);
         return OPRT_COM_ERROR;
@@ -412,8 +416,8 @@ int matop_service_request_async(matop_context_t *context, const mqtt_atop_reques
         return OPRT_BUFFER_NOT_ENOUGH;
     }
     request_buffer[written++] = '}';
-    request_buffer[written] = '\0';
-    request_datalen = (size_t)written;
+    request_buffer[written]   = '\0';
+    request_datalen           = (size_t)written;
     PR_DEBUG("atop request: %s", request_buffer);
 
     rt = matop_request_send(matop, (const uint8_t *)request_buffer, request_datalen);
@@ -460,7 +464,7 @@ int matop_service_client_reset(matop_context_t *context)
 
     /* post data */
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(MATOP_DEFAULT_BUFFER_LEN);
+    char  *buffer     = tal_malloc(MATOP_DEFAULT_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
@@ -472,9 +476,9 @@ int matop_service_client_reset(matop_context_t *context)
     /* ATOP service request send */
     rt = matop_service_request_async(context,
                                      &(const mqtt_atop_request_t){
-                                         .api = "tuya.device.reset",
-                                         .version = "4.0",
-                                         .data = (uint8_t *)buffer,
+                                         .api      = "tuya.device.reset",
+                                         .version  = "4.0",
+                                         .data     = (uint8_t *)buffer,
                                          .data_len = buffer_len,
                                      },
                                      NULL, context);
@@ -505,7 +509,7 @@ int matop_service_version_update(matop_context_t *context, const char *versions)
     /* post data */
 #define UPDATE_VERSION_BUFFER_LEN 196
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(UPDATE_VERSION_BUFFER_LEN);
+    char  *buffer     = tal_malloc(UPDATE_VERSION_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
@@ -518,9 +522,9 @@ int matop_service_version_update(matop_context_t *context, const char *versions)
     /* ATOP service request send */
     rt = matop_service_request_async(context,
                                      &(const mqtt_atop_request_t){
-                                         .api = "tuya.device.versions.update",
-                                         .version = "4.1",
-                                         .data = (uint8_t *)buffer,
+                                         .api      = "tuya.device.versions.update",
+                                         .version  = "4.1",
+                                         .data     = (uint8_t *)buffer,
                                          .data_len = buffer_len,
                                      },
                                      NULL, context);
@@ -550,7 +554,7 @@ int matop_service_upgrade_status_update(matop_context_t *context, int channel, i
 
     /* post data */
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(MATOP_DEFAULT_BUFFER_LEN);
+    char  *buffer     = tal_malloc(MATOP_DEFAULT_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
@@ -563,9 +567,9 @@ int matop_service_upgrade_status_update(matop_context_t *context, int channel, i
     /* ATOP service request send */
     rt = matop_service_request_async(context,
                                      &(const mqtt_atop_request_t){
-                                         .api = "tuya.device.upgrade.status.update",
-                                         .version = "4.1",
-                                         .data = (uint8_t *)buffer,
+                                         .api      = "tuya.device.upgrade.status.update",
+                                         .version  = "4.1",
+                                         .data     = (uint8_t *)buffer,
                                          .data_len = buffer_len,
                                      },
                                      NULL, context);
@@ -597,7 +601,7 @@ int matop_service_upgrade_info_get(matop_context_t *context, int channel, mqtt_a
 
     /* post data */
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(MATOP_DEFAULT_BUFFER_LEN);
+    char  *buffer     = tal_malloc(MATOP_DEFAULT_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
@@ -608,11 +612,11 @@ int matop_service_upgrade_info_get(matop_context_t *context, int channel, mqtt_a
 
     /* ATOP service request send */
     rt = matop_service_request_async(context,
-                                     &(const mqtt_atop_request_t){.api = "tuya.device.upgrade.get",
-                                                                  .version = "4.4",
-                                                                  .data = (uint8_t *)buffer,
+                                     &(const mqtt_atop_request_t){.api      = "tuya.device.upgrade.get",
+                                                                  .version  = "4.4",
+                                                                  .data     = (uint8_t *)buffer,
                                                                   .data_len = buffer_len,
-                                                                  .timeout = 10000},
+                                                                  .timeout  = 10000},
                                      notify_cb, user_data);
     tal_free(buffer);
     return rt;
@@ -640,7 +644,7 @@ int matop_service_auto_upgrade_info_get(matop_context_t *context, mqtt_atop_resp
 
     /* post data */
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(MATOP_DEFAULT_BUFFER_LEN);
+    char  *buffer     = tal_malloc(MATOP_DEFAULT_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
@@ -652,9 +656,9 @@ int matop_service_auto_upgrade_info_get(matop_context_t *context, mqtt_atop_resp
     /* ATOP service request send */
     rt = matop_service_request_async(context,
                                      &(const mqtt_atop_request_t){
-                                         .api = "tuya.device.upgrade.silent.get",
-                                         .version = "4.4",
-                                         .data = (uint8_t *)buffer,
+                                         .api      = "tuya.device.upgrade.silent.get",
+                                         .version  = "4.4",
+                                         .data     = (uint8_t *)buffer,
                                          .data_len = buffer_len,
                                      },
                                      notify_cb, user_data);
@@ -689,7 +693,7 @@ int matop_service_file_download_range(matop_context_t *context, const char *url,
     /* post data */
 #define MATOP_DOWNLOAD_BUFFER_LEN 511
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(MATOP_DOWNLOAD_BUFFER_LEN);
+    char  *buffer     = tal_malloc(MATOP_DOWNLOAD_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
@@ -701,11 +705,11 @@ int matop_service_file_download_range(matop_context_t *context, const char *url,
 
     /* ATOP service request send */
     rt = matop_service_request_async(context,
-                                     &(const mqtt_atop_request_t){.api = "tuya.device.file.download",
-                                                                  .version = "1.0",
-                                                                  .data = (uint8_t *)buffer,
+                                     &(const mqtt_atop_request_t){.api      = "tuya.device.file.download",
+                                                                  .version  = "1.0",
+                                                                  .data     = (uint8_t *)buffer,
                                                                   .data_len = buffer_len,
-                                                                  .timeout = timeout_ms},
+                                                                  .timeout  = timeout_ms},
                                      notify_cb, user_data);
     tal_free(buffer);
     return rt;
@@ -741,7 +745,7 @@ int matop_service_put_rst_log(matop_context_t *context, int reason)
     /* post data */
 #define UPDATE_VERSION_BUFFER_LEN 196
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(UPDATE_VERSION_BUFFER_LEN);
+    char  *buffer     = tal_malloc(UPDATE_VERSION_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         tal_free(rst_buffer);
@@ -754,9 +758,9 @@ int matop_service_put_rst_log(matop_context_t *context, int reason)
     /* ATOP service request send */
     rt = matop_service_request_async(context,
                                      &(const mqtt_atop_request_t){
-                                         .api = "atop.online.debug.log",
-                                         .version = NULL,
-                                         .data = (uint8_t *)buffer,
+                                         .api      = "atop.online.debug.log",
+                                         .version  = NULL,
+                                         .data     = (uint8_t *)buffer,
                                          .data_len = buffer_len,
                                      },
                                      NULL, context);
@@ -790,7 +794,7 @@ int matop_service_dynamic_cfg_get(matop_context_t *context, HTTP_DYNAMIC_CFG_TYP
 
     /* post data */
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(MATOP_DEFAULT_BUFFER_LEN);
+    char  *buffer     = tal_malloc(MATOP_DEFAULT_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
@@ -818,9 +822,9 @@ int matop_service_dynamic_cfg_get(matop_context_t *context, HTTP_DYNAMIC_CFG_TYP
     /* ATOP service request send */
     rt = matop_service_request_async(context,
                                      &(const mqtt_atop_request_t){
-                                         .api = "tuya.device.dynamic.config.get",
-                                         .version = "2.0",
-                                         .data = (uint8_t *)buffer,
+                                         .api      = "tuya.device.dynamic.config.get",
+                                         .version  = "2.0",
+                                         .data     = (uint8_t *)buffer,
                                          .data_len = buffer_len,
                                      },
                                      notify_cb, user_data);
@@ -853,12 +857,12 @@ int matop_service_dynamic_cfg_ack(matop_context_t *context, const char *timezone
         return OPRT_INVALID_PARM;
     }
 
-    int rt = OPRT_OK;
+    int      rt     = OPRT_OK;
     uint16_t offset = 0;
 
 #define DYNAMIC_CFG_ACK_BUFFER_LEN MATOP_DEFAULT_BUFFER_LEN
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(DYNAMIC_CFG_ACK_BUFFER_LEN);
+    char  *buffer     = tal_malloc(DYNAMIC_CFG_ACK_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
@@ -884,9 +888,9 @@ int matop_service_dynamic_cfg_ack(matop_context_t *context, const char *timezone
 
     rt = matop_service_request_async(context,
                                      &(const mqtt_atop_request_t){
-                                         .api = "tuya.device.dynamic.config.ack",
-                                         .version = "2.0",
-                                         .data = (uint8_t *)buffer,
+                                         .api      = "tuya.device.dynamic.config.ack",
+                                         .version  = "2.0",
+                                         .data     = (uint8_t *)buffer,
                                          .data_len = buffer_len,
                                      },
                                      notify_cb, user_data);
@@ -913,9 +917,9 @@ int matop_service_comm_node_enable(matop_context_t *context, mqtt_atop_response_
     /* ATOP service request send */
     return matop_service_request_async(context,
                                        &(const mqtt_atop_request_t){
-                                           .api = "tuya.device.comm.node.enable",
-                                           .version = "1.0",
-                                           .data = NULL,
+                                           .api      = "tuya.device.comm.node.enable",
+                                           .version  = "1.0",
+                                           .data     = NULL,
                                            .data_len = 0,
                                        },
                                        notify_cb, user_data);
@@ -938,9 +942,9 @@ int matop_service_comm_node_disable(matop_context_t *context, mqtt_atop_response
     /* ATOP service request send */
     return matop_service_request_async(context,
                                        &(const mqtt_atop_request_t){
-                                           .api = "tuya.device.comm.node.disable",
-                                           .version = "1.0",
-                                           .data = NULL,
+                                           .api      = "tuya.device.comm.node.disable",
+                                           .version  = "1.0",
+                                           .data     = NULL,
                                            .data_len = 0,
                                        },
                                        notify_cb, user_data);

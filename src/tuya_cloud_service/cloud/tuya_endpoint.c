@@ -27,8 +27,8 @@
 extern int iotdns_cloud_endpoint_get(const char *region, const char *env, tuya_endpoint_t *endpoint);
 
 typedef struct {
-    char region[MAX_LENGTH_REGION + 1];
-    char regist_key[MAX_LENGTH_REGIST + 1];
+    char            region[MAX_LENGTH_REGION + 1];
+    char            regist_key[MAX_LENGTH_REGIST + 1];
     tuya_endpoint_t endpoint;
 } endpoint_management_t;
 
@@ -43,7 +43,7 @@ static int tuya_region_regist_key_write(const char *region, const char *regist_k
 
     /* Write kv storage */
     int ret = 0;
-    ret = tal_kv_set("region", (const uint8_t *)region, strlen(region));
+    ret     = tal_kv_set("region", (const uint8_t *)region, strlen(region));
     if (ret != OPRT_OK) {
         PR_ERR("tal_kv_set region, error:0x%02x", ret);
         return OPRT_KVS_WR_FAIL;
@@ -66,10 +66,10 @@ static int tuya_region_regist_key_read(char *region, char *regist_key)
     }
 
     /* Read the region&env from kv storage */
-    int ret = 0;
-    size_t len = 0;
+    int      ret   = 0;
+    size_t   len   = 0;
     uint8_t *value = NULL;
-    ret = tal_kv_get("region", &value, &len);
+    ret            = tal_kv_get("region", &value, &len);
     if (ret != OPRT_OK) {
         PR_ERR("tal_kv_get region fail:0x%02x", ret);
         return OPRT_KVS_RD_FAIL;
@@ -224,6 +224,11 @@ int tuya_endpoint_domain_set(tuya_endpoint_t *endpoint)
  */
 int tuya_endpoint_region_regist_set(const char *region, const char *regist_key)
 {
+    if (region == NULL || regist_key == NULL) {
+        PR_ERR("Invalid param");
+        return OPRT_INVALID_PARM;
+    }
+
     if (tuya_region_regist_key_write(region, regist_key) != OPRT_OK) {
         PR_ERR("region_regist_key_write error");
         return OPRT_KVS_WR_FAIL;
@@ -301,7 +306,7 @@ int tuya_endpoint_update(void)
     if (endpoint_mgr.endpoint.cert != NULL && endpoint_mgr.endpoint.cert_len > 0) {
         PR_TRACE("Free endpoint already exist cert.");
         tal_free(endpoint_mgr.endpoint.cert);
-        endpoint_mgr.endpoint.cert = NULL;
+        endpoint_mgr.endpoint.cert     = NULL;
         endpoint_mgr.endpoint.cert_len = 0;
     }
     /* Try to get the iot-dns domain data */
@@ -329,7 +334,7 @@ int tuya_endpoint_update_auto_region(void)
     if (endpoint_mgr.endpoint.cert != NULL && endpoint_mgr.endpoint.cert_len > 0) {
         PR_TRACE("Free endpoint already exist cert.");
         tal_free(endpoint_mgr.endpoint.cert);
-        endpoint_mgr.endpoint.cert = NULL;
+        endpoint_mgr.endpoint.cert     = NULL;
         endpoint_mgr.endpoint.cert_len = 0;
     }
     /* Try to get the iot-dns domain data */

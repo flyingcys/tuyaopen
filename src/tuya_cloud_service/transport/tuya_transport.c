@@ -32,7 +32,7 @@
 
 struct tuya_transport_array_handle {
     tuya_transporter_t array[MAX_TRANSPORTER_NUM];
-    uint8_t index;
+    uint8_t            index;
 };
 
 tuya_transport_array_handle_t tuya_transport_array_create()
@@ -65,11 +65,15 @@ tuya_transport_array_handle_t tuya_transport_array_create()
 OPERATE_RET tuya_transport_array_add_transporter(tuya_transport_array_handle_t transport_handle,
                                                  tuya_transporter_t transporter, char *scheme)
 {
+    if (transport_handle == NULL || transporter == NULL || scheme == NULL) {
+        return OPRT_INVALID_PARM;
+    }
+
     if (transport_handle->index >= MAX_TRANSPORTER_NUM) {
         return OPRT_INDEX_OUT_OF_BOUND;
     }
 
-    transporter->scheme = mm_strdup(scheme);
+    transporter->scheme                                = mm_strdup(scheme);
     transport_handle->array[transport_handle->index++] = transporter;
     return OPRT_OK;
 }
@@ -89,9 +93,14 @@ OPERATE_RET tuya_transport_array_add_transporter(tuya_transport_array_handle_t t
  */
 tuya_transporter_t tuya_transport_array_get_transporter(tuya_transport_array_handle_t transport_handle, char *scheme)
 {
+    if (transport_handle == NULL || scheme == NULL) {
+        return NULL;
+    }
+
     int i = 0;
     for (; i < MAX_TRANSPORTER_NUM; i++) {
-        if (strcmp(transport_handle->array[i]->scheme, scheme) == 0) {
+        if (transport_handle->array[i] != NULL && transport_handle->array[i]->scheme != NULL &&
+            strcmp(transport_handle->array[i]->scheme, scheme) == 0) {
             return transport_handle->array[i];
         }
     }
@@ -111,6 +120,10 @@ tuya_transporter_t tuya_transport_array_get_transporter(tuya_transport_array_han
 OPERATE_RET
 tuya_transport_array_destroy(tuya_transport_array_handle_t transport_handle)
 {
+    if (transport_handle == NULL) {
+        return OPRT_INVALID_PARM;
+    }
+
     int i = 0;
 
     for (; i < MAX_TRANSPORTER_NUM; i++) {
@@ -345,15 +358,18 @@ tuya_transporter_set_func(tuya_transporter_t t, transporter_connect_fn connect, 
                           transporter_read_fn read, transporter_write_fn write, transporter_poll_read_fn poll_read,
                           transporter_poll_read_fn poll_write, transporter_destroy_fn destroy, transporter_ctrl ctrl)
 {
+    if (t == NULL) {
+        return OPRT_INVALID_PARM;
+    }
 
-    t->f_connect = connect;
-    t->f_close = close;
-    t->f_read = read;
-    t->f_write = write;
-    t->f_poll_read = poll_read;
+    t->f_connect    = connect;
+    t->f_close      = close;
+    t->f_read       = read;
+    t->f_write      = write;
+    t->f_poll_read  = poll_read;
     t->f_poll_write = poll_write;
-    t->f_destroy = destroy;
-    t->f_ctrl = ctrl;
+    t->f_destroy    = destroy;
+    t->f_ctrl       = ctrl;
 
     return OPRT_OK;
 }

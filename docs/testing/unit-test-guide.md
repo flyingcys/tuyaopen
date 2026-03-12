@@ -96,6 +96,12 @@ The current baseline includes:
 - `src/tal_kv/test/host`
 - `src/tal_network/test/host`
 - `src/tal_wifi/test/host`
+- `src/tuya_cloud_service/test/host`
+  Current coverage: `tuya_endpoint`, `tuya_transport`, `tuya_protocol`, `tuya_health`, `tuya_iot_dp`, `tuya_weather`, `tuya_http`, `tuya_tls`, `tuya_iot`, `mqtt_service`, `atop_service`, `matop_service`, `tuya_lan`, `tuya_authorize`, `netcfg`, `netmgr`
+
+Current Host baseline:
+
+- `21/21` suites passing
 
 ## Target Unit Test Skeleton
 

@@ -198,9 +198,8 @@ int atop_service_activate_request(const tuya_activite_request_t *request, atop_b
     offset += (size_t)write_len;
     remain = prealloc_size - offset;
 
-    write_len =
-        snprintf(buffer + offset, remain, ",\"cadVer\":\"%s\",\"cdVer\":\"%s\",\"t\":%" PRIu32 "}", CAD_VER, CD_VER,
-                 timestamp);
+    write_len = snprintf(buffer + offset, remain, ",\"cadVer\":\"%s\",\"cdVer\":\"%s\",\"t\":%" PRIu32 "}", CAD_VER,
+                         CD_VER, timestamp);
     if (write_len < 0 || (size_t)write_len >= remain) {
         tal_free(buffer);
         return OPRT_BUFFER_NOT_ENOUGH;
@@ -210,14 +209,14 @@ int atop_service_activate_request(const tuya_activite_request_t *request, atop_b
     PR_DEBUG("POST JSON:%s", buffer);
 
     /* atop_base_request object construct */
-    atop_base_request_t atop_request = {.uuid = request->uuid,
-                                        .key = request->authkey,
-                                        .path = "/d.json",
+    atop_base_request_t atop_request = {.uuid      = request->uuid,
+                                        .key       = request->authkey,
+                                        .path      = "/d.json",
                                         .timestamp = timestamp,
-                                        .api = "thing.device.opensdk.active",
-                                        .version = "1.0",
-                                        .data = buffer,
-                                        .datalen = offset,
+                                        .api       = "thing.device.opensdk.active",
+                                        .version   = "1.0",
+                                        .data      = buffer,
+                                        .datalen   = offset,
                                         .user_data = request->user_data};
 
     /* ATOP service request send */
@@ -251,15 +250,15 @@ int atop_service_client_reset(const char *id, const char *key)
 
     /* post data */
 #define RESET_POST_BUFFER_LEN 32
-    int buffer_len = 0;
-    char *buffer = tal_malloc(RESET_POST_BUFFER_LEN);
+    int   buffer_len = 0;
+    char *buffer     = tal_malloc(RESET_POST_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
     }
 
     uint32_t timestamp = tal_time_get_posix();
-    buffer_len = snprintf(buffer, RESET_POST_BUFFER_LEN, "{\"t\":%" PRIu32 "}", timestamp);
+    buffer_len         = snprintf(buffer, RESET_POST_BUFFER_LEN, "{\"t\":%" PRIu32 "}", timestamp);
     if (buffer_len < 0 || buffer_len >= RESET_POST_BUFFER_LEN) {
         tal_free(buffer);
         return OPRT_BUFFER_NOT_ENOUGH;
@@ -267,14 +266,14 @@ int atop_service_client_reset(const char *id, const char *key)
     PR_DEBUG("POST JSON:%s", buffer);
 
     /* atop_base_request object construct */
-    atop_base_request_t atop_request = {.devid = id,
-                                        .key = key,
-                                        .path = "/d.json",
+    atop_base_request_t atop_request = {.devid     = id,
+                                        .key       = key,
+                                        .path      = "/d.json",
                                         .timestamp = timestamp,
-                                        .api = "tuya.device.reset",
-                                        .version = "4.0",
-                                        .data = buffer,
-                                        .datalen = buffer_len,
+                                        .api       = "tuya.device.reset",
+                                        .version   = "4.0",
+                                        .data      = buffer,
+                                        .datalen   = buffer_len,
                                         .user_data = NULL};
 
     atop_base_response_t response = {0};
@@ -323,7 +322,7 @@ int atop_service_dynamic_cfg_get_v20(const char *id, const char *key, HTTP_DYNAM
 
     /* post data */
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(ATOP_DEFAULT_POST_BUFFER_LEN);
+    char  *buffer     = tal_malloc(ATOP_DEFAULT_POST_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
@@ -352,14 +351,14 @@ int atop_service_dynamic_cfg_get_v20(const char *id, const char *key, HTTP_DYNAM
     PR_DEBUG("POST JSON:%s", buffer);
 
     /* atop_base_request object construct */
-    atop_base_request_t atop_request = {.devid = id,
-                                        .key = key,
-                                        .path = "/d.json",
+    atop_base_request_t atop_request = {.devid     = id,
+                                        .key       = key,
+                                        .path      = "/d.json",
                                         .timestamp = timestamp,
-                                        .api = "tuya.device.dynamic.config.get",
-                                        .version = "2.0",
-                                        .data = buffer,
-                                        .datalen = buffer_len,
+                                        .api       = "tuya.device.dynamic.config.get",
+                                        .version   = "2.0",
+                                        .data      = buffer,
+                                        .datalen   = buffer_len,
                                         .user_data = NULL};
 
     /* ATOP service request send */
@@ -396,7 +395,7 @@ int atop_service_upgrade_info_get_v44(const char *id, const char *key, int chann
 
     /* post data */
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(ATOP_DEFAULT_POST_BUFFER_LEN);
+    char  *buffer     = tal_malloc(ATOP_DEFAULT_POST_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
@@ -408,14 +407,14 @@ int atop_service_upgrade_info_get_v44(const char *id, const char *key, int chann
 
     /* atop_base_request object construct */
     atop_base_request_t atop_request = {
-        .devid = id,
-        .key = key,
-        .path = "/d.json",
+        .devid     = id,
+        .key       = key,
+        .path      = "/d.json",
         .timestamp = timestamp,
-        .api = "tuya.device.upgrade.get",
-        .version = "4.4",
-        .data = buffer,
-        .datalen = buffer_len,
+        .api       = "tuya.device.upgrade.get",
+        .version   = "4.4",
+        .data      = buffer,
+        .datalen   = buffer_len,
         .user_data = NULL,
     };
 
@@ -452,7 +451,7 @@ int atop_service_auto_upgrade_info_get_v44(const char *id, const char *key, atop
 
     /* post data */
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(ATOP_DEFAULT_POST_BUFFER_LEN);
+    char  *buffer     = tal_malloc(ATOP_DEFAULT_POST_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
@@ -464,14 +463,14 @@ int atop_service_auto_upgrade_info_get_v44(const char *id, const char *key, atop
 
     /* atop_base_request object construct */
     atop_base_request_t atop_request = {
-        .devid = id,
-        .key = key,
-        .path = "/d.json",
+        .devid     = id,
+        .key       = key,
+        .path      = "/d.json",
         .timestamp = timestamp,
-        .api = "tuya.device.upgrade.silent.get",
-        .version = "4.4",
-        .data = buffer,
-        .datalen = buffer_len,
+        .api       = "tuya.device.upgrade.silent.get",
+        .version   = "4.4",
+        .data      = buffer,
+        .datalen   = buffer_len,
         .user_data = NULL,
     };
 
@@ -508,7 +507,7 @@ int atop_service_upgrade_status_update_v41(const char *id, const char *key, int 
 
     /* post data */
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(ATOP_DEFAULT_POST_BUFFER_LEN);
+    char  *buffer     = tal_malloc(ATOP_DEFAULT_POST_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
@@ -521,14 +520,14 @@ int atop_service_upgrade_status_update_v41(const char *id, const char *key, int 
 
     /* atop_base_request object construct */
     atop_base_request_t atop_request = {
-        .devid = id,
-        .key = key,
-        .path = "/d.json",
+        .devid     = id,
+        .key       = key,
+        .path      = "/d.json",
         .timestamp = timestamp,
-        .api = "tuya.device.upgrade.status.update",
-        .version = "4.1",
-        .data = buffer,
-        .datalen = buffer_len,
+        .api       = "tuya.device.upgrade.status.update",
+        .version   = "4.1",
+        .data      = buffer,
+        .datalen   = buffer_len,
         .user_data = NULL,
     };
 
@@ -577,7 +576,7 @@ int atop_service_version_update_v41(const char *id, const char *key, const char 
     /* post data */
 #define UPDATE_VERSION_BUFFER_LEN 196
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(UPDATE_VERSION_BUFFER_LEN);
+    char  *buffer     = tal_malloc(UPDATE_VERSION_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
@@ -590,14 +589,14 @@ int atop_service_version_update_v41(const char *id, const char *key, const char 
 
     /* atop_base_request object construct */
     atop_base_request_t atop_request = {
-        .devid = id,
-        .key = key,
-        .path = "/d.json",
+        .devid     = id,
+        .key       = key,
+        .path      = "/d.json",
         .timestamp = timestamp,
-        .api = "tuya.device.versions.update",
-        .version = "4.1",
-        .data = buffer,
-        .datalen = buffer_len,
+        .api       = "tuya.device.versions.update",
+        .version   = "4.1",
+        .data      = buffer,
+        .datalen   = buffer_len,
         .user_data = NULL,
     };
 
@@ -647,7 +646,7 @@ int atop_service_put_rst_log_v10(const char *id, const char *key, const char *rs
 
     /* post data */
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(ATOP_DEFAULT_POST_BUFFER_LEN);
+    char  *buffer     = tal_malloc(ATOP_DEFAULT_POST_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
@@ -658,14 +657,14 @@ int atop_service_put_rst_log_v10(const char *id, const char *key, const char *rs
 
     /* atop_base_request object construct */
     atop_base_request_t atop_request = {
-        .devid = id,
-        .key = key,
-        .path = "/d.json",
+        .devid     = id,
+        .key       = key,
+        .path      = "/d.json",
         .timestamp = timestamp,
-        .api = "atop.online.debug.log",
-        .version = NULL,
-        .data = buffer,
-        .datalen = buffer_len,
+        .api       = "atop.online.debug.log",
+        .version   = NULL,
+        .data      = buffer,
+        .datalen   = buffer_len,
         .user_data = NULL,
     };
 
@@ -707,13 +706,13 @@ int atop_service_outdoors_property_upload(const char *id, const char *key, const
         return OPRT_INVALID_PARM;
     }
 
-    int rt = OPRT_OK;
+    int      rt        = OPRT_OK;
     uint32_t timestamp = tal_time_get_posix();
 
     /* post data */
 #define UPDATE_PROPERTY_BUFFER_LEN 255
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(UPDATE_PROPERTY_BUFFER_LEN);
+    char  *buffer     = tal_malloc(UPDATE_PROPERTY_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
@@ -728,14 +727,14 @@ int atop_service_outdoors_property_upload(const char *id, const char *key, const
 
     /* atop_base_request object construct */
     atop_base_request_t atop_request = {
-        .devid = id,
-        .key = key,
-        .path = "/d.json",
+        .devid     = id,
+        .key       = key,
+        .path      = "/d.json",
         .timestamp = timestamp,
-        .api = "tuya.device.trip.outdoors.device.property",
-        .version = "1.0",
-        .data = buffer,
-        .datalen = buffer_len,
+        .api       = "tuya.device.trip.outdoors.device.property",
+        .version   = "1.0",
+        .data      = buffer,
+        .datalen   = buffer_len,
         .user_data = NULL,
     };
 
@@ -779,13 +778,13 @@ int atop_service_iccid_upload(const char *id, const char *key, const char *iccid
         return OPRT_INVALID_PARM;
     }
 
-    int rt = OPRT_OK;
+    int      rt        = OPRT_OK;
     uint32_t timestamp = tal_time_get_posix();
 
     /* post data */
 #define UPDATE_PROPERTY_BUFFER_LEN 255
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(UPDATE_PROPERTY_BUFFER_LEN);
+    char  *buffer     = tal_malloc(UPDATE_PROPERTY_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
@@ -798,14 +797,14 @@ int atop_service_iccid_upload(const char *id, const char *key, const char *iccid
 
     /* atop_base_request object construct */
     atop_base_request_t atop_request = {
-        .devid = id,
-        .key = key,
-        .path = "/d.json",
+        .devid     = id,
+        .key       = key,
+        .path      = "/d.json",
         .timestamp = timestamp,
-        .api = "tuya.device.meta.save",
-        .version = "1.0",
-        .data = buffer,
-        .datalen = buffer_len,
+        .api       = "tuya.device.meta.save",
+        .version   = "1.0",
+        .data      = buffer,
+        .datalen   = buffer_len,
         .user_data = NULL,
     };
 
@@ -848,12 +847,12 @@ int atop_service_sync_check(const char *id, const char *key, DEV_SYNC_STATUS_E *
         return OPRT_INVALID_PARM;
     }
 
-    int rt = OPRT_OK;
+    int      rt        = OPRT_OK;
     uint32_t timestamp = tal_time_get_posix();
 
     /* post data */
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(ATOP_DEFAULT_POST_BUFFER_LEN);
+    char  *buffer     = tal_malloc(ATOP_DEFAULT_POST_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
@@ -864,14 +863,14 @@ int atop_service_sync_check(const char *id, const char *key, DEV_SYNC_STATUS_E *
 
     /* atop_base_request object construct */
     atop_base_request_t atop_request = {
-        .devid = id,
-        .key = key,
-        .path = "/d.json",
+        .devid     = id,
+        .key       = key,
+        .path      = "/d.json",
         .timestamp = timestamp,
-        .api = "tuya.device.info.sync",
-        .version = "1.0",
-        .data = buffer,
-        .datalen = buffer_len,
+        .api       = "tuya.device.info.sync",
+        .version   = "1.0",
+        .data      = buffer,
+        .datalen   = buffer_len,
         .user_data = NULL,
     };
 
@@ -930,12 +929,12 @@ int atop_service_cache_dp_get(const char *id, const char *key, const char *req_d
         return OPRT_INVALID_PARM;
     }
 
-    int rt = OPRT_OK;
+    int      rt        = OPRT_OK;
     uint32_t timestamp = tal_time_get_posix();
     /* post data */
 
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(ATOP_DEFAULT_POST_BUFFER_LEN);
+    char  *buffer     = tal_malloc(ATOP_DEFAULT_POST_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
@@ -946,14 +945,14 @@ int atop_service_cache_dp_get(const char *id, const char *key, const char *req_d
 
     /* atop_base_request object construct */
     atop_base_request_t atop_request = {
-        .devid = id,
-        .key = key,
-        .path = "/d.json",
+        .devid     = id,
+        .key       = key,
+        .path      = "/d.json",
         .timestamp = timestamp,
-        .api = "tuya.device.dev.dp.get",
-        .version = "2.0",
-        .data = buffer,
-        .datalen = buffer_len,
+        .api       = "tuya.device.dev.dp.get",
+        .version   = "2.0",
+        .data      = buffer,
+        .datalen   = buffer_len,
         .user_data = NULL,
     };
 
@@ -987,25 +986,25 @@ int atop_service_comm_node_enable(const char *id, const char *key)
 
     /* post data */
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(ATOP_DEFAULT_POST_BUFFER_LEN);
+    char  *buffer     = tal_malloc(ATOP_DEFAULT_POST_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
     }
 
     uint32_t timestamp = tal_time_get_posix();
-    buffer_len = snprintf(buffer, ATOP_DEFAULT_POST_BUFFER_LEN, "{\"t\":%" PRIu32 "}", timestamp);
+    buffer_len         = snprintf(buffer, ATOP_DEFAULT_POST_BUFFER_LEN, "{\"t\":%" PRIu32 "}", timestamp);
     PR_DEBUG("POST JSON:%s", buffer);
 
     /* atop_base_request object construct */
-    atop_base_request_t atop_request = {.devid = id,
-                                        .key = key,
-                                        .path = "/d.json",
+    atop_base_request_t atop_request = {.devid     = id,
+                                        .key       = key,
+                                        .path      = "/d.json",
                                         .timestamp = timestamp,
-                                        .api = "tuya.device.comm.node.enable",
-                                        .version = "1.0",
-                                        .data = buffer,
-                                        .datalen = buffer_len,
+                                        .api       = "tuya.device.comm.node.enable",
+                                        .version   = "1.0",
+                                        .data      = buffer,
+                                        .datalen   = buffer_len,
                                         .user_data = NULL};
 
     atop_base_response_t response = {0};
@@ -1048,25 +1047,25 @@ int atop_service_comm_node_disable(const char *id, const char *key)
 
     /* post data */
     size_t buffer_len = 0;
-    char *buffer = tal_malloc(ATOP_DEFAULT_POST_BUFFER_LEN);
+    char  *buffer     = tal_malloc(ATOP_DEFAULT_POST_BUFFER_LEN);
     if (NULL == buffer) {
         PR_ERR("post buffer malloc fail");
         return OPRT_MALLOC_FAILED;
     }
 
     uint32_t timestamp = tal_time_get_posix();
-    buffer_len = snprintf(buffer, ATOP_DEFAULT_POST_BUFFER_LEN, "{\"t\":%" PRIu32 "}", timestamp);
+    buffer_len         = snprintf(buffer, ATOP_DEFAULT_POST_BUFFER_LEN, "{\"t\":%" PRIu32 "}", timestamp);
     PR_DEBUG("POST JSON:%s", buffer);
 
     /* atop_base_request object construct */
-    atop_base_request_t atop_request = {.devid = id,
-                                        .key = key,
-                                        .path = "/d.json",
+    atop_base_request_t atop_request = {.devid     = id,
+                                        .key       = key,
+                                        .path      = "/d.json",
                                         .timestamp = timestamp,
-                                        .api = "tuya.device.comm.node.disable",
-                                        .version = "1.0",
-                                        .data = buffer,
-                                        .datalen = buffer_len,
+                                        .api       = "tuya.device.comm.node.disable",
+                                        .version   = "1.0",
+                                        .data      = buffer,
+                                        .datalen   = buffer_len,
                                         .user_data = NULL};
 
     atop_base_response_t response = {0};
@@ -1111,12 +1110,16 @@ int atop_service_comm_post_simple(const char *api, const char *version, const ch
         return OPRT_INVALID_PARM;
     }
 
-    int rt = OPRT_OK;
+    int                rt         = OPRT_OK;
     tuya_iot_client_t *iot_client = tuya_iot_client_get();
+    if (iot_client == NULL) {
+        return OPRT_INVALID_PARM;
+    }
+
     uint32_t timestamp = tal_time_get_posix();
     /* post data */
 
-    char *buffer = NULL;
+    char  *buffer     = NULL;
     size_t buffer_len = 0;
     if (body) {
         buffer = tal_malloc(strlen(body) + 1);
@@ -1139,20 +1142,20 @@ int atop_service_comm_post_simple(const char *api, const char *version, const ch
 
     /* atop_base_request object construct */
     atop_base_request_t atop_request = {
-        .devid = iot_client->activate.devid,
-        .key = iot_client->activate.seckey,
-        .path = "/d.json",
+        .devid     = iot_client->activate.devid,
+        .key       = iot_client->activate.seckey,
+        .path      = "/d.json",
         .timestamp = timestamp,
-        .api = api,
-        .version = version,
-        .data = buffer,
-        .datalen = buffer_len,
+        .api       = api,
+        .version   = version,
+        .data      = buffer,
+        .datalen   = buffer_len,
         .user_data = user_data,
     };
 
     /* ATOP service request send */
     atop_base_response_t response = {0};
-    rt = atop_base_request(&atop_request, &response);
+    rt                            = atop_base_request(&atop_request, &response);
     if (buffer) {
         tal_free(buffer);
     }

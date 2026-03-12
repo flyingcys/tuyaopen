@@ -38,17 +38,17 @@ extern "C" {
 #define TUYA_TRANSPORTER_GET_TLS_CONFIG       0x0006
 
 struct socket_config_t {
-    uint8_t isBlock;
-    uint8_t isReuse;
-    uint8_t isDisableNagle;
-    uint8_t isKeepAlive;
-    uint16_t bindPort;
+    uint8_t        isBlock;
+    uint8_t        isReuse;
+    uint8_t        isDisableNagle;
+    uint8_t        isKeepAlive;
+    uint16_t       bindPort;
     TUYA_IP_ADDR_T bindAddr;
-    uint32_t sendTimeoutMs;
-    uint32_t recvTimeoutMs;
-    uint32_t keepAliveIdleTime;
-    uint32_t keepAliveInterval;
-    uint32_t keepAliveCount;
+    uint32_t       sendTimeoutMs;
+    uint32_t       recvTimeoutMs;
+    uint32_t       keepAliveIdleTime;
+    uint32_t       keepAliveInterval;
+    uint32_t       keepAliveCount;
 };
 
 typedef uint8_t TUYA_TRANSPORT_TYPE_E;
@@ -83,15 +83,15 @@ typedef OPERATE_RET (*transporter_close_fn)(tuya_transporter_t transporter);
 typedef OPERATE_RET (*transporter_ctrl)(tuya_transporter_t transporter, uint32_t cmd, void *args);
 
 struct tuya_transporter_inter_t {
-    char *scheme;
-    transporter_connect_fn f_connect;
-    transporter_read_fn f_read;
-    transporter_write_fn f_write;
-    transporter_poll_read_fn f_poll_read;
+    char                     *scheme;
+    transporter_connect_fn    f_connect;
+    transporter_read_fn       f_read;
+    transporter_write_fn      f_write;
+    transporter_poll_read_fn  f_poll_read;
     transporter_poll_write_fn f_poll_write;
-    transporter_close_fn f_close;
-    transporter_destroy_fn f_destroy;
-    transporter_ctrl f_ctrl;
+    transporter_close_fn      f_close;
+    transporter_destroy_fn    f_destroy;
+    transporter_ctrl          f_ctrl;
 };
 
 /**
@@ -145,7 +145,7 @@ OPERATE_RET tuya_transport_array_add_transporter(tuya_transport_array_handle_t t
  * transporter.
  */
 OPERATE_RET tuya_transport_array_remove_transporter(tuya_transport_array_handle_t transport_handle,
-                                                    tuya_transporter_t transporter);
+                                                    tuya_transporter_t            transporter);
 
 /**
  * @brief Retrieves a transporter from the transport array based on the
@@ -251,6 +251,15 @@ OPERATE_RET tuya_transporter_write(tuya_transporter_t transporter, uint8_t *buf,
 OPERATE_RET tuya_transporter_poll_read(tuya_transporter_t transporter, int timeout_ms);
 
 /**
+ * @brief Writes data to the transporter using polling mechanism.
+ *
+ * @param transporter The transporter to write data to.
+ * @param timeout_ms The timeout period in milliseconds.
+ * @return The result of the operation.
+ */
+OPERATE_RET tuya_transporter_poll_write(tuya_transporter_t transporter, int timeout_ms);
+
+/**
  * @brief Closes the specified transporter.
  *
  * This function is used to close the specified transporter.
@@ -305,7 +314,7 @@ OPERATE_RET tuya_transporter_set_func(tuya_transporter_t transporter, transporte
  *
  * @param transport_handle: handle to the transport array
  * @param connect: connection function
- * 
+ *
  * @return OPERATE_RET: 0: Success; <0: Please refer to the Tuya error code documentation for description
  */
 OPERATE_RET tuya_transporter_set_func(tuya_transporter_t transporter, transporter_connect_fn connect,

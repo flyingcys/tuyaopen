@@ -22,6 +22,7 @@
 - `src/tal_kv` Host 单测已接入并通过
 - `src/tal_network` Host 单测已接入并通过
 - `src/tal_wifi` Host 单测已接入并通过
+- `src/tuya_cloud_service/test/host` 已建立，并完成 Phase 1 的 `tuya_endpoint`、`tuya_transport`、`tuya_protocol`，Phase 2 的 `tuya_health`、`tuya_iot_dp`，Phase 3 的 `tuya_weather`、`tuya_http`、`tuya_tls`，Phase 4 的 `tuya_iot`、`mqtt_service`、`atop_service`、`matop_service`，以及 Phase 5 的 `tuya_lan`、`tuya_authorize`、`netcfg`、`netmgr` Host 单测
 - Host 覆盖率脚本、本地执行脚本和 GitHub Actions 工作流已接入
 - `test_app/unit_test_app` Target 单测应用骨架已接入并完成 `LINUX` 构建验证
 - `tests/target/pytest` 调度骨架已接入，本地 `LINUX` smoke 结果为 `1 passed, 1 skipped`
@@ -37,9 +38,27 @@
 - `test_tal_kv_host` PASS
 - `test_tal_network_host` PASS
 - `test_tal_wifi_host` PASS
+- `test_tuya_cloud_service_endpoint_host` PASS
+- `test_tuya_cloud_service_transport_host` PASS
+- `test_tuya_cloud_service_protocol_host` PASS
+- `test_tuya_cloud_service_health_host` PASS
+- `test_tuya_cloud_service_iot_dp_host` PASS
+- `test_tuya_cloud_service_weather_host` PASS
+- `test_tuya_cloud_service_http_host` PASS
+- `test_tuya_cloud_service_tls_host` PASS
+- `test_tuya_cloud_service_iot_host` PASS
+- `test_tuya_cloud_service_mqtt_host` PASS
+- `test_tuya_cloud_service_atop_host` PASS
+- `test_tuya_cloud_service_matop_host` PASS
+- `test_tuya_cloud_service_lan_host` PASS
+- `test_tuya_cloud_service_authorize_host` PASS
+- `test_tuya_cloud_service_netcfg_host` PASS
+- `test_tuya_cloud_service_netmgr_host` PASS
 
 下一阶段：
 
+- 继续扩展 `src/tuya_cloud_service` Phase 2-5 的 Host 单测，优先 `tuya_health`、`tuya_iot_dp`、`tuya_weather`
+- `src/tuya_cloud_service` 当前分阶段 Host 单测计划已全部落地，后续新增模块按同一入口持续扩展
 - 在真实板卡上验证 `ut_run tkl_gpio` 串口路径，并继续扩展 `tkl_uart`、`tkl_flash` 等 Target suites
 
 ## 2. 参考项目分析后的取舍结论

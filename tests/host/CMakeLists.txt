@@ -54,6 +54,10 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/../../src/tal_wifi/test/host/CMakeLists.txt")
     add_subdirectory(${CMAKE_SOURCE_DIR}/../../src/tal_wifi/test/host tal_wifi_host)
 endif()
 
+if(EXISTS "${CMAKE_SOURCE_DIR}/../../src/tuya_cloud_service/test/host/CMakeLists.txt")
+    add_subdirectory(${CMAKE_SOURCE_DIR}/../../src/tuya_cloud_service/test/host tuya_cloud_service_host)
+endif()
+
 add_custom_target(coverage
     COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}

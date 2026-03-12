@@ -34,16 +34,16 @@
 
 typedef struct {
     LIST_HEAD listHead;
-    int type;
+    int       type;
 } netcfg_session_t;
 
-static bool isInited = false;
+static bool              isInited         = false;
 static netcfg_session_t *p_netcfg_session = NULL;
 
 static void __netcfg_start_msg_cb(void *msg)
 {
     netcfg_handler_t *pHandler = NULL;
-    pHandler = (netcfg_handler_t *)msg;
+    pHandler                   = (netcfg_handler_t *)msg;
 
     int ret = pHandler->start(pHandler->type, pHandler->netcfg_finish_cb, pHandler->args);
     if (ret == OPRT_OK) {
@@ -73,7 +73,11 @@ static void __netcfg_start_msg_cb(void *msg)
  */
 int netcfg_register(int type, netcfg_start_cb_t start, netcfg_stop_cb_t stop)
 {
-    P_LIST_HEAD pPos;
+    if (start == NULL || stop == NULL) {
+        return OPRT_INVALID_PARM;
+    }
+
+    P_LIST_HEAD       pPos;
     netcfg_handler_t *phandler;
     tuya_list_for_each(pPos, &(p_netcfg_session->listHead))
     {
@@ -88,10 +92,10 @@ int netcfg_register(int type, netcfg_start_cb_t start, netcfg_stop_cb_t stop)
         return OPRT_MALLOC_FAILED;
     }
 
-    phandler->type = type;
-    phandler->start = start;
-    phandler->stop = stop;
-    phandler->isStarted = false;
+    phandler->type             = type;
+    phandler->start            = start;
+    phandler->stop             = stop;
+    phandler->isStarted        = false;
     phandler->netcfg_finish_cb = NULL;
 
     tuya_list_add(&phandler->node, &p_netcfg_session->listHead);
@@ -111,7 +115,7 @@ int netcfg_unregister(int type)
     if (p_netcfg_session == NULL) {
         return OPRT_COM_ERROR;
     }
-    P_LIST_HEAD pPos, pNext;
+    P_LIST_HEAD       pPos, pNext;
     netcfg_handler_t *phandler;
     tuya_list_for_each_safe(pPos, pNext, &(p_netcfg_session->listHead))
     {
@@ -141,7 +145,7 @@ netcfg_handler_t *netcfg_get_handler(int type)
         return NULL;
     }
 
-    P_LIST_HEAD pPos;
+    P_LIST_HEAD       pPos;
     netcfg_handler_t *phandler;
     tuya_list_for_each(pPos, &(p_netcfg_session->listHead))
     {
@@ -186,7 +190,7 @@ int netcfg_init(void)
 int netcfg_uninit(void)
 {
     if (p_netcfg_session) {
-        P_LIST_HEAD pPos, pNext;
+        P_LIST_HEAD       pPos, pNext;
         netcfg_handler_t *phandler;
         tal_workq_cancel(WORKQ_HIGHTPRI, __netcfg_start_msg_cb, NULL);
 
@@ -217,8 +221,8 @@ int netcfg_get_register_count(void)
     if (p_netcfg_session == NULL) {
         return 0;
     }
-    int count = 0;
-    P_LIST_HEAD pPos;
+    int               count = 0;
+    P_LIST_HEAD       pPos;
     netcfg_handler_t *phandler;
     tuya_list_for_each(pPos, &(p_netcfg_session->listHead))
     {
@@ -241,8 +245,8 @@ int netcfg_get_register_started_count(void)
     if (p_netcfg_session == NULL) {
         return 0;
     }
-    int count = 0;
-    P_LIST_HEAD pPos;
+    int               count = 0;
+    P_LIST_HEAD       pPos;
     netcfg_handler_t *phandler;
     tuya_list_for_each(pPos, &(p_netcfg_session->listHead))
     {
@@ -283,7 +287,7 @@ int netcfg_start(int type, netcfg_finish_cb_t netcfg_finish_cb, void *args)
         return OPRT_INVALID_PARM;
     } else {
         pHandler->netcfg_finish_cb = netcfg_finish_cb;
-        pHandler->args = args;
+        pHandler->args             = args;
         tal_workq_schedule(WORKQ_HIGHTPRI, __netcfg_start_msg_cb, pHandler);
     }
 
@@ -318,7 +322,7 @@ BOOL_T is_netcfg_inited(void)
 int netcfg_stop(int type)
 {
 
-    int ret = OPRT_OK;
+    int               ret      = OPRT_OK;
     netcfg_handler_t *pHandler = NULL;
 
     if (type != 0) {
@@ -330,7 +334,7 @@ int netcfg_stop(int type)
             PR_DEBUG("netcfg module stop type:0x%x", type);
             if (pHandler->isStarted) {
                 pHandler->isStarted = false;
-                ret = pHandler->stop(type);
+                ret                 = pHandler->stop(type);
                 if (ret != OPRT_OK) {
                     PR_ERR("netcfg module stop type:%d failed", type);
                     return ret;
@@ -375,7 +379,7 @@ int netcfg_stop(int type)
  */
 int netcfg_start_other_all(int type)
 {
-    int ret = OPRT_OK;
+    int               ret      = OPRT_OK;
     netcfg_handler_t *pHandler = NULL;
     if (p_netcfg_session == NULL) {
         return OPRT_COM_ERROR;
@@ -407,7 +411,7 @@ int netcfg_start_other_all(int type)
 int netcfg_stop_other_all(int type)
 {
 
-    int ret = OPRT_OK;
+    int               ret      = OPRT_OK;
     netcfg_handler_t *pHandler = NULL;
 
     if (p_netcfg_session == NULL) {
