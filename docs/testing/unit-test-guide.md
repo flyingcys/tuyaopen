@@ -173,7 +173,24 @@ cd test_app/unit_test_app
 ./dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --list
 ./dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite smoke
 ./dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite tkl_gpio
+./dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite tkl_uart
+./dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite tkl_flash
+./dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite tkl_spi
+./dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite tkl_i2c
 ```
+
+Current named local Target suites:
+
+- `smoke`
+- `tkl_gpio`
+- `tkl_uart`
+- `tkl_flash`
+- `tkl_spi`
+- `tkl_i2c`
+
+Current local `LINUX` Target pytest baseline:
+
+- `6 passed`
 
 ## Common Workflows
 
@@ -217,6 +234,10 @@ If you touched a named target suite, also run it directly once:
 ```bash
 cd test_app/unit_test_app
 ./dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite tkl_gpio
+./dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite tkl_uart
+./dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite tkl_flash
+./dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite tkl_spi
+./dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite tkl_i2c
 ```
 
 ### 4. Documentation-Only Updates

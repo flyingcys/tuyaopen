@@ -30,5 +30,9 @@ void                          tuya_unit_test_print_suite_list(void);
 
 int tuya_unit_test_run_smoke_suite(void);
 int tuya_unit_test_run_tkl_gpio_suite(void);
+int tuya_unit_test_run_tkl_uart_suite(void);
+int tuya_unit_test_run_tkl_flash_suite(void);
+int tuya_unit_test_run_tkl_spi_suite(void);
+int tuya_unit_test_run_tkl_i2c_suite(void);
 
 #endif /* TEST_APP_UNIT_TEST_APP_SRC_TEST_REGISTRY_H_ */

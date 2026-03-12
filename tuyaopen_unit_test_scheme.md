@@ -25,10 +25,12 @@
 - `src/tuya_cloud_service/test/host` 已建立，并完成 Phase 1 的 `tuya_endpoint`、`tuya_transport`、`tuya_protocol`，Phase 2 的 `tuya_health`、`tuya_iot_dp`，Phase 3 的 `tuya_weather`、`tuya_http`、`tuya_tls`，Phase 4 的 `tuya_iot`、`mqtt_service`、`atop_service`、`matop_service`，以及 Phase 5 的 `tuya_lan`、`tuya_authorize`、`netcfg`、`netmgr` Host 单测
 - Host 覆盖率脚本、本地执行脚本和 GitHub Actions 工作流已接入
 - `test_app/unit_test_app` Target 单测应用骨架已接入并完成 `LINUX` 构建验证
-- `tests/target/pytest` 调度骨架已接入，本地 `LINUX` smoke 结果为 `1 passed, 1 skipped`
+- `tests/target/pytest` 调度骨架已接入，并已扩展为可直接覆盖本地 `LINUX` named suites 的回归入口
 - 开发者文档、组件模板和 PR 测试检查项已补齐
 - Target app 已支持按 suite 名列举与执行
-- `tkl_gpio` 已成为首个真实 Target suite，本地 `LINUX` Target pytest 结果为 `2 passed`
+- `tkl_gpio` 已成为首个真实 Target suite
+- `tkl_uart`、`tkl_flash`、`tkl_spi` 与 `tkl_i2c` 已补充为 Linux-safe Target suites
+- 当前本地 `LINUX` Target pytest 基线为 `6 passed`
 - `flash_runner.py` 已支持通过 `TUYA_TARGET_FLASH_CMD` 注入烧录命令模板
 
 当前 Host 测试集结果：
@@ -59,7 +61,7 @@
 
 - 继续扩展 `src/tuya_cloud_service` Phase 2-5 的 Host 单测，优先 `tuya_health`、`tuya_iot_dp`、`tuya_weather`
 - `src/tuya_cloud_service` 当前分阶段 Host 单测计划已全部落地，后续新增模块按同一入口持续扩展
-- 在真实板卡上验证 `ut_run tkl_gpio` 串口路径，并继续扩展 `tkl_uart`、`tkl_flash` 等 Target suites
+- 在真实板卡上验证 `ut_run tkl_gpio`、`ut_run tkl_uart`、`ut_run tkl_flash`、`ut_run tkl_spi`、`ut_run tkl_i2c` 的串口路径，并继续扩展 `tkl_adc`、`tkl_pwm` 等 Target suites
 
 ## 2. 参考项目分析后的取舍结论
 

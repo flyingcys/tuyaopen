@@ -27,8 +27,8 @@ The coverage script will generate HTML output under:
 ## Build the Target Unit Test App
 
 ```bash
-cd test_app/unit_test_app
 mkdir -p .cache && touch .cache/.dont_prompt_update_platform
+cd test_app/unit_test_app
 tos.py check
 tos.py build
 ```
@@ -41,12 +41,28 @@ Final artifacts are exported under:
 
 - `test_app/unit_test_app/dist/`
 
-## Run Target Pytest Skeleton
+## Run Target Pytest Suites
 
 Run against the locally built `LINUX` executable:
 
 ```bash
 python -m pytest tests/target/pytest -m target -v
+```
+
+Current local `LINUX` Target pytest baseline:
+
+- `6 passed`
+
+Run named suites directly from the built ELF:
+
+```bash
+./test_app/unit_test_app/dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --list
+./test_app/unit_test_app/dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite smoke
+./test_app/unit_test_app/dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite tkl_gpio
+./test_app/unit_test_app/dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite tkl_uart
+./test_app/unit_test_app/dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite tkl_flash
+./test_app/unit_test_app/dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite tkl_spi
+./test_app/unit_test_app/dist/unit_test_app_1.0.0/unit_test_app_1.0.0.elf --suite tkl_i2c
 ```
 
 Run against a real board over serial:

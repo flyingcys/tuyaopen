@@ -18,6 +18,10 @@
 static const tuya_unit_test_suite_t s_target_suites[] = {
     {.name = "smoke", .help = "run the target smoke suite", .run = tuya_unit_test_run_smoke_suite},
     {.name = "tkl_gpio", .help = "run target-side tkl_gpio adapter tests", .run = tuya_unit_test_run_tkl_gpio_suite},
+    {.name = "tkl_uart", .help = "run target-side tkl_uart adapter tests", .run = tuya_unit_test_run_tkl_uart_suite},
+    {.name = "tkl_flash", .help = "run target-side tkl_flash adapter tests", .run = tuya_unit_test_run_tkl_flash_suite},
+    {.name = "tkl_spi", .help = "run target-side tkl_spi adapter tests", .run = tuya_unit_test_run_tkl_spi_suite},
+    {.name = "tkl_i2c", .help = "run target-side tkl_i2c adapter tests", .run = tuya_unit_test_run_tkl_i2c_suite},
 };
 
 const tuya_unit_test_suite_t *tuya_unit_test_get_suites(size_t *count)
