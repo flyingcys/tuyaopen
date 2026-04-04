@@ -69,8 +69,7 @@ xz_status
    - `XZ_WS_URL`（WebSocket 服务地址）
    - `XZ_WS_TOKEN`（身份令牌）
    - `XZ_PROTOCOL=websocket`
-   - `XZ_ALSA_CAPTURE`（可选，默认为 `default`）
-   - `XZ_ALSA_PLAYBACK`（可选，默认为 `default`）
+   - 需要替换 ALSA 设备名时，请在构建前修改 `config/Linux.config` / `app_default.config` 中的 `CONFIG_ALSA_DEVICE_CAPTURE` 与 `CONFIG_ALSA_DEVICE_PLAYBACK`。
 5. 启动生成的可执行文件：`./dist/xiaozhi_1.0.0/xiaozhi_1.0.0.elf`
 
 ### 手动语音链路验证

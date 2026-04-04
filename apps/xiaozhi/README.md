@@ -50,8 +50,7 @@ The Linux build currently supports only the WebSocket voice channel. ALSA captur
    - `XZ_WS_URL`
    - `XZ_WS_TOKEN`
    - `XZ_PROTOCOL=websocket`
-   - `XZ_ALSA_CAPTURE` (optional, defaults to `default`)
-   - `XZ_ALSA_PLAYBACK` (optional, defaults to `default`)
+   - If you need to change the ALSA device names, update `CONFIG_ALSA_DEVICE_CAPTURE` and `CONFIG_ALSA_DEVICE_PLAYBACK` in `config/Linux.config` / `app_default.config` before building.
 5. Execute the generated binary: `./dist/xiaozhi_1.0.0/xiaozhi_1.0.0.elf`
 
 ### Manual Voice Validation
