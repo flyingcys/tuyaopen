@@ -22,7 +22,7 @@ xz_chat_state_t xz_state_after_tts_stop(xz_chat_state_t current)
 
 xz_chat_state_t xz_state_after_abort(xz_chat_state_t current)
 {
-    if (current == XZ_CHAT_SPEAKING) {
+    if (current == XZ_CHAT_SPEAKING || current == XZ_CHAT_LISTENING) {
         return XZ_CHAT_IDLE;
     }
     return current;

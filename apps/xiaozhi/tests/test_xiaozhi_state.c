@@ -27,12 +27,19 @@ static void test_speaking_to_idle_on_abort(void)
     assert(next == XZ_CHAT_IDLE);
 }
 
+static void test_listening_to_idle_on_abort(void)
+{
+    xz_chat_state_t next = xz_state_after_abort(XZ_CHAT_LISTENING);
+    assert(next == XZ_CHAT_IDLE);
+}
+
 int main(void)
 {
     test_idle_to_listening();
     test_listening_to_speaking();
     test_speaking_to_idle_on_tts_stop();
     test_speaking_to_idle_on_abort();
+    test_listening_to_idle_on_abort();
 
     puts("xiaozhi_state tests passed");
     return 0;
