@@ -17,6 +17,11 @@ typedef struct {
     size_t  tail;
 } xz_audio_pcm_accum_t;
 
+/**
+ * The accumulator must be reset via xz_audio_pcm_accum_reset() or zero-initialized
+ * before the first call to xz_audio_pcm_accum_push().
+ */
+
 void xz_audio_pcm_accum_reset(xz_audio_pcm_accum_t *accum);
 /**
  * Push PCM bytes into the accumulator.
