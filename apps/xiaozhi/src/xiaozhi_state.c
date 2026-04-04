@@ -27,3 +27,8 @@ xz_chat_state_t xz_state_after_abort(xz_chat_state_t current)
     }
     return current;
 }
+
+int xz_state_accepts_tts_binary(xz_chat_state_t current)
+{
+    return (current == XZ_CHAT_SPEAKING) ? 1 : 0;
+}

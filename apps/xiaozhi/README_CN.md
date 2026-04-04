@@ -58,7 +58,7 @@ xz_status
 
 ### Linux 语音链路（WebSocket）
 
-Linux 版本目前只支持 WebSocket 语音通道。默认采集与回放设备都绑定到 ALSA 的 `default`，运行时不会再通过环境变量覆盖。若需更换设备，务必在 Linux 音频配置中完成后重新构建并部署，确保构建产物的配置与目标设备一致。收到 `listen` 请求后，客户端会上传麦克风流，等待服务端返回 `tts start`/`binary`/`tts stop`，并播放返回的音频。
+Linux 版本目前只支持 WebSocket 语音通道。默认采集与回放设备都绑定到 ALSA 的 `default`，运行时不会再通过环境变量覆盖。若默认设备不存在或 ALSA 配置错误，应用会在启动阶段失败并返回非零。若需更换设备，务必在 Linux 音频配置中完成后重新构建并部署，确保构建产物的配置与目标设备一致。收到 `listen` 请求后，客户端会上传麦克风流，等待服务端返回 `tts start`/`binary`/`tts stop`，并播放返回的音频。
 
 ### Linux WebSocket 可执行物运行
 
