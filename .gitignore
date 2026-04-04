@@ -10,6 +10,7 @@ compile_commands.json
 /.venv
 /tmp
 /.cache
+/.worktree
 /cache
 /output
 /build
