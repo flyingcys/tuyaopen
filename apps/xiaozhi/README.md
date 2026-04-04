@@ -39,7 +39,7 @@ xz_status
 
 ### Linux Voice Pipeline (WebSocket)
 
-The Linux build currently supports only the WebSocket voice channel. ALSA capture and playback devices default to `default`, but you can override them with `XZ_ALSA_CAPTURE` and `XZ_ALSA_PLAYBACK`. After a `listen` request, the client uploads microphone data, waits for `tts start`/`binary`/`tts stop` from the server, and plays back the returned audio.
+The Linux build currently supports only the WebSocket voice channel. ALSA capture and playback devices default to `default`, and their names are sourced from the `CONFIG_ALSA_DEVICE_CAPTURE` and `CONFIG_ALSA_DEVICE_PLAYBACK` entries in `config/Linux.config` / `app_default.config`. After a `listen` request, the client uploads microphone data, waits for `tts start`/`binary`/`tts stop` from the server, and plays back the returned audio.
 
 ### Running the WebSocket Executable
 

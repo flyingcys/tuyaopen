@@ -58,7 +58,7 @@ xz_status
 
 ### Linux 语音链路（WebSocket）
 
-首版 Linux 语音链路仅支持基于 WebSocket 的音频通道。默认采集和回放均使用 ALSA 设备 `default`，可以通过环境变量 `XZ_ALSA_CAPTURE` 和 `XZ_ALSA_PLAYBACK` 指定其它设备名称。语音链路在收到 `listen` 请求后会上传麦克风流、等待服务端返回 `tts start`/`binary`/`tts stop` 并播放返回的音频。
+首版 Linux 语音链路仅支持基于 WebSocket 的音频通道。默认采集和回放均使用 ALSA 设备 `default`，名称由 `config/Linux.config` / `app_default.config` 中的 `CONFIG_ALSA_DEVICE_CAPTURE` 和 `CONFIG_ALSA_DEVICE_PLAYBACK` 配置项控制。语音链路在收到 `listen` 请求后会上传麦克风流、等待服务端返回 `tts start`/`binary`/`tts stop` 并播放返回的音频。
 
 ### Linux WebSocket 可执行物运行
 
