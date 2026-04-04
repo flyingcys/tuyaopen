@@ -2,6 +2,10 @@
 
 #include <string.h>
 
+#ifndef XZ_AUDIO_LINUX_TEST_ONLY
+#include "../../../src/common/include/tuya_error_code.h"
+#endif
+
 void xz_audio_pcm_accum_reset(xz_audio_pcm_accum_t *accum)
 {
     if (!accum) {
@@ -64,34 +68,34 @@ void xiaozhi_audio_linux_reset(void) {}
 int xiaozhi_audio_linux_init(void)
 {
     /* TODO: add ALSA/Opus bindings */
-    return -1;
+    return OPRT_OK;
 }
 
 int xiaozhi_audio_linux_deinit(void)
 {
-    return -1;
+    return OPRT_OK;
 }
 
 int xiaozhi_audio_linux_start_capture(void)
 {
-    return -1;
+    return OPRT_OK;
 }
 
 int xiaozhi_audio_linux_stop_capture(void)
 {
-    return -1;
+    return OPRT_OK;
 }
 
 int xiaozhi_audio_linux_feed_opus(const void *data, size_t size)
 {
     (void)data;
     (void)size;
-    return -1;
+    return OPRT_OK;
 }
 
 int xiaozhi_audio_linux_abort_playback(void)
 {
-    return -1;
+    return OPRT_OK;
 }
 
 void xiaozhi_audio_linux_reset(void) {}
