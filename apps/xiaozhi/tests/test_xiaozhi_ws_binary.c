@@ -7,6 +7,21 @@
 
 #include "xiaozhi_ws.h"
 
+static uint8_t  g_last_frame[512];
+static size_t   g_last_frame_len;
+static uint32_t g_next_random_value = 0x01020304;
+
+static void reset_last_frame(void)
+{
+    g_last_frame_len = 0;
+    memset(g_last_frame, 0, sizeof(g_last_frame));
+}
+
+static void set_next_random(uint32_t value)
+{
+    g_next_random_value = value;
+}
+
 void *tal_malloc(size_t size)
 {
     if (size == 0) {
@@ -28,7 +43,8 @@ SYS_TIME_T tal_system_get_millisecond(void)
 
 int tal_system_get_random(uint32_t range)
 {
-    return (int)((range > 0) ? 1 : 0);
+    (void)range;
+    return (int)(g_next_random_value & 0x7FFFFFFF);
 }
 
 OPERATE_RET tal_net_fd_zero(TUYA_FD_SET_T *fds)
@@ -89,10 +105,14 @@ OPERATE_RET tuya_transporter_read(tuya_transporter_t transporter, uint8_t *buf, 
 OPERATE_RET tuya_transporter_write(tuya_transporter_t transporter, uint8_t *buf, int len, int timeout_ms)
 {
     (void)transporter;
-    (void)buf;
-    (void)len;
     (void)timeout_ms;
-    return OPRT_OK;
+    size_t copy_len = (size_t)len;
+    if (copy_len > sizeof(g_last_frame)) {
+        copy_len = sizeof(g_last_frame);
+    }
+    memcpy(g_last_frame, buf, copy_len);
+    g_last_frame_len = (size_t)len;
+    return len;
 }
 
 OPERATE_RET tuya_transporter_close(tuya_transporter_t transporter)
@@ -297,11 +317,36 @@ static size_t build_unmasked_binary_frame(uint8_t *out, size_t cap, const uint8_
     return 2 + payload_len;
 }
 
-int main(void)
+static void reset_binary_state(void)
 {
+    g_binary_calls       = 0;
+    g_binary_payload_len = 0;
+    memset(g_binary_payload, 0, sizeof(g_binary_payload));
+}
+
+static void assert_masked_frame(const uint8_t *payload, size_t payload_len)
+{
+    assert(g_last_frame_len == payload_len + 6);
+    uint8_t opcode = g_last_frame[0] & 0x0F;
+    assert(opcode == 0x02);
+    uint8_t len_byte = g_last_frame[1];
+    assert((len_byte & 0x80) == 0x80);
+    assert((len_byte & 0x7F) == payload_len);
+
+    uint8_t mask[4];
+    memcpy(mask, g_last_frame + 2, sizeof(mask));
+    for (size_t i = 0; i < payload_len; ++i) {
+        uint8_t expected = payload[i] ^ mask[i % 4];
+        assert(g_last_frame[6 + i] == expected);
+    }
+}
+
+static void test_binary_callback_flow(void)
+{
+    reset_binary_state();
     xz_ws_client_t ws;
     assert(xz_ws_init(&ws) == OPRT_OK);
-    ws.tcp = (tuya_transporter_t *)0x1; // satisfy null check without real network
+    ws.tcp = (tuya_transporter_t *)0x1;
 
     const uint8_t payload[] = {0x11, 0x22, 0x33, 0x44};
     uint8_t       frame[64] = {0};
@@ -318,8 +363,51 @@ int main(void)
     assert(memcmp(g_binary_payload, payload, sizeof(payload)) == 0);
 
     assert(xz_ws_send_audio(NULL, payload, sizeof(payload)) == OPRT_INVALID_PARM);
+    xz_ws_deinit(&ws);
+}
+
+static void test_xz_ws_send_audio_masks_payload(void)
+{
+    xz_ws_client_t ws;
+    reset_last_frame();
+    set_next_random(0x01020304);
+    assert(xz_ws_init(&ws) == OPRT_OK);
+    ws.tcp = (tuya_transporter_t *)0x1;
+
+    const uint8_t payload[] = {0xAA, 0xBB, 0xCC};
+    assert(xz_ws_send_audio(&ws, payload, sizeof(payload)) == OPRT_OK);
+    assert_masked_frame(payload, sizeof(payload));
 
     xz_ws_deinit(&ws);
+}
+
+static void test_poll_without_binary_callback_consumes_frames(void)
+{
+    reset_binary_state();
+    xz_ws_client_t ws;
+    assert(xz_ws_init(&ws) == OPRT_OK);
+    ws.tcp = (tuya_transporter_t *)0x1;
+
+    const uint8_t payload[] = {0x9A, 0xBC};
+    uint8_t       frame[64] = {0};
+    size_t        f_len     = build_unmasked_binary_frame(frame, sizeof(frame), payload, sizeof(payload));
+    assert(f_len > 0);
+    assert(f_len <= ws.rx_cap);
+    memcpy(ws.rx_buf, frame, f_len);
+    ws.rx_len = f_len;
+
+    assert(xz_ws_poll(&ws, 0) == OPRT_OK);
+    assert(ws.rx_len == 0);
+    assert(g_binary_calls == 0);
+
+    xz_ws_deinit(&ws);
+}
+
+int main(void)
+{
+    test_binary_callback_flow();
+    test_xz_ws_send_audio_masks_payload();
+    test_poll_without_binary_callback_consumes_frames();
     puts("test_xiaozhi_ws_binary: PASS");
     return 0;
 }

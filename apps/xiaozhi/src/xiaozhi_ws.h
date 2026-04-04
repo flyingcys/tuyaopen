@@ -61,6 +61,7 @@ OPERATE_RET xz_ws_send_abort(xz_ws_client_t *ws, const char *reason);
 OPERATE_RET xz_ws_send_mcp(xz_ws_client_t *ws, const char *payload_json);
 OPERATE_RET xz_ws_set_text_message_callback(xz_ws_client_t *ws, xz_text_message_cb_t cb, void *userdata);
 OPERATE_RET xz_ws_send_audio(xz_ws_client_t *ws, const uint8_t *payload, size_t payload_len);
+/* payload pointer is only valid for the scope of the binary callback; copy it if you need it later. */
 OPERATE_RET xz_ws_set_binary_message_callback(xz_ws_client_t *ws, xz_binary_message_cb_t cb, void *userdata);
 
 #ifdef __cplusplus
