@@ -20,8 +20,11 @@ set(APP_SRCS
     ${APP_PATH}/src/xiaozhi_mcp.c
     ${APP_PATH}/src/xiaozhi_ota.c
     ${APP_PATH}/src/xiaozhi_upgrade.c
+    ${APP_PATH}/../../src/peripherals/audio_codecs/tdl_audio/src/tdl_audio_manage.c
     ${APP_PATH}/src/xiaozhi_ws.c
     ${APP_PATH}/src/xiaozhi_ws_handshake.c
+    ${APP_PATH}/src/xiaozhi_audio_linux.c
+    ${APP_PATH}/src/xiaozhi_state.c
     ${APP_PATH}/src/xiaozhi_mqtt_udp.c
     ${APP_PATH}/src/xiaozhi_app.c
 )
@@ -29,6 +32,7 @@ set(APP_SRCS
 # APP_INC
 set(APP_INC
     ${APP_PATH}/src
+    ${APP_PATH}/../../src/peripherals/audio_codecs/tdl_audio/include
 )
 
 ########################################
@@ -45,3 +49,7 @@ target_include_directories(${EXAMPLE_LIB}
     PRIVATE
         ${APP_INC}
     )
+
+if(TOS_PROJECT_PLATFORM STREQUAL "LINUX")
+    set(PLATFORM_NEED_LIBS "${PLATFORM_NEED_LIBS} opus")
+endif()

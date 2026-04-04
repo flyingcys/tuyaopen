@@ -762,7 +762,11 @@ OPERATE_RET xz_ws_poll(xz_ws_client_t *ws, int wait_ms)
     if (opcode == 0x1) {
         (void)xz_ws_handle_text(ws, payload, payload_len);
     } else if (opcode == 0x2) {
-        PR_DEBUG("websocket binary len=%u", (unsigned)payload_len);
+        if (ws->on_binary_message) {
+            ws->on_binary_message(ws->on_binary_userdata, payload, payload_len);
+        } else {
+            PR_DEBUG("websocket binary len=%u", (unsigned)payload_len);
+        }
     } else if (opcode == 0x8) {
         (void)xz_ws_send_frame(ws, 0x8, payload, payload_len);
         if (payload) {
@@ -859,5 +863,25 @@ OPERATE_RET xz_ws_set_text_message_callback(xz_ws_client_t *ws, xz_text_message_
 
     ws->on_text_message  = cb;
     ws->on_text_userdata = userdata;
+    return OPRT_OK;
+}
+
+OPERATE_RET xz_ws_send_audio(xz_ws_client_t *ws, const uint8_t *payload, size_t payload_len)
+{
+    if (!ws || !payload) {
+        return OPRT_INVALID_PARM;
+    }
+
+    return xz_ws_send_frame(ws, 0x2, payload, payload_len);
+}
+
+OPERATE_RET xz_ws_set_binary_message_callback(xz_ws_client_t *ws, xz_binary_message_cb_t cb, void *userdata)
+{
+    if (!ws) {
+        return OPRT_INVALID_PARM;
+    }
+
+    ws->on_binary_message  = cb;
+    ws->on_binary_userdata = userdata;
     return OPRT_OK;
 }

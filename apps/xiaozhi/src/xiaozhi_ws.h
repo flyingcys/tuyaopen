@@ -16,6 +16,8 @@
 extern "C" {
 #endif
 
+typedef void (*xz_binary_message_cb_t)(void *userdata, const uint8_t *payload, size_t payload_len);
+
 typedef struct {
     tuya_transporter_t tcp;
     tuya_tls_hander    tls;
@@ -37,6 +39,9 @@ typedef struct {
     xz_text_message_cb_t on_text_message;
     void                *on_text_userdata;
 
+    xz_binary_message_cb_t on_binary_message;
+    void                  *on_binary_userdata;
+
     xz_channel_t    channel;
     xz_conn_state_t state;
 } xz_ws_client_t;
@@ -55,6 +60,9 @@ OPERATE_RET xz_ws_send_listen(xz_ws_client_t *ws, const char *state, const char 
 OPERATE_RET xz_ws_send_abort(xz_ws_client_t *ws, const char *reason);
 OPERATE_RET xz_ws_send_mcp(xz_ws_client_t *ws, const char *payload_json);
 OPERATE_RET xz_ws_set_text_message_callback(xz_ws_client_t *ws, xz_text_message_cb_t cb, void *userdata);
+OPERATE_RET xz_ws_send_audio(xz_ws_client_t *ws, const uint8_t *payload, size_t payload_len);
+/* payload pointer is only valid for the scope of the binary callback; copy it if you need it later. */
+OPERATE_RET xz_ws_set_binary_message_callback(xz_ws_client_t *ws, xz_binary_message_cb_t cb, void *userdata);
 
 #ifdef __cplusplus
 }

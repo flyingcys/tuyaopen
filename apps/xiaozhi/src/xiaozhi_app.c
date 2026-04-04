@@ -14,9 +14,17 @@
 #include "xiaozhi_mqtt_udp.h"
 #include "xiaozhi_ota.h"
 #include "xiaozhi_settings.h"
+#include "xiaozhi_state.h"
 #include "xiaozhi_system.h"
 #include "xiaozhi_upgrade.h"
 #include "xiaozhi_ws.h"
+
+#if defined(OPERATING_SYSTEM) && defined(SYSTEM_LINUX) && (OPERATING_SYSTEM == SYSTEM_LINUX)
+#define XZ_APP_ENABLE_LINUX_AUDIO 1
+#include "xiaozhi_audio_linux.h"
+#else
+#define XZ_APP_ENABLE_LINUX_AUDIO 0
+#endif
 
 #if defined(ESP_PLATFORM)
 #include "esp_app_desc.h"
@@ -59,17 +67,26 @@ typedef enum {
 } xz_active_proto_t;
 
 typedef enum {
-    XZ_CHAT_IDLE = 0,
-    XZ_CHAT_CONNECTING,
-    XZ_CHAT_LISTENING,
-    XZ_CHAT_SPEAKING,
-} xz_chat_state_t;
-
-typedef enum {
     XZ_LISTEN_MODE_AUTO = 0,
     XZ_LISTEN_MODE_MANUAL,
     XZ_LISTEN_MODE_REALTIME,
 } xz_listen_mode_t;
+
+#define XZ_UPLINK_AUDIO_QUEUE_DEPTH 16U
+#define XZ_UPLINK_AUDIO_FRAME_MAX   1024U
+
+typedef struct {
+    size_t  length;
+    uint8_t data[XZ_UPLINK_AUDIO_FRAME_MAX];
+} xz_uplink_audio_frame_t;
+
+typedef struct {
+    MUTEX_HANDLE            lock;
+    uint32_t                head;
+    uint32_t                tail;
+    uint32_t                count;
+    xz_uplink_audio_frame_t frames[XZ_UPLINK_AUDIO_QUEUE_DEPTH];
+} xz_uplink_audio_queue_t;
 
 typedef struct {
     BOOL_T  inited;
@@ -79,8 +96,9 @@ typedef struct {
     BOOL_T  ota_checked;
     uint8_t ota_retry_count;
 
-    MUTEX_HANDLE  lock;
-    THREAD_HANDLE worker;
+    MUTEX_HANDLE            lock;
+    THREAD_HANDLE           worker;
+    xz_uplink_audio_queue_t uplink_audio_queue;
 
     xz_active_proto_t    active;
     xz_chat_state_t      chat_state;
@@ -99,8 +117,196 @@ typedef struct {
 static xz_app_ctx_t s_app = {0};
 
 static void        xz_on_transport_text_message(void *userdata, const uint8_t *payload, size_t payload_len);
+static void        xz_on_transport_binary_message(void *userdata, const uint8_t *payload, size_t payload_len);
 static void        xz_handle_transport_text_locked(const uint8_t *payload, size_t payload_len);
+extern int         xz_state_accepts_tts_binary(xz_chat_state_t current);
 static OPERATE_RET xz_send_mcp_payload_locked(const char *payload_json);
+static OPERATE_RET xz_audio_start_capture_locked(void);
+static OPERATE_RET xz_audio_stop_capture_locked(void);
+static OPERATE_RET xz_audio_abort_playback_locked(void);
+static OPERATE_RET xz_audio_reset_locked(void);
+static void        xz_set_chat_state_locked(xz_chat_state_t state);
+static OPERATE_RET xz_uplink_audio_queue_init(void);
+static void        xz_uplink_audio_queue_clear(void);
+static BOOL_T      xz_uplink_audio_queue_push(const void *frame, size_t length);
+static BOOL_T      xz_uplink_audio_queue_pop(uint8_t *out, size_t *out_len, size_t out_cap);
+static OPERATE_RET xz_drain_uplink_audio_queue_locked(void);
+static OPERATE_RET xz_on_listen_start_locked(const char *mode);
+static OPERATE_RET xz_on_listen_stop_locked(void);
+static OPERATE_RET xz_on_tts_start_locked(void);
+static OPERATE_RET xz_on_tts_stop_locked(void);
+static OPERATE_RET xz_on_abort_locked(void);
+
+static OPERATE_RET xz_audio_start_capture_locked(void)
+{
+#if XZ_APP_ENABLE_LINUX_AUDIO
+    int rt = xiaozhi_audio_linux_start_capture();
+    if (rt != OPRT_OK) {
+        PR_WARN("audio start capture failed: %d", rt);
+        return rt;
+    }
+#endif
+    return OPRT_OK;
+}
+
+static OPERATE_RET xz_audio_stop_capture_locked(void)
+{
+#if XZ_APP_ENABLE_LINUX_AUDIO
+    int rt = xiaozhi_audio_linux_stop_capture();
+    if (rt != OPRT_OK) {
+        PR_WARN("audio stop capture failed: %d", rt);
+        return rt;
+    }
+#endif
+    return OPRT_OK;
+}
+
+static OPERATE_RET xz_audio_abort_playback_locked(void)
+{
+#if XZ_APP_ENABLE_LINUX_AUDIO
+    int rt = xiaozhi_audio_linux_abort_playback();
+    if (rt != OPRT_OK) {
+        PR_WARN("audio abort playback failed: %d", rt);
+        return rt;
+    }
+#endif
+    return OPRT_OK;
+}
+
+static OPERATE_RET xz_audio_reset_locked(void)
+{
+#if XZ_APP_ENABLE_LINUX_AUDIO
+    xiaozhi_audio_linux_reset();
+#endif
+    return OPRT_OK;
+}
+
+static OPERATE_RET xz_uplink_audio_queue_init(void)
+{
+    if (s_app.uplink_audio_queue.lock) {
+        return OPRT_OK;
+    }
+
+    OPERATE_RET rt = tal_mutex_create_init(&s_app.uplink_audio_queue.lock);
+    if (rt != OPRT_OK) {
+        return rt;
+    }
+
+    s_app.uplink_audio_queue.head  = 0;
+    s_app.uplink_audio_queue.tail  = 0;
+    s_app.uplink_audio_queue.count = 0;
+    return OPRT_OK;
+}
+
+static void xz_uplink_audio_queue_clear(void)
+{
+    if (!s_app.uplink_audio_queue.lock) {
+        return;
+    }
+
+    if (tal_mutex_lock(s_app.uplink_audio_queue.lock) != OPRT_OK) {
+        return;
+    }
+
+    s_app.uplink_audio_queue.head  = 0;
+    s_app.uplink_audio_queue.tail  = 0;
+    s_app.uplink_audio_queue.count = 0;
+
+    (void)tal_mutex_unlock(s_app.uplink_audio_queue.lock);
+}
+
+static BOOL_T xz_uplink_audio_queue_push(const void *frame, size_t length)
+{
+    if (!frame || length == 0 || length > XZ_UPLINK_AUDIO_FRAME_MAX || !s_app.uplink_audio_queue.lock) {
+        return FALSE;
+    }
+
+    if (tal_mutex_lock(s_app.uplink_audio_queue.lock) != OPRT_OK) {
+        return FALSE;
+    }
+
+    if (s_app.uplink_audio_queue.count == XZ_UPLINK_AUDIO_QUEUE_DEPTH) {
+        (void)tal_mutex_unlock(s_app.uplink_audio_queue.lock);
+        return FALSE;
+    }
+
+    xz_uplink_audio_frame_t *slot = &s_app.uplink_audio_queue.frames[s_app.uplink_audio_queue.tail];
+    (void)memcpy(slot->data, frame, length);
+    slot->length = length;
+
+    s_app.uplink_audio_queue.tail = (s_app.uplink_audio_queue.tail + 1U) % XZ_UPLINK_AUDIO_QUEUE_DEPTH;
+    s_app.uplink_audio_queue.count++;
+
+    (void)tal_mutex_unlock(s_app.uplink_audio_queue.lock);
+    return TRUE;
+}
+
+static BOOL_T xz_uplink_audio_queue_pop(uint8_t *out, size_t *out_len, size_t out_cap)
+{
+    if (!out || !out_len || out_cap == 0 || !s_app.uplink_audio_queue.lock) {
+        return FALSE;
+    }
+
+    if (tal_mutex_lock(s_app.uplink_audio_queue.lock) != OPRT_OK) {
+        return FALSE;
+    }
+
+    if (s_app.uplink_audio_queue.count == 0) {
+        (void)tal_mutex_unlock(s_app.uplink_audio_queue.lock);
+        return FALSE;
+    }
+
+    xz_uplink_audio_frame_t *slot = &s_app.uplink_audio_queue.frames[s_app.uplink_audio_queue.head];
+    if (slot->length > out_cap) {
+        s_app.uplink_audio_queue.head = (s_app.uplink_audio_queue.head + 1U) % XZ_UPLINK_AUDIO_QUEUE_DEPTH;
+        s_app.uplink_audio_queue.count--;
+        (void)tal_mutex_unlock(s_app.uplink_audio_queue.lock);
+        return FALSE;
+    }
+
+    (void)memcpy(out, slot->data, slot->length);
+    *out_len = slot->length;
+
+    s_app.uplink_audio_queue.head = (s_app.uplink_audio_queue.head + 1U) % XZ_UPLINK_AUDIO_QUEUE_DEPTH;
+    s_app.uplink_audio_queue.count--;
+
+    (void)tal_mutex_unlock(s_app.uplink_audio_queue.lock);
+    return TRUE;
+}
+
+static OPERATE_RET xz_drain_uplink_audio_queue_locked(void)
+{
+    uint8_t frame[XZ_UPLINK_AUDIO_FRAME_MAX];
+    size_t  frame_len = 0;
+
+    while (xz_uplink_audio_queue_pop(frame, &frame_len, sizeof(frame))) {
+        OPERATE_RET rt = OPRT_INVALID_PARM;
+        if (s_app.active == XZ_ACTIVE_WS) {
+            rt = xz_ws_send_audio(&s_app.ws, frame, frame_len);
+        } else if (s_app.active == XZ_ACTIVE_MQTT_UDP) {
+            rt = xz_mqtt_udp_send_audio(&s_app.mqtt_udp, frame, frame_len, tal_system_get_millisecond());
+        }
+
+        if (rt != OPRT_OK && rt != OPRT_INVALID_PARM) {
+            PR_WARN("audio uplink send failed: %d", rt);
+            return rt;
+        }
+    }
+
+    return OPRT_OK;
+}
+
+#if XZ_APP_ENABLE_LINUX_AUDIO
+void xiaozhi_audio_linux_on_tx_opus_frame(const void *frame, size_t length, void *ctx)
+{
+    (void)ctx;
+    if (!frame || length == 0 || !s_app.inited) {
+        return;
+    }
+
+    (void)xz_uplink_audio_queue_push(frame, length);
+}
+#endif
 
 static void xz_copy_str(char *out, size_t out_size, const char *in)
 {
@@ -147,6 +353,70 @@ static const char *xz_chat_state_to_text(xz_chat_state_t state)
         return "speaking";
     }
     return "idle";
+}
+
+static void xz_set_chat_state_locked(xz_chat_state_t state)
+{
+    s_app.chat_state = state;
+}
+
+static OPERATE_RET xz_on_listen_start_locked(const char *mode)
+{
+    xz_uplink_audio_queue_clear();
+    OPERATE_RET rt = xz_audio_start_capture_locked();
+    if (rt != OPRT_OK) {
+        return rt;
+    }
+    s_app.listen_mode = xz_listen_mode_from_text(mode);
+    xz_set_chat_state_locked(xz_state_after_listen_start(s_app.chat_state));
+    return OPRT_OK;
+}
+
+static OPERATE_RET xz_on_listen_stop_locked(void)
+{
+    OPERATE_RET rt = xz_audio_stop_capture_locked();
+    if (rt != OPRT_OK) {
+        return rt;
+    }
+    xz_uplink_audio_queue_clear();
+    xz_set_chat_state_locked(XZ_CHAT_IDLE);
+    return OPRT_OK;
+}
+
+static OPERATE_RET xz_on_tts_start_locked(void)
+{
+    OPERATE_RET rt = xz_audio_stop_capture_locked();
+    if (rt != OPRT_OK) {
+        return rt;
+    }
+    xz_uplink_audio_queue_clear();
+    xz_set_chat_state_locked(xz_state_after_tts_start(s_app.chat_state));
+    return OPRT_OK;
+}
+
+static OPERATE_RET xz_on_tts_stop_locked(void)
+{
+    OPERATE_RET rt = xz_audio_stop_capture_locked();
+    if (rt != OPRT_OK) {
+        return rt;
+    }
+    xz_set_chat_state_locked(xz_state_after_tts_stop(s_app.chat_state));
+    return OPRT_OK;
+}
+
+static OPERATE_RET xz_on_abort_locked(void)
+{
+    OPERATE_RET rt = xz_audio_stop_capture_locked();
+    if (rt != OPRT_OK) {
+        return rt;
+    }
+    xz_uplink_audio_queue_clear();
+    rt = xz_audio_abort_playback_locked();
+    if (rt != OPRT_OK) {
+        return rt;
+    }
+    xz_set_chat_state_locked(xz_state_after_abort(s_app.chat_state));
+    return OPRT_OK;
 }
 
 static int xz_parse_version_part(const char **pp)
@@ -787,8 +1057,10 @@ static OPERATE_RET xz_disconnect_locked(BOOL_T send_goodbye)
         (void)xz_mqtt_udp_close(&s_app.mqtt_udp, send_goodbye);
     }
 
-    s_app.active     = XZ_ACTIVE_NONE;
-    s_app.chat_state = XZ_CHAT_IDLE;
+    s_app.active = XZ_ACTIVE_NONE;
+    xz_set_chat_state_locked(XZ_CHAT_IDLE);
+    (void)xz_audio_reset_locked();
+    xz_uplink_audio_queue_clear();
     return OPRT_OK;
 }
 
@@ -814,8 +1086,10 @@ static OPERATE_RET xz_connect_websocket_locked(void)
     (void)xiaozhi_system_get_device_id(device_id, sizeof(device_id));
     (void)xiaozhi_system_get_client_id(client_id, sizeof(client_id));
 
-    s_app.chat_state = XZ_CHAT_CONNECTING;
-    OPERATE_RET rt   = xz_ws_connect(&s_app.ws, ws_url, ws_token, ws_version, device_id, client_id);
+    xz_set_chat_state_locked(XZ_CHAT_CONNECTING);
+    (void)xz_audio_stop_capture_locked();
+    (void)xz_audio_abort_playback_locked();
+    OPERATE_RET rt = xz_ws_connect(&s_app.ws, ws_url, ws_token, ws_version, device_id, client_id);
     if (rt != OPRT_OK) {
         return rt;
     }
@@ -826,8 +1100,8 @@ static OPERATE_RET xz_connect_websocket_locked(void)
         return rt;
     }
 
-    s_app.active     = XZ_ACTIVE_WS;
-    s_app.chat_state = XZ_CHAT_IDLE;
+    s_app.active = XZ_ACTIVE_WS;
+    xz_set_chat_state_locked(XZ_CHAT_IDLE);
     return OPRT_OK;
 }
 
@@ -870,9 +1144,11 @@ static OPERATE_RET xz_connect_mqtt_udp_locked(void)
         return OPRT_INVALID_PARM;
     }
 
-    s_app.chat_state = XZ_CHAT_CONNECTING;
-    OPERATE_RET rt   = xz_mqtt_udp_connect(&s_app.mqtt_udp, endpoint, client_id, username, password, publish_topic,
-                                           subscribe_topic, keepalive);
+    xz_set_chat_state_locked(XZ_CHAT_CONNECTING);
+    (void)xz_audio_stop_capture_locked();
+    (void)xz_audio_abort_playback_locked();
+    OPERATE_RET rt = xz_mqtt_udp_connect(&s_app.mqtt_udp, endpoint, client_id, username, password, publish_topic,
+                                         subscribe_topic, keepalive);
     if (rt != OPRT_OK) {
         return rt;
     }
@@ -883,8 +1159,8 @@ static OPERATE_RET xz_connect_mqtt_udp_locked(void)
         return rt;
     }
 
-    s_app.active     = XZ_ACTIVE_MQTT_UDP;
-    s_app.chat_state = XZ_CHAT_IDLE;
+    s_app.active = XZ_ACTIVE_MQTT_UDP;
+    xz_set_chat_state_locked(XZ_CHAT_IDLE);
     return OPRT_OK;
 }
 
@@ -990,6 +1266,11 @@ static OPERATE_RET xz_poll_locked(int wait_ms)
 {
     OPERATE_RET rt = OPRT_OK;
 
+    rt = xz_drain_uplink_audio_queue_locked();
+    if (rt != OPRT_OK) {
+        return rt;
+    }
+
     if (s_app.active == XZ_ACTIVE_WS) {
         rt = xz_ws_poll(&s_app.ws, wait_ms);
         if (rt == OPRT_OK && xz_channel_is_timeout(&s_app.ws.channel, tal_system_get_millisecond())) {
@@ -1048,9 +1329,15 @@ static void xz_handle_transport_text_locked(const uint8_t *payload, size_t paylo
         cJSON *state = cJSON_GetObjectItem(root, "state");
         if (cJSON_IsString(state) && state->valuestring) {
             if (strcmp(state->valuestring, "start") == 0) {
-                s_app.chat_state = XZ_CHAT_SPEAKING;
+                OPERATE_RET rt = xz_on_tts_start_locked();
+                if (rt != OPRT_OK) {
+                    PR_WARN("tts start audio sync failed: %d", rt);
+                }
             } else if (strcmp(state->valuestring, "stop") == 0) {
-                s_app.chat_state = (s_app.listen_mode == XZ_LISTEN_MODE_MANUAL) ? XZ_CHAT_IDLE : XZ_CHAT_LISTENING;
+                OPERATE_RET rt = xz_on_tts_stop_locked();
+                if (rt != OPRT_OK) {
+                    PR_WARN("tts stop audio sync failed: %d", rt);
+                }
             } else if (strcmp(state->valuestring, "sentence_start") == 0) {
                 cJSON *text = cJSON_GetObjectItem(root, "text");
                 if (cJSON_IsString(text) && text->valuestring) {
@@ -1110,6 +1397,27 @@ static void xz_on_transport_text_message(void *userdata, const uint8_t *payload,
 {
     (void)userdata;
     xz_handle_transport_text_locked(payload, payload_len);
+}
+
+static void xz_on_transport_binary_message(void *userdata, const uint8_t *payload, size_t payload_len)
+{
+    (void)userdata;
+#if XZ_APP_ENABLE_LINUX_AUDIO
+    if (!payload || payload_len == 0) {
+        return;
+    }
+    if (!xz_state_accepts_tts_binary(s_app.chat_state)) {
+        return;
+    }
+
+    int rt = xiaozhi_audio_linux_feed_opus(payload, payload_len);
+    if (rt != OPRT_OK) {
+        PR_WARN("audio feed downlink opus failed: %d len=%u", rt, (unsigned)payload_len);
+    }
+#else
+    (void)payload;
+    (void)payload_len;
+#endif
 }
 
 static void xz_worker_thread(void *arg)
@@ -1256,6 +1564,19 @@ OPERATE_RET xiaozhi_app_init(void)
     if (rt != OPRT_OK) {
         return rt;
     }
+    rt = xz_uplink_audio_queue_init();
+    if (rt != OPRT_OK) {
+        return rt;
+    }
+
+#if XZ_APP_ENABLE_LINUX_AUDIO
+    rt = xiaozhi_audio_linux_init();
+    if (rt != OPRT_OK) {
+        PR_ERR("audio runtime init failed: %d", rt);
+        return rt;
+    }
+    (void)xz_audio_reset_locked();
+#endif
 
     (void)xiaozhi_settings_init_defaults();
 
@@ -1267,6 +1588,7 @@ OPERATE_RET xiaozhi_app_init(void)
         return rt;
     }
     (void)xz_ws_set_text_message_callback(&s_app.ws, xz_on_transport_text_message, &s_app);
+    (void)xz_ws_set_binary_message_callback(&s_app.ws, xz_on_transport_binary_message, &s_app);
 
     rt = xz_mqtt_udp_init(&s_app.mqtt_udp);
     if (rt != OPRT_OK) {
@@ -1285,7 +1607,7 @@ OPERATE_RET xiaozhi_app_init(void)
 
     (void)xiaozhi_app_apply_wifi_settings();
 
-    s_app.chat_state             = XZ_CHAT_IDLE;
+    xz_set_chat_state_locked(XZ_CHAT_IDLE);
     s_app.listen_mode            = XZ_LISTEN_MODE_MANUAL;
     s_app.pending_reboot         = FALSE;
     s_app.pending_upgrade_url[0] = '\0';
@@ -1307,14 +1629,16 @@ OPERATE_RET xiaozhi_app_start(void)
         return OPRT_OK;
     }
 
-    s_app.stop_flag              = FALSE;
-    s_app.reconnect_flag         = FALSE;
-    s_app.ota_checked            = FALSE;
-    s_app.ota_retry_count        = 0;
-    s_app.chat_state             = XZ_CHAT_IDLE;
+    s_app.stop_flag       = FALSE;
+    s_app.reconnect_flag  = FALSE;
+    s_app.ota_checked     = FALSE;
+    s_app.ota_retry_count = 0;
+    xz_set_chat_state_locked(XZ_CHAT_IDLE);
     s_app.listen_mode            = XZ_LISTEN_MODE_MANUAL;
     s_app.pending_reboot         = FALSE;
     s_app.pending_upgrade_url[0] = '\0';
+    (void)xz_audio_reset_locked();
+    xz_uplink_audio_queue_clear();
 
     THREAD_CFG_T cfg = {0};
     cfg.stackDepth   = 1024 * 8;
@@ -1430,10 +1754,9 @@ OPERATE_RET xiaozhi_app_send_listen(const char *state, const char *mode, const c
     }
     if (rt == OPRT_OK) {
         if (strcmp(state, "start") == 0) {
-            s_app.listen_mode = xz_listen_mode_from_text(mode);
-            s_app.chat_state  = XZ_CHAT_LISTENING;
+            rt = xz_on_listen_start_locked(mode);
         } else if (strcmp(state, "stop") == 0) {
-            s_app.chat_state = XZ_CHAT_IDLE;
+            rt = xz_on_listen_stop_locked();
         }
     }
     (void)tal_mutex_unlock(s_app.lock);
@@ -1450,8 +1773,8 @@ OPERATE_RET xiaozhi_app_send_abort(const char *reason)
     } else if (s_app.active == XZ_ACTIVE_MQTT_UDP) {
         rt = xz_mqtt_udp_send_abort(&s_app.mqtt_udp, reason);
     }
-    if (rt == OPRT_OK && s_app.chat_state == XZ_CHAT_SPEAKING) {
-        s_app.chat_state = (s_app.listen_mode == XZ_LISTEN_MODE_MANUAL) ? XZ_CHAT_IDLE : XZ_CHAT_LISTENING;
+    if (rt == OPRT_OK) {
+        rt = xz_on_abort_locked();
     }
     (void)tal_mutex_unlock(s_app.lock);
 
