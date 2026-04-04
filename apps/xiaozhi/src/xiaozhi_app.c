@@ -22,17 +22,6 @@
 #if defined(OPERATING_SYSTEM) && defined(SYSTEM_LINUX) && (OPERATING_SYSTEM == SYSTEM_LINUX)
 #define XZ_APP_ENABLE_LINUX_AUDIO 1
 #include "xiaozhi_audio_linux.h"
-#if defined(__GNUC__) || defined(__clang__)
-#define XZ_AUDIO_WEAK_REF __attribute__((weak))
-#else
-#define XZ_AUDIO_WEAK_REF
-#endif
-extern int  xiaozhi_audio_linux_init(void) XZ_AUDIO_WEAK_REF;
-extern int  xiaozhi_audio_linux_start_capture(void) XZ_AUDIO_WEAK_REF;
-extern int  xiaozhi_audio_linux_stop_capture(void) XZ_AUDIO_WEAK_REF;
-extern int  xiaozhi_audio_linux_feed_opus(const void *data, size_t size) XZ_AUDIO_WEAK_REF;
-extern int  xiaozhi_audio_linux_abort_playback(void) XZ_AUDIO_WEAK_REF;
-extern void xiaozhi_audio_linux_reset(void) XZ_AUDIO_WEAK_REF;
 #else
 #define XZ_APP_ENABLE_LINUX_AUDIO 0
 #endif
@@ -128,9 +117,6 @@ static void        xz_on_abort_locked(void);
 static void xz_audio_start_capture_locked(void)
 {
 #if XZ_APP_ENABLE_LINUX_AUDIO
-    if (!xiaozhi_audio_linux_start_capture) {
-        return;
-    }
     int rt = xiaozhi_audio_linux_start_capture();
     if (rt != OPRT_OK) {
         PR_WARN("audio start capture failed: %d", rt);
@@ -141,9 +127,6 @@ static void xz_audio_start_capture_locked(void)
 static void xz_audio_stop_capture_locked(void)
 {
 #if XZ_APP_ENABLE_LINUX_AUDIO
-    if (!xiaozhi_audio_linux_stop_capture) {
-        return;
-    }
     int rt = xiaozhi_audio_linux_stop_capture();
     if (rt != OPRT_OK) {
         PR_WARN("audio stop capture failed: %d", rt);
@@ -154,9 +137,6 @@ static void xz_audio_stop_capture_locked(void)
 static void xz_audio_abort_playback_locked(void)
 {
 #if XZ_APP_ENABLE_LINUX_AUDIO
-    if (!xiaozhi_audio_linux_abort_playback) {
-        return;
-    }
     int rt = xiaozhi_audio_linux_abort_playback();
     if (rt != OPRT_OK) {
         PR_WARN("audio abort playback failed: %d", rt);
@@ -167,9 +147,6 @@ static void xz_audio_abort_playback_locked(void)
 static void xz_audio_reset_locked(void)
 {
 #if XZ_APP_ENABLE_LINUX_AUDIO
-    if (!xiaozhi_audio_linux_reset) {
-        return;
-    }
     xiaozhi_audio_linux_reset();
 #endif
 }
@@ -1261,9 +1238,6 @@ static void xz_on_transport_binary_message(void *userdata, const uint8_t *payloa
     if (!payload || payload_len == 0) {
         return;
     }
-    if (!xiaozhi_audio_linux_feed_opus) {
-        return;
-    }
 
     int rt = xiaozhi_audio_linux_feed_opus(payload, payload_len);
     if (rt != OPRT_OK) {
@@ -1421,16 +1395,12 @@ OPERATE_RET xiaozhi_app_init(void)
     }
 
 #if XZ_APP_ENABLE_LINUX_AUDIO
-    if (xiaozhi_audio_linux_init) {
-        rt = xiaozhi_audio_linux_init();
-        if (rt != OPRT_OK) {
-            PR_ERR("audio runtime init failed: %d", rt);
-            return rt;
-        }
-        xz_audio_reset_locked();
-    } else {
-        PR_WARN("audio runtime symbol not linked, run without linux audio backend");
+    rt = xiaozhi_audio_linux_init();
+    if (rt != OPRT_OK) {
+        PR_ERR("audio runtime init failed: %d", rt);
+        return rt;
     }
+    xz_audio_reset_locked();
 #endif
 
     (void)xiaozhi_settings_init_defaults();
