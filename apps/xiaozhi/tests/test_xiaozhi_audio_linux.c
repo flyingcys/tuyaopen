@@ -28,9 +28,37 @@ static void test_pcm_accum(void)
     assert(accum.tail == 0);
 }
 
+static void test_pcm_accum_overflow(void)
+{
+    xz_audio_pcm_accum_t accum;
+    enum { kExtraBytes = 128 };
+    const size_t total = XZ_AUDIO_PCM_FRAME_BYTES + kExtraBytes;
+    uint8_t      payload[total];
+
+    xz_audio_pcm_accum_reset(&accum);
+
+    for (size_t i = 0; i < total; ++i) {
+        payload[i] = (uint8_t)(i & 0xFF);
+    }
+
+    size_t first_consumed = xz_audio_pcm_accum_push(&accum, payload, total);
+    assert(first_consumed == XZ_AUDIO_PCM_FRAME_BYTES);
+    assert(accum.tail == 0);
+
+    size_t remainder       = total - first_consumed;
+    size_t second_consumed = xz_audio_pcm_accum_push(&accum, payload + first_consumed, remainder);
+    assert(second_consumed == remainder);
+    assert(accum.tail == remainder);
+
+    for (size_t i = 0; i < remainder; ++i) {
+        assert(accum.buffer[i] == payload[first_consumed + i]);
+    }
+}
+
 int main(void)
 {
     test_pcm_accum();
+    test_pcm_accum_overflow();
 
     assert(xiaozhi_audio_linux_init() == 0);
     assert(xiaozhi_audio_linux_start_capture() == 0);

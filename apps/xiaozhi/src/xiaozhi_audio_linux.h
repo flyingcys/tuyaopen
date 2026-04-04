@@ -17,7 +17,16 @@ typedef struct {
     size_t  tail;
 } xz_audio_pcm_accum_t;
 
-void   xz_audio_pcm_accum_reset(xz_audio_pcm_accum_t *accum);
+void xz_audio_pcm_accum_reset(xz_audio_pcm_accum_t *accum);
+/**
+ * Push PCM bytes into the accumulator.
+ *
+ * @param accum accumulator state.
+ * @param pcm pointer to PCM data.
+ * @param bytes number of bytes available for push.
+ * @return number of bytes consumed. Callers must invoke the function again
+ *         with any leftover data when not all bytes could be packed.
+ */
 size_t xz_audio_pcm_accum_push(xz_audio_pcm_accum_t *accum, const void *pcm, size_t bytes);
 
 int  xiaozhi_audio_linux_init(void);
