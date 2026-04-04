@@ -11,15 +11,28 @@
 #include "tuya_tls.h"
 #include "tuya_register_center.h"
 
+#include <string.h>
+
 #if defined(ENABLE_LIBLWIP) && (ENABLE_LIBLWIP == 1)
 #include "lwip_init.h"
 #endif
 
 #if OPERATING_SYSTEM == SYSTEM_LINUX
+#include "../../../src/peripherals/audio_codecs/tdd_audio/include/tdd_audio_alsa.h"
 #if defined(__GNUC__) || defined(__clang__)
 extern OPERATE_RET board_register_hardware(void) __attribute__((weak));
 #else
 extern OPERATE_RET board_register_hardware(void);
+#endif
+
+#ifndef AUDIO_CODEC_NAME
+#define AUDIO_CODEC_NAME "alsa_audio"
+#endif
+#ifndef ALSA_DEVICE_CAPTURE
+#define ALSA_DEVICE_CAPTURE "default"
+#endif
+#ifndef ALSA_DEVICE_PLAYBACK
+#define ALSA_DEVICE_PLAYBACK "default"
 #endif
 #endif
 
@@ -55,10 +68,8 @@ static void xiaozhi_runtime_init(void)
     s_inited = TRUE;
 }
 
-void user_main(void)
+static OPERATE_RET xiaozhi_run_app_lifecycle(void)
 {
-    xiaozhi_runtime_init();
-
     PR_NOTICE("Application information:");
     PR_NOTICE("Project name:        %s", PROJECT_NAME);
     PR_NOTICE("App version:         %s", PROJECT_VERSION);
@@ -72,7 +83,7 @@ void user_main(void)
     OPERATE_RET rt = xiaozhi_app_init();
     if (rt != OPRT_OK) {
         PR_ERR("xiaozhi_app_init failed: %d", rt);
-        return;
+        return rt;
     }
 
     tuya_app_cli_init();
@@ -80,28 +91,88 @@ void user_main(void)
     rt = xiaozhi_app_start();
     if (rt != OPRT_OK) {
         PR_ERR("xiaozhi_app_start failed: %d", rt);
+        return rt;
     }
+
+    return OPRT_OK;
+}
+
+void user_main(void)
+{
+    xiaozhi_runtime_init();
+    (void)xiaozhi_run_app_lifecycle();
 }
 
 #if OPERATING_SYSTEM == SYSTEM_LINUX
-void main(int argc, char *argv[])
+static OPERATE_RET xiaozhi_linux_register_audio_fallback(void)
+{
+#if defined(ENABLE_AUDIO_ALSA) && (ENABLE_AUDIO_ALSA == 1)
+    TDD_AUDIO_ALSA_CFG_T alsa_cfg = {0};
+
+    (void)strncpy(alsa_cfg.capture_device, ALSA_DEVICE_CAPTURE, sizeof(alsa_cfg.capture_device) - 1);
+    (void)strncpy(alsa_cfg.playback_device, ALSA_DEVICE_PLAYBACK, sizeof(alsa_cfg.playback_device) - 1);
+
+    alsa_cfg.sample_rate     = TDD_ALSA_SAMPLE_16000;
+    alsa_cfg.data_bits       = TDD_ALSA_DATABITS_16;
+    alsa_cfg.channels        = TDD_ALSA_CHANNEL_MONO;
+    alsa_cfg.spk_sample_rate = TDD_ALSA_SAMPLE_16000;
+    alsa_cfg.buffer_frames   = 1024;
+    alsa_cfg.period_frames   = 256;
+    alsa_cfg.aec_enable      = 0;
+
+    OPERATE_RET rt = tdd_audio_alsa_register((char *)AUDIO_CODEC_NAME, alsa_cfg);
+    if (rt != OPRT_OK) {
+        PR_ERR("fallback tdd_audio_alsa_register failed: %d", rt);
+        return rt;
+    }
+    PR_NOTICE("fallback ALSA registered: codec=%s cap=%s pb=%s", AUDIO_CODEC_NAME, ALSA_DEVICE_CAPTURE,
+              ALSA_DEVICE_PLAYBACK);
+    return OPRT_OK;
+#else
+    PR_ERR("ENABLE_AUDIO_ALSA is disabled, cannot fallback register ALSA");
+    return OPRT_NOT_SUPPORTED;
+#endif
+}
+
+static OPERATE_RET xiaozhi_linux_register_hardware(void)
+{
+    if (board_register_hardware) {
+        OPERATE_RET rt = board_register_hardware();
+        if (rt == OPRT_OK) {
+            return OPRT_OK;
+        }
+        PR_WARN("board_register_hardware failed: %d, try ALSA fallback", rt);
+    } else {
+        PR_WARN("board_register_hardware not found, use ALSA fallback");
+    }
+
+    return xiaozhi_linux_register_audio_fallback();
+}
+
+int main(int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
 
-    if (board_register_hardware) {
-        OPERATE_RET rt = board_register_hardware();
-        if (rt != OPRT_OK) {
-            PR_WARN("board_register_hardware failed: %d", rt);
-        }
-    } else {
-        PR_WARN("board_register_hardware not found, skip board setup");
+    xiaozhi_runtime_init();
+
+    OPERATE_RET rt = xiaozhi_linux_register_hardware();
+    if (rt != OPRT_OK) {
+        PR_ERR("linux hardware register failed: %d", rt);
+        return 2;
     }
 
-    user_main();
+    rt = xiaozhi_run_app_lifecycle();
+    if (rt != OPRT_OK) {
+        PR_ERR("xiaozhi app lifecycle failed: %d", rt);
+        return 3;
+    }
+
     while (1) {
         tal_system_sleep(1000);
     }
+
+    return 0;
 }
 #else
 static THREAD_HANDLE ty_app_thread = NULL;
