@@ -123,14 +123,23 @@ extern int         xz_state_accepts_tts_binary(xz_chat_state_t current);
 static OPERATE_RET xz_send_mcp_payload_locked(const char *payload_json);
 static OPERATE_RET xz_audio_start_capture_locked(void);
 static OPERATE_RET xz_audio_stop_capture_locked(void);
+static OPERATE_RET xz_audio_start_detect_locked(void);
+static OPERATE_RET xz_audio_stop_detect_locked(void);
+static OPERATE_RET xz_audio_resume_detect_locked(void);
 static OPERATE_RET xz_audio_abort_playback_locked(void);
 static OPERATE_RET xz_audio_reset_locked(void);
+static BOOL_T      xz_is_connected_locked(void);
 static void        xz_set_chat_state_locked(xz_chat_state_t state);
 static OPERATE_RET xz_uplink_audio_queue_init(void);
 static void        xz_uplink_audio_queue_clear(void);
 static BOOL_T      xz_uplink_audio_queue_push(const void *frame, size_t length);
 static BOOL_T      xz_uplink_audio_queue_pop(uint8_t *out, size_t *out_len, size_t out_cap);
 static OPERATE_RET xz_drain_uplink_audio_queue_locked(void);
+static OPERATE_RET xz_send_listen_transport_locked(const char *state, const char *mode, const char *text);
+static OPERATE_RET xz_send_abort_transport_locked(const char *reason);
+static OPERATE_RET xz_transition_to_idle_locked(BOOL_T abort_playback, BOOL_T resume_detect);
+static OPERATE_RET xz_restart_listening_locked(xz_listen_mode_t mode);
+static OPERATE_RET xz_handle_hotword_detected_locked(const char *wake_word);
 static OPERATE_RET xz_on_listen_start_locked(const char *mode);
 static OPERATE_RET xz_on_listen_stop_locked(void);
 static OPERATE_RET xz_on_tts_start_locked(void);
@@ -155,6 +164,42 @@ static OPERATE_RET xz_audio_stop_capture_locked(void)
     int rt = xiaozhi_audio_linux_stop_capture();
     if (rt != OPRT_OK) {
         PR_WARN("audio stop capture failed: %d", rt);
+        return rt;
+    }
+#endif
+    return OPRT_OK;
+}
+
+static OPERATE_RET xz_audio_start_detect_locked(void)
+{
+#if XZ_APP_ENABLE_LINUX_AUDIO
+    int rt = xiaozhi_audio_linux_start_detect();
+    if (rt != OPRT_OK) {
+        PR_WARN("audio start detect failed: %d", rt);
+        return rt;
+    }
+#endif
+    return OPRT_OK;
+}
+
+static OPERATE_RET xz_audio_stop_detect_locked(void)
+{
+#if XZ_APP_ENABLE_LINUX_AUDIO
+    int rt = xiaozhi_audio_linux_stop_detect();
+    if (rt != OPRT_OK) {
+        PR_WARN("audio stop detect failed: %d", rt);
+        return rt;
+    }
+#endif
+    return OPRT_OK;
+}
+
+static OPERATE_RET xz_audio_resume_detect_locked(void)
+{
+#if XZ_APP_ENABLE_LINUX_AUDIO
+    int rt = xiaozhi_audio_linux_resume_detect();
+    if (rt != OPRT_OK) {
+        PR_WARN("audio resume detect failed: %d", rt);
         return rt;
     }
 #endif
@@ -306,6 +351,25 @@ void xiaozhi_audio_linux_on_tx_opus_frame(const void *frame, size_t length, void
 
     (void)xz_uplink_audio_queue_push(frame, length);
 }
+
+static void xz_on_linux_hotword_detected(const char *wake_word, void *ctx)
+{
+    (void)ctx;
+    if (!s_app.inited) {
+        return;
+    }
+
+    if (tal_mutex_lock(s_app.lock) != OPRT_OK) {
+        return;
+    }
+
+    OPERATE_RET rt = xz_handle_hotword_detected_locked(wake_word);
+    (void)tal_mutex_unlock(s_app.lock);
+
+    if (rt != OPRT_OK && rt != OPRT_RESOURCE_NOT_READY && rt != OPRT_NOT_FOUND) {
+        PR_WARN("hotword flow failed: %d", rt);
+    }
+}
 #endif
 
 static void xz_copy_str(char *out, size_t out_size, const char *in)
@@ -357,12 +421,87 @@ static const char *xz_chat_state_to_text(xz_chat_state_t state)
 
 static void xz_set_chat_state_locked(xz_chat_state_t state)
 {
+    if (s_app.chat_state != state) {
+        PR_NOTICE("chat state: %s -> %s", xz_chat_state_to_text(s_app.chat_state), xz_chat_state_to_text(state));
+    }
     s_app.chat_state = state;
+}
+
+static OPERATE_RET xz_send_listen_transport_locked(const char *state, const char *mode, const char *text)
+{
+    if (!state || state[0] == '\0') {
+        return OPRT_INVALID_PARM;
+    }
+
+    PR_NOTICE("send listen: state=%s mode=%s text=%s active=%d", state, (mode && mode[0] != '\0') ? mode : "(none)",
+              (text && text[0] != '\0') ? text : "(none)", (int)s_app.active);
+
+    if (s_app.active == XZ_ACTIVE_WS) {
+        return xz_ws_send_listen(&s_app.ws, state, mode, text);
+    }
+    if (s_app.active == XZ_ACTIVE_MQTT_UDP) {
+        return xz_mqtt_udp_send_listen(&s_app.mqtt_udp, state, mode, text);
+    }
+
+    return OPRT_COM_ERROR;
+}
+
+static OPERATE_RET xz_send_abort_transport_locked(const char *reason)
+{
+    PR_NOTICE("send abort: reason=%s active=%d", (reason && reason[0] != '\0') ? reason : "(none)", (int)s_app.active);
+
+    if (s_app.active == XZ_ACTIVE_WS) {
+        return xz_ws_send_abort(&s_app.ws, reason);
+    }
+    if (s_app.active == XZ_ACTIVE_MQTT_UDP) {
+        return xz_mqtt_udp_send_abort(&s_app.mqtt_udp, reason);
+    }
+
+    return OPRT_COM_ERROR;
+}
+
+static OPERATE_RET xz_transition_to_idle_locked(BOOL_T abort_playback, BOOL_T resume_detect)
+{
+    PR_NOTICE("transition to idle: abort_playback=%d resume_detect=%d", abort_playback, resume_detect);
+    OPERATE_RET rt = xz_audio_stop_capture_locked();
+    if (rt != OPRT_OK) {
+        return rt;
+    }
+
+    xz_uplink_audio_queue_clear();
+
+    if (abort_playback) {
+        rt = xz_audio_abort_playback_locked();
+        if (rt != OPRT_OK) {
+            return rt;
+        }
+        (void)xz_audio_reset_locked();
+    }
+
+    xz_set_chat_state_locked(XZ_CHAT_IDLE);
+    if (resume_detect) {
+        (void)xz_audio_resume_detect_locked();
+    }
+    return OPRT_OK;
+}
+
+static OPERATE_RET xz_restart_listening_locked(xz_listen_mode_t mode)
+{
+    const char *mode_text = xz_listen_mode_to_text(mode);
+    PR_NOTICE("restart listening: mode=%s", mode_text);
+    OPERATE_RET rt        = xz_send_listen_transport_locked("start", mode_text, NULL);
+    if (rt != OPRT_OK) {
+        return rt;
+    }
+
+    return xz_on_listen_start_locked(mode_text);
 }
 
 static OPERATE_RET xz_on_listen_start_locked(const char *mode)
 {
+    PR_NOTICE("enter listening: mode=%s", (mode && mode[0] != '\0') ? mode : "manual");
     xz_uplink_audio_queue_clear();
+    (void)xz_audio_abort_playback_locked();
     OPERATE_RET rt = xz_audio_start_capture_locked();
     if (rt != OPRT_OK) {
         return rt;
@@ -374,49 +513,89 @@ static OPERATE_RET xz_on_listen_start_locked(const char *mode)
 
 static OPERATE_RET xz_on_listen_stop_locked(void)
 {
-    OPERATE_RET rt = xz_audio_stop_capture_locked();
-    if (rt != OPRT_OK) {
-        return rt;
-    }
-    xz_uplink_audio_queue_clear();
-    xz_set_chat_state_locked(XZ_CHAT_IDLE);
-    return OPRT_OK;
+    PR_NOTICE("leave listening");
+    return xz_transition_to_idle_locked(FALSE, TRUE);
 }
 
 static OPERATE_RET xz_on_tts_start_locked(void)
 {
+    PR_NOTICE("enter speaking");
     OPERATE_RET rt = xz_audio_stop_capture_locked();
     if (rt != OPRT_OK) {
         return rt;
     }
     xz_uplink_audio_queue_clear();
+    (void)xz_audio_reset_locked();
     xz_set_chat_state_locked(xz_state_after_tts_start(s_app.chat_state));
     return OPRT_OK;
 }
 
 static OPERATE_RET xz_on_tts_stop_locked(void)
 {
-    OPERATE_RET rt = xz_audio_stop_capture_locked();
+    BOOL_T continue_listening = (s_app.listen_mode != XZ_LISTEN_MODE_MANUAL) ? TRUE : FALSE;
+    PR_NOTICE("leave speaking: continue_listening=%d mode=%s", continue_listening, xz_listen_mode_to_text(s_app.listen_mode));
+    OPERATE_RET rt           = xz_audio_stop_capture_locked();
     if (rt != OPRT_OK) {
         return rt;
     }
-    xz_set_chat_state_locked(xz_state_after_tts_stop(s_app.chat_state));
-    return OPRT_OK;
+
+    xz_set_chat_state_locked(xz_state_after_tts_stop_mode(s_app.chat_state, continue_listening));
+    if (!continue_listening) {
+        (void)xz_audio_resume_detect_locked();
+        return OPRT_OK;
+    }
+
+    return xz_restart_listening_locked(s_app.listen_mode);
 }
 
 static OPERATE_RET xz_on_abort_locked(void)
 {
-    OPERATE_RET rt = xz_audio_stop_capture_locked();
+    PR_NOTICE("handle abort");
+    OPERATE_RET rt = xz_transition_to_idle_locked(TRUE, TRUE);
     if (rt != OPRT_OK) {
         return rt;
     }
-    xz_uplink_audio_queue_clear();
-    rt = xz_audio_abort_playback_locked();
-    if (rt != OPRT_OK) {
-        return rt;
-    }
+
     xz_set_chat_state_locked(xz_state_after_abort(s_app.chat_state));
     return OPRT_OK;
+}
+
+static OPERATE_RET xz_handle_hotword_detected_locked(const char *wake_word)
+{
+    const char *hotword = (wake_word && wake_word[0] != '\0') ? wake_word : "wake";
+    OPERATE_RET rt;
+
+    PR_NOTICE("hotword detected: word=%s chat=%s connected=%d", hotword, xz_chat_state_to_text(s_app.chat_state),
+              xz_is_connected_locked());
+
+    if (!xz_is_connected_locked()) {
+        return OPRT_RESOURCE_NOT_READY;
+    }
+
+    if (s_app.chat_state == XZ_CHAT_SPEAKING || s_app.chat_state == XZ_CHAT_LISTENING) {
+        (void)xz_send_abort_transport_locked("wake_word_detected");
+        rt = xz_transition_to_idle_locked(TRUE, FALSE);
+        if (rt != OPRT_OK) {
+            return rt;
+        }
+    } else if (s_app.chat_state == XZ_CHAT_CONNECTING) {
+        return OPRT_RESOURCE_NOT_READY;
+    }
+
+    rt = xz_send_listen_transport_locked("detect", NULL, hotword);
+    if (rt != OPRT_OK) {
+        return rt;
+    }
+
+#if XZ_APP_ENABLE_LINUX_AUDIO
+    rt = xiaozhi_audio_linux_play_wakeup_prompt();
+    if (rt != OPRT_OK && rt != OPRT_NOT_FOUND) {
+        return rt;
+    }
+#endif
+
+    s_app.listen_mode = XZ_LISTEN_MODE_AUTO;
+    return xz_restart_listening_locked(s_app.listen_mode);
 }
 
 static int xz_parse_version_part(const char **pp)
@@ -1058,6 +1237,7 @@ static OPERATE_RET xz_disconnect_locked(BOOL_T send_goodbye)
     }
 
     s_app.active = XZ_ACTIVE_NONE;
+    (void)xz_audio_stop_detect_locked();
     xz_set_chat_state_locked(XZ_CHAT_IDLE);
     (void)xz_audio_reset_locked();
     xz_uplink_audio_queue_clear();
@@ -1087,6 +1267,7 @@ static OPERATE_RET xz_connect_websocket_locked(void)
     (void)xiaozhi_system_get_client_id(client_id, sizeof(client_id));
 
     xz_set_chat_state_locked(XZ_CHAT_CONNECTING);
+    (void)xz_audio_stop_detect_locked();
     (void)xz_audio_stop_capture_locked();
     (void)xz_audio_abort_playback_locked();
     OPERATE_RET rt = xz_ws_connect(&s_app.ws, ws_url, ws_token, ws_version, device_id, client_id);
@@ -1102,6 +1283,7 @@ static OPERATE_RET xz_connect_websocket_locked(void)
 
     s_app.active = XZ_ACTIVE_WS;
     xz_set_chat_state_locked(XZ_CHAT_IDLE);
+    (void)xz_audio_start_detect_locked();
     return OPRT_OK;
 }
 
@@ -1145,6 +1327,7 @@ static OPERATE_RET xz_connect_mqtt_udp_locked(void)
     }
 
     xz_set_chat_state_locked(XZ_CHAT_CONNECTING);
+    (void)xz_audio_stop_detect_locked();
     (void)xz_audio_stop_capture_locked();
     (void)xz_audio_abort_playback_locked();
     OPERATE_RET rt = xz_mqtt_udp_connect(&s_app.mqtt_udp, endpoint, client_id, username, password, publish_topic,
@@ -1161,6 +1344,7 @@ static OPERATE_RET xz_connect_mqtt_udp_locked(void)
 
     s_app.active = XZ_ACTIVE_MQTT_UDP;
     xz_set_chat_state_locked(XZ_CHAT_IDLE);
+    (void)xz_audio_start_detect_locked();
     return OPRT_OK;
 }
 
@@ -1325,9 +1509,13 @@ static void xz_handle_transport_text_locked(const uint8_t *payload, size_t paylo
         return;
     }
 
+    PR_NOTICE("recv text: type=%s chat=%s bytes=%u", type->valuestring, xz_chat_state_to_text(s_app.chat_state),
+              (unsigned)payload_len);
+
     if (strcmp(type->valuestring, "tts") == 0) {
         cJSON *state = cJSON_GetObjectItem(root, "state");
         if (cJSON_IsString(state) && state->valuestring) {
+            PR_NOTICE("recv tts: state=%s", state->valuestring);
             if (strcmp(state->valuestring, "start") == 0) {
                 OPERATE_RET rt = xz_on_tts_start_locked();
                 if (rt != OPRT_OK) {
@@ -1342,6 +1530,7 @@ static void xz_handle_transport_text_locked(const uint8_t *payload, size_t paylo
                 cJSON *text = cJSON_GetObjectItem(root, "text");
                 if (cJSON_IsString(text) && text->valuestring) {
                     xz_copy_str(s_app.last_tts_sentence, sizeof(s_app.last_tts_sentence), text->valuestring);
+                    PR_NOTICE("recv tts sentence: %s", s_app.last_tts_sentence);
                 }
             }
         }
@@ -1349,11 +1538,13 @@ static void xz_handle_transport_text_locked(const uint8_t *payload, size_t paylo
         cJSON *text = cJSON_GetObjectItem(root, "text");
         if (cJSON_IsString(text) && text->valuestring) {
             xz_copy_str(s_app.last_stt, sizeof(s_app.last_stt), text->valuestring);
+            PR_NOTICE("recv stt: %s", s_app.last_stt);
         }
     } else if (strcmp(type->valuestring, "llm") == 0) {
         cJSON *emotion = cJSON_GetObjectItem(root, "emotion");
         if (cJSON_IsString(emotion) && emotion->valuestring) {
             xz_copy_str(s_app.last_emotion, sizeof(s_app.last_emotion), emotion->valuestring);
+            PR_NOTICE("recv llm emotion: %s", s_app.last_emotion);
         }
     } else if (strcmp(type->valuestring, "alert") == 0) {
         cJSON *status  = cJSON_GetObjectItem(root, "status");
@@ -1364,6 +1555,7 @@ static void xz_handle_transport_text_locked(const uint8_t *payload, size_t paylo
             (void)snprintf(alert, sizeof(alert), "%s:%s:%s", status->valuestring, message->valuestring,
                            emotion->valuestring);
             xz_copy_str(s_app.last_alert, sizeof(s_app.last_alert), alert);
+            PR_NOTICE("recv alert: %s", s_app.last_alert);
         }
     } else if (strcmp(type->valuestring, "custom") == 0) {
         cJSON *custom_payload = cJSON_GetObjectItem(root, "payload");
@@ -1372,16 +1564,19 @@ static void xz_handle_transport_text_locked(const uint8_t *payload, size_t paylo
             if (json) {
                 xz_copy_str(s_app.last_custom, sizeof(s_app.last_custom), json);
                 cJSON_free(json);
+                PR_NOTICE("recv custom payload");
             }
         }
     } else if (strcmp(type->valuestring, "system") == 0) {
         cJSON *command = cJSON_GetObjectItem(root, "command");
         if (cJSON_IsString(command) && command->valuestring && strcmp(command->valuestring, "reboot") == 0) {
             s_app.pending_reboot = TRUE;
+            PR_NOTICE("recv system command: reboot");
         }
     } else if (strcmp(type->valuestring, "mcp") == 0) {
         cJSON *mcp_payload = cJSON_GetObjectItem(root, "payload");
         if (cJSON_IsObject(mcp_payload)) {
+            PR_NOTICE("recv mcp payload");
             char *reply_json = NULL;
             if (xiaozhi_mcp_handle_payload(mcp_payload, &reply_json) == OPRT_OK && reply_json) {
                 (void)xz_send_mcp_payload_locked(reply_json);
@@ -1396,7 +1591,11 @@ static void xz_handle_transport_text_locked(const uint8_t *payload, size_t paylo
 static void xz_on_transport_text_message(void *userdata, const uint8_t *payload, size_t payload_len)
 {
     (void)userdata;
+    if (tal_mutex_lock(s_app.lock) != OPRT_OK) {
+        return;
+    }
     xz_handle_transport_text_locked(payload, payload_len);
+    (void)tal_mutex_unlock(s_app.lock);
 }
 
 static void xz_on_transport_binary_message(void *userdata, const uint8_t *payload, size_t payload_len)
@@ -1406,11 +1605,18 @@ static void xz_on_transport_binary_message(void *userdata, const uint8_t *payloa
     if (!payload || payload_len == 0) {
         return;
     }
+    if (tal_mutex_lock(s_app.lock) != OPRT_OK) {
+        return;
+    }
     if (!xz_state_accepts_tts_binary(s_app.chat_state)) {
+        PR_NOTICE("drop binary audio: chat=%s len=%u", xz_chat_state_to_text(s_app.chat_state), (unsigned)payload_len);
+        (void)tal_mutex_unlock(s_app.lock);
         return;
     }
 
+    PR_NOTICE("recv binary audio: chat=%s len=%u", xz_chat_state_to_text(s_app.chat_state), (unsigned)payload_len);
     int rt = xiaozhi_audio_linux_feed_opus(payload, payload_len);
+    (void)tal_mutex_unlock(s_app.lock);
     if (rt != OPRT_OK) {
         PR_WARN("audio feed downlink opus failed: %d len=%u", rt, (unsigned)payload_len);
     }
@@ -1575,6 +1781,7 @@ OPERATE_RET xiaozhi_app_init(void)
         PR_ERR("audio runtime init failed: %d", rt);
         return rt;
     }
+    xiaozhi_audio_linux_set_hotword_callback(xz_on_linux_hotword_detected, &s_app);
     (void)xz_audio_reset_locked();
 #endif
 
@@ -1747,11 +1954,7 @@ OPERATE_RET xiaozhi_app_send_listen(const char *state, const char *mode, const c
 
     OPERATE_RET rt = OPRT_INVALID_PARM;
     (void)tal_mutex_lock(s_app.lock);
-    if (s_app.active == XZ_ACTIVE_WS) {
-        rt = xz_ws_send_listen(&s_app.ws, state, mode, text);
-    } else if (s_app.active == XZ_ACTIVE_MQTT_UDP) {
-        rt = xz_mqtt_udp_send_listen(&s_app.mqtt_udp, state, mode, text);
-    }
+    rt = xz_send_listen_transport_locked(state, mode, text);
     if (rt == OPRT_OK) {
         if (strcmp(state, "start") == 0) {
             rt = xz_on_listen_start_locked(mode);
@@ -1768,11 +1971,7 @@ OPERATE_RET xiaozhi_app_send_abort(const char *reason)
 {
     OPERATE_RET rt = OPRT_INVALID_PARM;
     (void)tal_mutex_lock(s_app.lock);
-    if (s_app.active == XZ_ACTIVE_WS) {
-        rt = xz_ws_send_abort(&s_app.ws, reason);
-    } else if (s_app.active == XZ_ACTIVE_MQTT_UDP) {
-        rt = xz_mqtt_udp_send_abort(&s_app.mqtt_udp, reason);
-    }
+    rt = xz_send_abort_transport_locked(reason);
     if (rt == OPRT_OK) {
         rt = xz_on_abort_locked();
     }
@@ -1817,4 +2016,29 @@ OPERATE_RET xiaozhi_app_upgrade_firmware(const char *url)
     tal_system_reset();
 
     return OPRT_OK;
+}
+
+OPERATE_RET xiaozhi_app_start_detect(void)
+{
+    if (!s_app.inited) {
+        return OPRT_COM_ERROR;
+    }
+
+    (void)tal_mutex_lock(s_app.lock);
+    xz_set_chat_state_locked(XZ_CHAT_IDLE);
+    OPERATE_RET rt = xz_audio_start_detect_locked();
+    (void)tal_mutex_unlock(s_app.lock);
+    return rt;
+}
+
+OPERATE_RET xiaozhi_app_stop_detect(void)
+{
+    if (!s_app.inited) {
+        return OPRT_COM_ERROR;
+    }
+
+    (void)tal_mutex_lock(s_app.lock);
+    OPERATE_RET rt = xz_audio_stop_detect_locked();
+    (void)tal_mutex_unlock(s_app.lock);
+    return rt;
 }

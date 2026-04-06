@@ -5,7 +5,12 @@
 
 #include "xiaozhi_protocol.h"
 
+#ifdef XZ_PROTOCOL_TEST_ONLY
+extern uint32_t tal_system_get_millisecond(void);
+extern void    *tal_malloc(size_t size);
+#else
 #include "tal_api.h"
+#endif
 
 #include <stdio.h>
 #include <string.h>

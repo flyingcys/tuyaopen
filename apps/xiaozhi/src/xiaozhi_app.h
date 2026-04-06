@@ -18,6 +18,8 @@ OPERATE_RET xiaozhi_app_stop(void);
 OPERATE_RET xiaozhi_app_reconnect(void);
 OPERATE_RET xiaozhi_app_ota_bootstrap(void);
 OPERATE_RET xiaozhi_app_upgrade_firmware(const char *url);
+OPERATE_RET xiaozhi_app_start_detect(void);
+OPERATE_RET xiaozhi_app_stop_detect(void);
 
 OPERATE_RET xiaozhi_app_apply_wifi_settings(void);
 OPERATE_RET xiaozhi_app_get_status(char *buf, size_t buf_size);

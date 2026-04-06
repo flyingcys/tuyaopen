@@ -11,6 +11,7 @@
 #include "xiaozhi_settings.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifndef PROJECT_VERSION
@@ -20,6 +21,17 @@
 #ifndef PLATFORM_BOARD
 #define PLATFORM_BOARD "xiaozhi"
 #endif
+
+static bool xz_system_copy_env_override(const char *env_name, char *out, size_t out_size)
+{
+    const char *env = getenv(env_name);
+    if (!env || env[0] == '\0' || !out || out_size == 0) {
+        return false;
+    }
+
+    (void)snprintf(out, out_size, "%s", env);
+    return true;
+}
 
 static void xz_generate_uuid_v4(char *out, size_t out_size)
 {
@@ -42,6 +54,10 @@ OPERATE_RET xiaozhi_system_get_device_id(char *buf, size_t buf_size)
 {
     if (!buf || buf_size < 18) {
         return OPRT_INVALID_PARM;
+    }
+
+    if (xz_system_copy_env_override("XZ_DEVICE_ID", buf, buf_size)) {
+        return OPRT_OK;
     }
 
     NW_MAC_S    mac = {0};
@@ -75,6 +91,10 @@ OPERATE_RET xiaozhi_system_get_client_id(char *buf, size_t buf_size)
 {
     if (!buf || buf_size < 37) {
         return OPRT_INVALID_PARM;
+    }
+
+    if (xz_system_copy_env_override("XZ_CLIENT_ID", buf, buf_size)) {
+        return OPRT_OK;
     }
 
     OPERATE_RET rt = xiaozhi_settings_get_string(XZ_NS_SYS, "client_id", buf, buf_size, "");

@@ -80,17 +80,19 @@ check_python_version() {
     return 1
 }
 
-# Determine which Python command to use
+# Determine which Python command to use, preferring newer versions first.
 PYTHON_CMD=""
-if check_python_version "python3" >/dev/null 2>&1; then
-    PYTHON_CMD=$(check_python_version "python3")
-    echo "Using python3 ($(python3 --version))"
-elif check_python_version "python" >/dev/null 2>&1; then
-    PYTHON_CMD=$(check_python_version "python")
-    echo "Using python ($(python --version))"
-else
+for candidate in python3.12 python3.11 python3.10 python3.9 python3.8 python3 python; do
+    if check_python_version "$candidate" >/dev/null 2>&1; then
+        PYTHON_CMD=$(check_python_version "$candidate")
+        echo "Using $candidate ($("$candidate" --version))"
+        break
+    fi
+done
+
+if [ -z "$PYTHON_CMD" ]; then
     echo "Error: No suitable Python version found!"
-    echo "Please install Python 3.6.0 or higher."
+    echo "Please install Python 3.8.0 or higher."
     return 1
 fi
 
@@ -152,8 +154,10 @@ export OPEN_SDK_PYTHON=${OPEN_SDK_ROOT}/.venv/bin/python
 export OPEN_SDK_PIP=${OPEN_SDK_ROOT}/.venv/bin/pip
 export OPEN_SDK_ROOT=$OPEN_SDK_ROOT
 
-# Export the exit function
-export -f exit
+# Export the exit function only when the current shell supports it.
+if [ -n "${BASH_VERSION:-}" ]; then
+    export -f exit
+fi
 
 # Verify activation worked
 if [ -z "$VIRTUAL_ENV" ]; then
@@ -163,7 +167,9 @@ fi
 echo "Virtual environment activated successfully: $VIRTUAL_ENV"
 
 # install dependencies
-pip install -r ${OPEN_SDK_ROOT}/requirements.txt
+if ! pip install -r ${OPEN_SDK_ROOT}/requirements.txt; then
+    return 1
+fi
 
 # remove cache files
 CACHE_PATH=${OPEN_SDK_ROOT}/.cache
@@ -172,7 +178,9 @@ rm -f ${CACHE_PATH}/.env.json
 rm -f ${CACHE_PATH}/.dont_prompt_update_platform
 
 # complete
-eval "$(bash -c '_TOS_PY_COMPLETE=bash_source tos.py')"
+if command -v tos.py >/dev/null 2>&1; then
+    eval "$(bash -c '_TOS_PY_COMPLETE=bash_source tos.py')"
+fi
 
 # hello tuya
 HELLO_TUYA='

@@ -8,9 +8,14 @@
 extern "C" {
 #endif
 
-#define XZ_AUDIO_PCM_FRAME_BYTES 640
+#define XZ_AUDIO_SAMPLE_RATE_HZ    16000
+#define XZ_AUDIO_CHANNELS          1
+#define XZ_AUDIO_FRAME_DURATION_MS 20
+#define XZ_AUDIO_FRAME_SAMPLES     ((XZ_AUDIO_SAMPLE_RATE_HZ / 1000) * XZ_AUDIO_FRAME_DURATION_MS)
+#define XZ_AUDIO_PCM_FRAME_BYTES   (XZ_AUDIO_FRAME_SAMPLES * XZ_AUDIO_CHANNELS * sizeof(int16_t))
 
 typedef void (*xz_audio_opus_tx_cb_t)(const void *frame, size_t length, void *ctx);
+typedef void (*xz_audio_hotword_cb_t)(const char *wake_word, void *ctx);
 
 typedef struct {
     uint8_t buffer[XZ_AUDIO_PCM_FRAME_BYTES];
@@ -38,6 +43,11 @@ int  xiaozhi_audio_linux_init(void);
 int  xiaozhi_audio_linux_deinit(void);
 int  xiaozhi_audio_linux_start_capture(void);
 int  xiaozhi_audio_linux_stop_capture(void);
+int  xiaozhi_audio_linux_start_detect(void);
+int  xiaozhi_audio_linux_stop_detect(void);
+int  xiaozhi_audio_linux_resume_detect(void);
+void xiaozhi_audio_linux_set_hotword_callback(xz_audio_hotword_cb_t cb, void *ctx);
+int  xiaozhi_audio_linux_play_wakeup_prompt(void);
 int  xiaozhi_audio_linux_feed_opus(const void *data, size_t size);
 int  xiaozhi_audio_linux_abort_playback(void);
 void xiaozhi_audio_linux_reset(void);

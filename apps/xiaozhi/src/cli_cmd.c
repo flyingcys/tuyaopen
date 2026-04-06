@@ -328,13 +328,10 @@ static void cmd_xz_listen(int argc, char *argv[])
         const char *mode = (argc >= 3) ? argv[2] : "manual";
         rt               = xiaozhi_app_send_listen("start", mode, NULL);
     } else if (strcmp(argv[1], "stop") == 0) {
+        (void)xiaozhi_app_stop_detect();
         rt = xiaozhi_app_send_listen("stop", NULL, NULL);
     } else if (strcmp(argv[1], "detect") == 0) {
-        char text[256] = {0};
-        if (argc >= 3) {
-            join_args(argc, argv, 2, text, sizeof(text));
-        }
-        rt = xiaozhi_app_send_listen("detect", NULL, text[0] ? text : NULL);
+        rt = xiaozhi_app_start_detect();
     }
 
     cli_echof("xz_listen rt=%d", rt);

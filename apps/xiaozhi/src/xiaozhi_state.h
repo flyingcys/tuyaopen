@@ -15,6 +15,7 @@ typedef enum {
 xz_chat_state_t xz_state_after_listen_start(xz_chat_state_t current);
 xz_chat_state_t xz_state_after_tts_start(xz_chat_state_t current);
 xz_chat_state_t xz_state_after_tts_stop(xz_chat_state_t current);
+xz_chat_state_t xz_state_after_tts_stop_mode(xz_chat_state_t current, int continue_listening);
 xz_chat_state_t xz_state_after_abort(xz_chat_state_t current);
 
 #ifdef __cplusplus

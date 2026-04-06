@@ -23,6 +23,12 @@ static void test_speaking_to_idle_on_tts_stop(void)
     assert(next == XZ_CHAT_IDLE);
 }
 
+static void test_speaking_to_listening_on_tts_stop_auto_mode(void)
+{
+    xz_chat_state_t next = xz_state_after_tts_stop_mode(XZ_CHAT_SPEAKING, 1);
+    assert(next == XZ_CHAT_LISTENING);
+}
+
 static void test_tts_stop_keeps_listening_state(void)
 {
     xz_chat_state_t next = xz_state_after_tts_stop(XZ_CHAT_LISTENING);
@@ -54,6 +60,7 @@ int main(void)
     test_idle_to_listening();
     test_listening_to_speaking();
     test_speaking_to_idle_on_tts_stop();
+    test_speaking_to_listening_on_tts_stop_auto_mode();
     test_tts_stop_keeps_listening_state();
     test_speaking_to_idle_on_abort();
     test_listening_to_idle_on_abort();

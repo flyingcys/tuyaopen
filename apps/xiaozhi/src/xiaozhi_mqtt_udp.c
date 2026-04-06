@@ -272,7 +272,7 @@ static void xz_mqtt_on_message(void *mqtt_client, uint16_t msgid, const mqtt_cli
         }
     } else {
         client->channel.last_rx_ms = tal_system_get_millisecond();
-        PR_DEBUG("mqtt recv type=%s", type->valuestring);
+        PR_NOTICE("mqtt recv text type=%s", type->valuestring);
         if (client->on_text_message) {
             client->on_text_message(client->on_text_userdata, (const uint8_t *)msg->payload, msg->length);
         }

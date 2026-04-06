@@ -7,7 +7,27 @@
 #define __XIAOZHI_PROTOCOL_H__
 
 #include "cJSON.h"
+
+#ifdef XZ_PROTOCOL_TEST_ONLY
+#include <stdbool.h>
+#include <stdint.h>
+typedef int OPERATE_RET;
+typedef int BOOL_T;
+#ifndef OPRT_OK
+#define OPRT_OK 0
+#endif
+#ifndef OPRT_INVALID_PARM
+#define OPRT_INVALID_PARM (-2)
+#endif
+#ifndef TRUE
+#define TRUE 1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
+#else
 #include "tuya_cloud_types.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {

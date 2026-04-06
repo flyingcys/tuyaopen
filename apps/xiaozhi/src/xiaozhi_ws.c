@@ -586,7 +586,7 @@ static OPERATE_RET xz_ws_handle_text(xz_ws_client_t *ws, const uint8_t *payload,
                       ws->channel.server_sample_rate, ws->channel.server_frame_duration);
         } else {
             ws->channel.last_rx_ms = tal_system_get_millisecond();
-            PR_DEBUG("websocket text type=%s", type->valuestring);
+            PR_NOTICE("websocket recv text type=%s", type->valuestring);
             if (ws->on_text_message) {
                 ws->on_text_message(ws->on_text_userdata, payload, payload_len);
             }
