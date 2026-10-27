@@ -5,4 +5,4 @@
 	url = https://github.com/littlefs-project/littlefs.git
 [submodule "tuyaopen-core"]
 	path = tuyaopen-core
-	url = https://github.com/flyingcys/TuyaOpen-Core.git
+	url = https://github.com/tuya/TuyaOpen-Core.git
