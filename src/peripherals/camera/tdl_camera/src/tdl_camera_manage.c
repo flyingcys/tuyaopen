@@ -24,6 +24,11 @@
 #include "tdl_camera_manage.h"
 #include "tdl_camera_driver.h"
 
+/* T5AI camera driver uses TAL_* names; the platform exposes TKL_* macros. */
+#include "tkl_system.h"
+#define TAL_ENTER_CRITICAL() TKL_ENTER_CRITICAL()
+#define TAL_EXIT_CRITICAL()  TKL_EXIT_CRITICAL()
+
 /***********************************************************
 ************************macro define************************
 ***********************************************************/
