@@ -403,8 +403,27 @@ static OPERATE_RET __demo_camera_request_i_frame(void)
 
 static OPERATE_RET __demo_camera_set_bitrate(uint32_t kbps)
 {
-    (void)kbps;
-    return OPRT_NOT_SUPPORTED;
+    OPERATE_RET rt;
+
+    if (s_cam_lock == NULL) {
+        return OPRT_COM_ERROR;
+    }
+
+    /* P2P rate control runs on p2p_media_send; open/close runs on the demo
+     * thread. Serialize them so a stop cannot tear the encoder down between
+     * the running check and the TKL call. */
+    rt = tal_mutex_lock(s_cam_lock);
+    if (rt != OPRT_OK) {
+        return rt;
+    }
+    if (!s_cam_running || s_cam == NULL) {
+        rt = OPRT_COM_ERROR;
+    } else {
+        rt = tdl_camera_dev_set_bitrate(s_cam, kbps);
+    }
+    tal_mutex_unlock(s_cam_lock);
+
+    return rt;
 }
 
 #else /* !DEMO_HAS_CAMERA */

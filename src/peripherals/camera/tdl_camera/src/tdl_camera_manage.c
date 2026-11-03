@@ -428,6 +428,31 @@ OPERATE_RET tdl_camera_dev_close(TDL_CAMERA_HANDLE_T camera_hdl)
 }
 
 /**
+ * @brief Change the encoder target bitrate while the stream is running
+ * @param camera_hdl Camera handle
+ * @param kbps target bitrate in kbps
+ * @return OPRT_OK when accepted, OPRT_RESOURCE_NOT_READY when the encoder is
+ *         still applying a previous request, OPRT_NOT_SUPPORTED when the
+ *         device has no such control, or another error code
+ */
+OPERATE_RET tdl_camera_dev_set_bitrate(TDL_CAMERA_HANDLE_T camera_hdl, uint32_t kbps)
+{
+    CAMERA_DEVICE_T *camera_dev = (CAMERA_DEVICE_T *)camera_hdl;
+
+    if (NULL == camera_dev || 0 == kbps) {
+        return OPRT_INVALID_PARM;
+    }
+    if (false == camera_dev->is_open) {
+        return OPRT_COM_ERROR;
+    }
+    if (NULL == camera_dev->intfs.set_bitrate) {
+        return OPRT_NOT_SUPPORTED;
+    }
+
+    return camera_dev->intfs.set_bitrate(camera_dev->tdd_hdl, kbps);
+}
+
+/**
  * @brief Register a camera device
  * @brief Creates and registers a new camera device with the management system
  * @param name Camera device name
