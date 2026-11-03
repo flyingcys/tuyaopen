@@ -758,15 +758,12 @@ static void ap_netcfg_thread(void *args)
                     PR_ERR("accept failed %d (errno: %d)", ap->client_fd, tal_net_get_errno());
                     continue;
                 }
-                // set reuse
-                ret = tal_net_set_reuse(ap->client_fd);
-                // set no block
-                ret += tal_net_set_block(ap->client_fd, FALSE);
-                if (0 > ret) {
-                    PR_ERR("tcp listen select fail");
-                    tal_system_sleep(1500);
-                    continue;
-                }
+                // set reuse; not required for an established connection
+                int reuse_ret = tal_net_set_reuse(ap->client_fd);
+                // set no block; the TLS layer falls back to select() when this
+                // is unavailable (e.g. lwIP fcntl not provided by the port)
+                int block_ret = tal_net_set_block(ap->client_fd, FALSE);
+                PR_DEBUG("client fd:%d reuse:%d nonblock:%d", ap->client_fd, reuse_ret, block_ret);
                 PR_DEBUG("new client connect. fd:%d ip:%d.%d.%d.%d", ap->client_fd, (uint8_t)(addr >> 24),
                          (uint8_t)(addr >> 16), (uint8_t)(addr >> 8), (uint8_t)addr);
                 ret = ap_tls_psk_set(ap);
