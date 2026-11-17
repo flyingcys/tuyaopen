@@ -15,6 +15,11 @@
 #define LWIP_NO_ARCH_CPU_H  1
 #define LWIP_NO_ARCH_PERF_H 1
 
+/* libre's struct sa always embeds sockaddr_in6; the P2P path itself is IPv4.
+ * The view must expose the type even though the platform library keeps its own
+ * (IPv6-enabled) configuration. */
+#define LWIP_IPV6 1
+
 #define LWIP_SOCKET         1
 #define LWIP_NETCONN        1
 #define LWIP_COMPAT_SOCKETS 1

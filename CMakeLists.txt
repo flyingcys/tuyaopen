@@ -144,6 +144,8 @@ endif()
 # [tuyaopen-core integration] ① core 接入（须在 deal_with_components 之前：
 # 上游组件/board 不声明依赖，include 面靠 COMPONENT_PUBINC 目录传播；
 # 置于 board 之后，使下面的 foreach 同时覆盖 src 组件与 board target）
+# P2P/libre：TuyaOS 构建使用 p2p-core/port/re 下的共享端口源，平台差异由
+# re_platform_config.h 在编译期决定；头视图也由 port/re/re.cmake 自行接入。
 include(${TOP_SOURCE_DIR}/tuyaopen-core/tuyaopen-core.cmake)   # 含 TuyaOpenOptions.cmake
 # core 的环境基底（core 契约：宿主注入 tuyaopen-headers）：动态 tuya_kconfig.h +
 # 上游 common 头（tuya_cloud_types.h→tuya_iot_config.h→tuya_kconfig.h 链）+ 平台公共头
