@@ -146,7 +146,10 @@ capture() {
     if ! "$py" -c 'import serial' >/dev/null 2>&1; then
         py="$(cd "$ROOT/../../.." && pwd)/.venv/bin/python"
     fi
-    "$py" - "$CONSOLE_PORT" "$BAUD" "$CAPTURE_SECS" "$LOG" <<'PY'
+    # exec so that stopping the helper (Ctrl-C, TaskStop) kills the reader
+    # itself; otherwise a stray python keeps the tty open and silently splits
+    # the console stream with the next capture.
+    exec "$py" - "$CONSOLE_PORT" "$BAUD" "$CAPTURE_SECS" "$LOG" <<'PY'
 import sys
 import time
 
