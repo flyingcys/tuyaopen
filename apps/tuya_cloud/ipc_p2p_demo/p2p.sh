@@ -153,28 +153,45 @@ import time
 import serial
 
 port, baud, secs, log = sys.argv[1], int(sys.argv[2]), float(sys.argv[3]), sys.argv[4]
-ser = serial.Serial(port, baud, timeout=0.5)
-try:
-    ser.setDTR(False)
-    ser.setRTS(False)
-except Exception:
-    pass
-
 out = open(log, "ab") if log else None
 end = time.time() + secs
+
+
+def emit(data):
+    if not data:
+        return
+    if out:
+        out.write(data)
+        out.flush()
+    sys.stdout.buffer.write(data)
+    sys.stdout.buffer.flush()
+
+
 try:
     while time.time() < end:
-        data = ser.read(4096)
-        if data:
-            if out:
-                out.write(data)
-                out.flush()
-            sys.stdout.buffer.write(data)
-            sys.stdout.buffer.flush()
+        ser = None
+        try:
+            ser = serial.Serial(port, baud, timeout=0.5)
+            try:
+                ser.setDTR(False)
+                ser.setRTS(False)
+            except Exception:
+                pass
+            while time.time() < end:
+                emit(ser.read(4096))
+        except serial.SerialException:
+            # The CH340 occasionally drops the interface; reopen and keep
+            # capturing instead of losing the whole run.
+            time.sleep(0.5)
+        finally:
+            if ser is not None:
+                try:
+                    ser.close()
+                except Exception:
+                    pass
 finally:
     if out:
         out.close()
-    ser.close()
 PY
 }
 
