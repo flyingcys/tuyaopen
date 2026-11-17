@@ -653,10 +653,23 @@ int demo_on_live_video_start_callback(void)
     }
 
     s_live_want_cam = TRUE;
+
+    /* Enable push and clear the queue before the camera starts. The encoder
+     * emits its GOP-start IDR as soon as it opens (CONFIG_H264_GOP_START_IDR_FRAME);
+     * enabling push afterwards dropped that IDR, and the next natural one can
+     * be seconds away, leaving the App with no decodable frame. */
+    s_live_push_enable = TRUE;
+    if (s_frame_mutex != NULL) {
+        tal_mutex_lock(s_frame_mutex);
+        __demo_p2p_queue_clear();
+        tal_mutex_unlock(s_frame_mutex);
+    }
+
     __demo_camera_sync();
     if (!s_cam_running) {
         PR_ERR("LIVE start: camera open failed");
-        s_live_want_cam = FALSE;
+        s_live_want_cam    = FALSE;
+        s_live_push_enable = FALSE;
         return -1;
     }
 
@@ -666,19 +679,12 @@ int demo_on_live_video_start_callback(void)
     }
 #endif
 
-    if (s_frame_mutex != NULL) {
-        tal_mutex_lock(s_frame_mutex);
-        __demo_p2p_queue_clear();
-        tal_mutex_unlock(s_frame_mutex);
-    }
-
 #if DEMO_HAS_AUDIO
     if (!s_mic_running && __demo_mic_start() != OPRT_OK) {
         PR_ERR("LIVE start: mic start failed");
     }
 #endif
 
-    s_live_push_enable = TRUE;
     PR_NOTICE("LIVE video start: push enabled");
     return 0;
 }
